@@ -27,9 +27,12 @@ public class Content {
 
     private LocalDateTime modifiedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     private ContentStatus contentStatus = ContentStatus.INACTIVE;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id")
     private User creator;
 
     @OneToMany(mappedBy = "content")

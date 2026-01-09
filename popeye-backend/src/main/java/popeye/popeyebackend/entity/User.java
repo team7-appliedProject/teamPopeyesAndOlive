@@ -22,12 +22,15 @@ public class User {
 
     private LocalDateTime createdAt =  LocalDateTime.now();
 
-    @Column(name = "phone_number")
+    @Column(name = "phone_number", unique = true)
     private Long number;
 
-    private Integer devilCount;
+    @Column(name = "total_spinach", defaultValue = "0")
+    private Integer totalSpinach;
 
-    private LocalDateTime blockedAt;
+    @Column(name = "total_starcandy", defaultValue = "0")
+    private Integer totalStarcandy;
+
 
     @OneToMany(mappedBy = "creator")
     private List<Content> contents;
