@@ -14,7 +14,10 @@ public class Order {
     private Long id; // 주문 ID
 
     private int quantity;
+
+    @Column(name = "created_at")
     private LocalDateTime orderDate=LocalDateTime.now();
+
     private OrderStatus orderStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
