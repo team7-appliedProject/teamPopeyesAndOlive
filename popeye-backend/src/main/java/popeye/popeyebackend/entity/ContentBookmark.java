@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "content_bookmark")
+@Table(name = "content_bookmarks")
 @Getter
 @NoArgsConstructor
 public class ContentBookmark {

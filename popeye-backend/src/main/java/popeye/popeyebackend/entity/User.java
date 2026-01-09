@@ -25,11 +25,11 @@ public class User {
     @Column(name = "phone_number", unique = true)
     private Long number;
 
-    @Column(name = "total_spinach", defaultValue = "0")
-    private Integer totalSpinach;
+    @Column(name = "total_spinach")
+    private Integer totalSpinach = 0;
 
-    @Column(name = "total_starcandy", defaultValue = "0")
-    private Integer totalStarcandy;
+    @Column(name = "total_starcandy")
+    private Integer totalStarcandy = 0;
 
 
     @OneToMany(mappedBy = "creator")
@@ -52,4 +52,7 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private List<Bookmark> bookmarks;
+
+    @OneToOne(mappedBy = "user")
+    private DevilUser devilUser;
 }

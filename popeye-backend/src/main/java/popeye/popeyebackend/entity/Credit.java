@@ -3,6 +3,7 @@ package popeye.popeyebackend.entity;
 import jakarta.persistence.*;
 import popeye.popeyebackend.enums.CreditType;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -14,7 +15,7 @@ public class Credit {
 
     private CreditType creditType;
     private int amount;
-    private LocalDateTime expiredAt;
+    private LocalDate expiredAt;
     private LocalDateTime paidAt = LocalDateTime.now();
 
     @ManyToOne

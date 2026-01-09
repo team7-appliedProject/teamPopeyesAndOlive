@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Table(name = "devil_users")
 @NoArgsConstructor
 public class DevilUser {
     @Id
@@ -19,9 +20,9 @@ public class DevilUser {
 
     private LocalDateTime blockedAt;
 
-    @Column(name = "devil_count")
+    @Column
     private Integer devilCount;
 
-    @Column(name = "hashed_phone_number")
+    @Column
     private String hashedPhoneNumber;
 }

@@ -36,7 +36,7 @@ public class Content {
     private User creator;
 
     @OneToMany(mappedBy = "content")
-    private List<Bookmark> bookmarks;
+    private List<ContentBookmark> bookmarks;
 
     @OneToMany(mappedBy = "content")
     private List<Order> orders;

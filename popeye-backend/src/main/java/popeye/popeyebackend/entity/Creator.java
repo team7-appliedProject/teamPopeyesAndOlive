@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Table(name = "creators")
 @NoArgsConstructor
 public class Creator {
     @Id

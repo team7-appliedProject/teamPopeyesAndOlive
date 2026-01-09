@@ -2,7 +2,7 @@ package popeye.popeyebackend.entity;
 
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "banned_users")
@@ -11,7 +11,7 @@ public class BannedUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDateTime unbannedAt = LocalDateTime.now().plusMonths(1);
+    private LocalDate unbannedAt = LocalDate.now().plusMonths(1);
 
     private String hashedPhoneNumber;
 }

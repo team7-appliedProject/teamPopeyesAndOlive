@@ -8,3 +8,6 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+popeye:
+  secret-key: "my_super_secret_key_popeye_1234!"

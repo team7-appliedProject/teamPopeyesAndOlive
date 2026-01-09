@@ -3,10 +3,10 @@ package popeye.popeyebackend.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.apache.tomcat.util.http.parser.MediaType;
+import popeye.popeyebackend.enums.MediaType;
 
 @Entity
-@Table(name = "content_media")
+@Table(name = "content_medias")
 @Getter
 @NoArgsConstructor
 public class ContentMedia {

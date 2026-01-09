@@ -34,5 +34,5 @@ public class Order {
     @Column(name = "used_starcandy")
     private Integer usedStarcandy; // 사용된 별사탕 수
 
-    private Boolean settlement; // 크리에이터 정산 여부
+    private Boolean settlement = false; // 크리에이터 정산 여부
 }

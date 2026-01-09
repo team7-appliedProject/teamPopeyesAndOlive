@@ -1,6 +1,5 @@
 package popeye.popeyebackend.entity;
 
-import ch.qos.logback.core.status.Status;
 import jakarta.persistence.*;
 import popeye.popeyebackend.enums.PaymentType;
 import popeye.popeyebackend.enums.PgProvider;
@@ -15,10 +14,9 @@ public class Payment {
     private Long id;
 
     private int amount;
-    private PaymentType paymentType;
 
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private PaymentType paymentType;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "pg_provider")

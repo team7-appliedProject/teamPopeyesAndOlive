@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "content_like")
+@Table(name = "content_likes")
 @Getter
 @NoArgsConstructor
 public class ContentLike {
