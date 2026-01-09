@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Table(name = "users")
 public class User {
     @Id
     private Long id;
@@ -28,21 +29,24 @@ public class User {
 
     private LocalDateTime blockedAt;
 
-    @OneToMany
+    @OneToMany(mappedBy = "creator")
     private List<Content> contents;
 
-    @OneToMany
+    @OneToMany(mappedBy = "creator")
     private List<Settlement> settlements;
 
-    @OneToMany
+    @OneToMany(mappedBy = "user")
     private List<Order> orders;
 
-    @OneToMany
+    @OneToMany(mappedBy = "user")
     private List<Credit> credits;
 
-    @OneToMany
+    @OneToMany(mappedBy = "user")
     private List<Payment> payments;
 
-    @OneToMany
+    @OneToMany(mappedBy = "user")
     private List<Notification> notifications;
+
+    @OneToMany(mappedBy = "user")
+    private List<Bookmark> bookmarks;
 }

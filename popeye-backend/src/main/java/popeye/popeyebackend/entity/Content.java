@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import popeye.popeyebackend.enums.ContentStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
+@Table(name = "contents")
 public class Content {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,4 +31,10 @@ public class Content {
 
     @ManyToOne
     private User creator;
+
+    @OneToMany(mappedBy = "content")
+    private List<Bookmark> bookmarks;
+
+    @OneToMany(mappedBy = "content")
+    private List<Order> orders;
 }

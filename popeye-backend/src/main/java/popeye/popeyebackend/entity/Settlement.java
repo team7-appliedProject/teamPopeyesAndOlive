@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "settlements")
 public class Settlement {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,5 +17,5 @@ public class Settlement {
 
     @ManyToOne
     @JoinColumn(name = "creator_id")
-    private User user;
+    private User creator;
 }

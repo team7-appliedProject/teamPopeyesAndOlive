@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "banned_users")
 public class BannedUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

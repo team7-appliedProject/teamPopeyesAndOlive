@@ -5,6 +5,7 @@ import popeye.popeyebackend.enums.PaymentType;
 import popeye.popeyebackend.enums.PgProvider;
 
 @Entity
+@Table(name = "payments")
 public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

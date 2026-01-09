@@ -6,6 +6,7 @@ import popeye.popeyebackend.enums.CreditType;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "credits")
 public class Credit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
