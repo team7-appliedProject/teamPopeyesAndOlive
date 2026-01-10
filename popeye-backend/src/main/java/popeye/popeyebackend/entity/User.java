@@ -1,6 +1,7 @@
 package popeye.popeyebackend.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import popeye.popeyebackend.enums.Role;
 
 import java.time.LocalDateTime;
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
+@Getter
 public class User {
     @Id
     private Long id;
