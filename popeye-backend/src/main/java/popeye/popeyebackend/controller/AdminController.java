@@ -3,6 +3,7 @@ package popeye.popeyebackend.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -23,10 +24,11 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getDailyData(days));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/manage")
-    public void banUser(@AuthenticationPrincipal UserDetails userDetails, @RequestBody BanUserInfoDto banUserInfoDto) {
-        userDetails.getAuthorities().contains("ROLE_ADMIN") ?
-                adminService.banUser(userDetails.getUsername(), banUserInfoDto) : return;
+    public ResponseEntity<Void> banUser(@AuthenticationPrincipal UserDetails userDetails, @RequestBody BanUserInfoDto banUserInfoDto) {
+        adminService.banUser(userDetails.getUsername(), banUserInfoDto);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/manage")
