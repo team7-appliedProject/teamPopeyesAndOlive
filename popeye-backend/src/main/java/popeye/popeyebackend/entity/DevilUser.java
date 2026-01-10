@@ -21,12 +21,16 @@ public class DevilUser {
     private Long blockedDays = 0L;
 
     @Column
-    private Integer devilCount;
+    private Integer devilCount = 0;
 
     @Column
     private String hashedPhoneNumber;
 
     public void plusBlockedDays(int days) {
         this.blockedDays += days;
+    }
+
+    public void plusDevilCount() {
+        this.devilCount++;
     }
 }
