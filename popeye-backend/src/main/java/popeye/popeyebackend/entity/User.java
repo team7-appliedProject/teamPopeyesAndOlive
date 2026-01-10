@@ -18,6 +18,7 @@ public class User {
 
     private String password;
 
+    @Enumerated
     private Role role;
 
     private LocalDateTime createdAt =  LocalDateTime.now();
@@ -55,4 +56,11 @@ public class User {
 
     @OneToOne(mappedBy = "user")
     private DevilUser devilUser;
+
+    @OneToMany(mappedBy = "admin")
+    private List<BannedUser> bannedUserList;
+
+    public void changeRole (Role role) {
+        this.role = role;
+    }
 }

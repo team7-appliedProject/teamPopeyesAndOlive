@@ -4,18 +4,28 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import popeye.popeyebackend.dto.admin.AdminDailyDataDto;
+import popeye.popeyebackend.dto.admin.BanUserInfoDto;
+import popeye.popeyebackend.entity.BannedUser;
 import popeye.popeyebackend.entity.DailyStatistics;
+import popeye.popeyebackend.entity.DevilUser;
+import popeye.popeyebackend.entity.User;
+import popeye.popeyebackend.enums.Role;
+import popeye.popeyebackend.repository.BannedUserRepository;
 import popeye.popeyebackend.repository.DailyStatisticsRepository;
+import popeye.popeyebackend.repository.DevilUserRepository;
 import popeye.popeyebackend.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class AdminService {
     private final UserRepository userRepository;
     private final DailyStatisticsRepository dailyStatisticsRepository;
+    private final DevilUserRepository devilUserRepository;
+    private final BannedUserRepository bannedUserRepository;
 
     // daily data 받기
     @Transactional(readOnly = true)
@@ -25,5 +35,30 @@ public class AdminService {
 
         List<DailyStatistics> dailyStatistics = dailyStatisticsRepository.findByDateBetween(startDate, endDate);
         return dailyStatistics.stream().map(AdminDailyDataDto::from).toList();
+    }
+
+    // 유저 차단 관리
+    @Transactional
+    public void banUser(Long adminId, BanUserInfoDto userInfoDto){
+        User banAdmin = userRepository.findById(adminId)
+                .orElseThrow(() -> new RuntimeException("no match admin"));
+
+        User userFound = userRepository.findById(userInfoDto.banUserId())
+                .orElseThrow(()->new RuntimeException("no User found"));
+        DevilUser devilUser = devilUserRepository.findById(userInfoDto.banUserId())
+                .orElseThrow(()->new RuntimeException("no User found"));
+
+        userFound.changeRole(Role.BLOCKED);
+        devilUser.plusBlockedDays(userInfoDto.banDays());
+
+        BannedUser bannedUser = BannedUser.builder()
+                .bannedAt(LocalDate.now())
+                .unbannedAt(LocalDate.now().plusDays(userInfoDto.banDays()))
+                .banDays(userInfoDto.banDays())
+                .hashedPhoneNumber(devilUser.getHashedPhoneNumber())
+                .reason(userInfoDto.reason())
+                .admin(banAdmin).build();
+
+        bannedUserRepository.save(bannedUser);
     }
 }

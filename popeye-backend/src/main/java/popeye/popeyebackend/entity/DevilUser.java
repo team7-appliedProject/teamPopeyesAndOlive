@@ -18,11 +18,15 @@ public class DevilUser {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private LocalDateTime blockedAt;
+    private Long blockedDays = 0L;
 
     @Column
     private Integer devilCount;
 
     @Column
     private String hashedPhoneNumber;
+
+    public void plusBlockedDays(int days) {
+        this.blockedDays += days;
+    }
 }
