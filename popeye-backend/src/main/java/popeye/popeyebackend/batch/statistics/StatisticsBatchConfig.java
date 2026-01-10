@@ -1,4 +1,4 @@
-package popeye.popeyebackend.config.statisticbatch;
+package popeye.popeyebackend.batch.statistics;
 
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package popeye.popeyebackend.config.statisticbatch;
+package popeye.popeyebackend.batch.statistics;
 
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
