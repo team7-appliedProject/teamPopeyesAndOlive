@@ -13,7 +13,6 @@ import java.time.LocalDate;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class BannedUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,5 +32,14 @@ public class BannedUser {
     @JoinColumn(name = "admin_id")
     private User admin;
 
+    @Builder
+    public BannedUser(LocalDate unbannedAt, String reason, String hashedPhoneNumber, LocalDate bannedAt, Integer banDays, User admin) {
+        this.unbannedAt = unbannedAt;
+        this.reason = reason;
+        this.hashedPhoneNumber = hashedPhoneNumber;
+        this.bannedAt = bannedAt;
+        this.banDays = banDays;
+        this.admin = admin;
+    }
 
 }
