@@ -39,3 +39,6 @@ out/
 ### Environment ###
 .env
 .env.*
+
+### MYSQL ###
+.mysql-data/
