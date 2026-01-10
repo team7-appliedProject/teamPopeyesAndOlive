@@ -1,10 +1,15 @@
 package popeye.popeyebackend.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import popeye.popeyebackend.dto.admin.AdminDailyDataDto;
 import popeye.popeyebackend.dto.admin.BanUserInfoDto;
+import popeye.popeyebackend.dto.admin.DevilUserDto;
 import popeye.popeyebackend.entity.BannedUser;
 import popeye.popeyebackend.entity.DailyStatistics;
 import popeye.popeyebackend.entity.DevilUser;
@@ -15,9 +20,9 @@ import popeye.popeyebackend.repository.DailyStatisticsRepository;
 import popeye.popeyebackend.repository.DevilUserRepository;
 import popeye.popeyebackend.repository.UserRepository;
 
+
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +47,6 @@ public class AdminService {
     public void banUser(Long adminId, BanUserInfoDto userInfoDto){
         User banAdmin = userRepository.findById(adminId)
                 .orElseThrow(() -> new RuntimeException("no match admin"));
-
         User userFound = userRepository.findById(userInfoDto.banUserId())
                 .orElseThrow(()->new RuntimeException("no User found"));
         DevilUser devilUser = devilUserRepository.findById(userInfoDto.banUserId())
@@ -60,5 +64,14 @@ public class AdminService {
                 .admin(banAdmin).build();
 
         bannedUserRepository.save(bannedUser);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DevilUserDto> getDevilUsers(int page) {
+        Pageable pageable = PageRequest.of(page, 30, Sort.by("user.nickname").ascending());
+
+        Page<DevilUser> devilUsers = devilUserRepository.findAll(pageable);
+
+        return devilUsers.stream().map(DevilUserDto::from).toList();
     }
 }

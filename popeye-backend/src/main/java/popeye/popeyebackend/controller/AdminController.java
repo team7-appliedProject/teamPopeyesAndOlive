@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import popeye.popeyebackend.dto.admin.AdminDailyDataDto;
 import popeye.popeyebackend.dto.admin.BanUserInfoDto;
+import popeye.popeyebackend.dto.admin.DevilUserDto;
 import popeye.popeyebackend.service.AdminService;
 
 import java.util.List;
@@ -32,7 +33,8 @@ public class AdminController {
     }
 
     @GetMapping("/manage")
-    public ResponseEntity<List<BanUserInfoDto>> getDevilUsers() {
-        return null;
+    public ResponseEntity<List<DevilUserDto>> getDevilUsers(@RequestParam(defaultValue = "0")int page) {
+        List<DevilUserDto> devilUsers = adminService.getDevilUsers(page);
+        return ResponseEntity.ok(devilUsers);
     }
 }
