@@ -1,6 +1,7 @@
 package popeye.popeyebackend.entity;
 
 import jakarta.persistence.*;
+import popeye.popeyebackend.entity.content.ContentBookmark;
 import popeye.popeyebackend.enums.ContentStatus;
 
 import java.time.LocalDateTime;

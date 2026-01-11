@@ -1,8 +1,9 @@
-package popeye.popeyebackend.entity;
+package popeye.popeyebackend.entity.content;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import popeye.popeyebackend.entity.Content;
 import popeye.popeyebackend.enums.MediaType;
 
 @Entity
