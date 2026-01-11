@@ -1,12 +1,16 @@
 package popeye.popeyebackend.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import popeye.popeyebackend.enums.Role;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "users")
 public class User {
     @Id
@@ -18,12 +22,13 @@ public class User {
 
     private String password;
 
+    @Enumerated(EnumType.STRING)
     private Role role;
 
     private LocalDateTime createdAt =  LocalDateTime.now();
 
     @Column(name = "phone_number", unique = true)
-    private Long number;
+    private String number;
 
     @Column(name = "total_spinach")
     private Integer totalSpinach = 0;
@@ -51,7 +56,7 @@ public class User {
     private List<Notification> notifications;
 
     @OneToMany(mappedBy = "user")
-    private List<Bookmark> bookmarks;
+    private List<ContentBookmark> bookmarks;
 
     @OneToOne(mappedBy = "user")
     private DevilUser devilUser;
