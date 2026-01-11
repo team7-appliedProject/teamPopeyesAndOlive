@@ -42,10 +42,6 @@ public class User {
     @Column(name = "total_starcandy")
     private Integer totalStarcandy = 0;
 
-
-    @OneToMany(mappedBy = "creator")
-    private List<Content> contents;
-
     @OneToMany(mappedBy = "creator")
     private List<Settlement> settlements;
 
@@ -64,17 +60,17 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<ContentBookmark> bookmarks;
 
-    @OneToOne(mappedBy = "user")
-    private DevilUser devilUser;
-
     @OneToMany(mappedBy = "admin")
     private List<BannedUser> bannedUserList;
 
     @OneToMany(mappedBy = "reporter")
     private List<Report> reports;
 
-    @OneToMany(mappedBy = "reported")
-    private List<Report> reporteds;
+    @OneToOne(mappedBy = "user")
+    private DevilUser devilUser;
+
+    @OneToOne(mappedBy = "user")
+    private Creator creator;
 
     public void changeRole (Role role) {
         this.role = role;

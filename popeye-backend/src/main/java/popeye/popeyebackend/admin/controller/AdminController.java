@@ -2,7 +2,6 @@ package popeye.popeyebackend.admin.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -10,7 +9,7 @@ import popeye.popeyebackend.admin.dto.AdminDailyDataDto;
 import popeye.popeyebackend.admin.dto.BanUserInfoDto;
 import popeye.popeyebackend.admin.dto.DevilUserDto;
 import popeye.popeyebackend.admin.service.AdminService;
-import popeye.popeyebackend.report.dto.ReportDto;
+import popeye.popeyebackend.report.dto.ReportProcessDto;
 
 import java.util.List;
 
@@ -38,10 +37,16 @@ public class AdminController {
     }
 
     @GetMapping("/reports")
-    public ResponseEntity<List<ReportDto>> getReports(
+    public ResponseEntity<List<ReportProcessDto>> getReports(
             @RequestParam(defaultValue = "0")int page,
             @RequestParam(defaultValue = "10")int size) {
-        List<ReportDto> reports = adminService.getReports(page, size);
+        List<ReportProcessDto> reports = adminService.getReports(page, size);
         return ResponseEntity.ok(reports);
+    }
+
+    @PostMapping("/reports")
+    public ResponseEntity<Void> reportProcess(@RequestBody ReportProcessDto reportProcessDto) {
+        adminService.reportProcess(reportProcessDto);
+        return ResponseEntity.ok().build();
     }
 }

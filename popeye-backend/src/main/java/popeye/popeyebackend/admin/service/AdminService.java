@@ -7,8 +7,7 @@ import popeye.popeyebackend.admin.dto.AdminDailyDataDto;
 import popeye.popeyebackend.admin.dto.BanUserInfoDto;
 import popeye.popeyebackend.admin.dto.DevilUserDto;
 import popeye.popeyebackend.dailystatistics.service.DailyStatisticsService;
-import popeye.popeyebackend.report.dto.ReportDto;
-import popeye.popeyebackend.report.repository.ReportRepository;
+import popeye.popeyebackend.report.dto.ReportProcessDto;
 import popeye.popeyebackend.report.service.ReportService;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.service.UserService;
@@ -44,7 +43,13 @@ public class AdminService {
 
     // 신고 리스트
     @Transactional(readOnly = true)
-    public List<ReportDto> getReports(int page, int size) {
-        return reportService.getReports(page, size).stream().map(ReportDto::from).toList();
+    public List<ReportProcessDto> getReports(int page, int size) {
+        return reportService.getReports(page, size).stream().map(ReportProcessDto::from).toList();
+    }
+
+    // 신고 처리
+    @Transactional
+    public void reportProcess(ReportProcessDto reportProcessDto){
+        reportService.reportProcess(reportProcessDto);
     }
 }
