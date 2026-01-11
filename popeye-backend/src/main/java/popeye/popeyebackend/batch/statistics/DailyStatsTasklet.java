@@ -1,11 +1,10 @@
 package popeye.popeyebackend.batch.statistics;
 
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
+import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.step.StepContribution;
 import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.infrastructure.repeat.RepeatStatus;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.stereotype.Component;
 import popeye.popeyebackend.dailystatistics.domain.DailyStatistics;
 import popeye.popeyebackend.dailystatistics.repository.DailyStatisticsRepository;
@@ -20,6 +19,7 @@ import popeye.popeyebackend.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+
 @Component
 @RequiredArgsConstructor
 public class DailyStatsTasklet implements Tasklet {
@@ -32,7 +32,7 @@ public class DailyStatsTasklet implements Tasklet {
     private final OrderRepository orderRepository;
 
     @Override
-    public @Nullable RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+    public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         LocalDate yesterday = LocalDate.now().minusDays(1);
         LocalDateTime start = yesterday.atStartOfDay();
         LocalDateTime end = yesterday.atTime(23, 59, 59);
