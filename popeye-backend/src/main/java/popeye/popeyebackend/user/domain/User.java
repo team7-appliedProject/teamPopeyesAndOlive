@@ -9,6 +9,7 @@ import popeye.popeyebackend.pay.entity.Order;
 import popeye.popeyebackend.pay.entity.Payment;
 import popeye.popeyebackend.pay.entity.Settlement;
 import popeye.popeyebackend.notificaion.domain.Notification;
+import popeye.popeyebackend.report.domain.Report;
 import popeye.popeyebackend.user.enums.Role;
 
 import java.time.LocalDateTime;
@@ -68,6 +69,12 @@ public class User {
 
     @OneToMany(mappedBy = "admin")
     private List<BannedUser> bannedUserList;
+
+    @OneToMany(mappedBy = "reporter")
+    private List<Report> reports;
+
+    @OneToMany(mappedBy = "reported")
+    private List<Report> reporteds;
 
     public void changeRole (Role role) {
         this.role = role;

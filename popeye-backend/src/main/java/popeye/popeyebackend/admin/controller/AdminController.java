@@ -10,6 +10,7 @@ import popeye.popeyebackend.admin.dto.AdminDailyDataDto;
 import popeye.popeyebackend.admin.dto.BanUserInfoDto;
 import popeye.popeyebackend.admin.dto.DevilUserDto;
 import popeye.popeyebackend.admin.service.AdminService;
+import popeye.popeyebackend.report.dto.ReportDto;
 
 import java.util.List;
 
@@ -24,7 +25,6 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getDailyData(days));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/manage")
     public ResponseEntity<Void> banUser(@AuthenticationPrincipal UserDetails userDetails, @RequestBody BanUserInfoDto banUserInfoDto) {
         adminService.banUser(userDetails.getUser(), banUserInfoDto);
@@ -35,5 +35,13 @@ public class AdminController {
     public ResponseEntity<List<DevilUserDto>> getDevilUsers(@RequestParam(defaultValue = "0")int page) {
         List<DevilUserDto> devilUsers = adminService.getDevilUsers(page);
         return ResponseEntity.ok(devilUsers);
+    }
+
+    @GetMapping("/reports")
+    public ResponseEntity<List<ReportDto>> getReports(
+            @RequestParam(defaultValue = "0")int page,
+            @RequestParam(defaultValue = "10")int size) {
+        List<ReportDto> reports = adminService.getReports(page, size);
+        return ResponseEntity.ok(reports);
     }
 }

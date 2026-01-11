@@ -7,6 +7,9 @@ import popeye.popeyebackend.admin.dto.AdminDailyDataDto;
 import popeye.popeyebackend.admin.dto.BanUserInfoDto;
 import popeye.popeyebackend.admin.dto.DevilUserDto;
 import popeye.popeyebackend.dailystatistics.service.DailyStatisticsService;
+import popeye.popeyebackend.report.dto.ReportDto;
+import popeye.popeyebackend.report.repository.ReportRepository;
+import popeye.popeyebackend.report.service.ReportService;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.service.UserService;
 
@@ -18,6 +21,8 @@ import java.util.List;
 public class AdminService {
     private final DailyStatisticsService dailyStatisticsService;
     private final UserService userService;
+    private final ReportService reportService;
+
 
     // daily data 받기
     @Transactional(readOnly = true)
@@ -35,5 +40,11 @@ public class AdminService {
     @Transactional(readOnly = true)
     public List<DevilUserDto> getDevilUsers(int page) {
         return userService.getDevilUsers(page).stream().map(DevilUserDto::from).toList();
+    }
+
+    // 신고 리스트
+    @Transactional(readOnly = true)
+    public List<ReportDto> getReports(int page, int size) {
+        return reportService.getReports(page, size).stream().map(ReportDto::from).toList();
     }
 }
