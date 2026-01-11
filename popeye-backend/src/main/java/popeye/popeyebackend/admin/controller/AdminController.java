@@ -24,16 +24,16 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getDailyData(days));
     }
 
-    @PatchMapping("/manage")
-    public ResponseEntity<Void> banUser(@AuthenticationPrincipal UserDetails userDetails, @RequestBody BanUserInfoDto banUserInfoDto) {
-        adminService.banUser(userDetails.getUser(), banUserInfoDto);
-        return ResponseEntity.ok().build();
-    }
-
     @GetMapping("/devil-users")
     public ResponseEntity<List<DevilUserDto>> getDevilUsers(@RequestParam(defaultValue = "0")int page) {
         List<DevilUserDto> devilUsers = adminService.getDevilUsers(page);
         return ResponseEntity.ok(devilUsers);
+    }
+
+    @PatchMapping("/devil-user")
+    public ResponseEntity<Void> banUser(@AuthenticationPrincipal UserDetails userDetails, @RequestBody BanUserInfoDto banUserInfoDto) {
+        adminService.banUser(userDetails.getUser(), banUserInfoDto);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/reports")
