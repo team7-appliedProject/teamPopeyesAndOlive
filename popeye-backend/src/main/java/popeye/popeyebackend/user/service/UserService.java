@@ -5,8 +5,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import popeye.popeyebackend.global.security.JwtTokenProvider;
 import popeye.popeyebackend.user.domain.BannedUser;
 import popeye.popeyebackend.user.domain.DevilUser;
 import popeye.popeyebackend.user.domain.User;
@@ -20,11 +22,49 @@ import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
     private final DevilUserRepository devilUserRepository;
     private final CreatorRepository creatorRepository;
     private final BannedUserRepository bannedUserRepository;
+
+    //회원가입 부분이라 기존 코드 위에 구현
+    @Transactional
+    public Long signup(SignupRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+        }
+        if (userRepository.existsByNickname(request.getNickname())) {
+            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+        }
+
+        User user = User.builder()
+                .email(request.getEmail())
+                .nickname(request.getNickname())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.USER)
+                .phoneNumber(request.getPhoneNumber())
+                .totalSpinach(1000)
+                .totalStarcandy(0)
+                .build();
+
+        return userRepository.save(user).getId();
+    }
+
+    public TokenResponse login(LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        String token = jwtTokenProvider.createToken(user.getEmail(), user.getRole().name());
+        return TokenResponse.of(token);
+    }
 
     @Transactional
     public void executeBan(User admin, Long targetId, int banDays, String reason){
