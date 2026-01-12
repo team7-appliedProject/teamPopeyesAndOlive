@@ -39,8 +39,3 @@ out/
 ### Environment ###
 .env
 .env.*
-
-### Database
-/db**
-
-*.pem
