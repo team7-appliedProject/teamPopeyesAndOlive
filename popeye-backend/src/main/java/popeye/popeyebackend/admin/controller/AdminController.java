@@ -31,11 +31,13 @@ public class AdminController {
         return ResponseEntity.ok(devilUsers);
     }
 
-    @PatchMapping("/devil-user")
+    @PatchMapping("/devil-users")
     public ResponseEntity<Void> banUser(@AuthenticationPrincipal UserDetails userDetails, @RequestBody BanUserInfoDto banUserInfoDto) {
         adminService.banUser(userDetails.getUser(), banUserInfoDto);
         return ResponseEntity.ok().build();
     }
+
+    @PatchMapping("/devil-user/{userId}")
 
     @PatchMapping("/illegal-contents")
     public ResponseEntity<Void> banIllegalContents(@AuthenticationPrincipal UserDetails userDetails, @RequestBody InactiveContentDto dto) {

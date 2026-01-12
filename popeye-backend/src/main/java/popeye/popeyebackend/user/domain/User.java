@@ -2,7 +2,6 @@ package popeye.popeyebackend.user.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.domain.ContentBan;
 import popeye.popeyebackend.content.domain.ContentBookmark;
 import popeye.popeyebackend.notification.domain.Notification;
@@ -76,7 +75,12 @@ public class User {
     @OneToOne(mappedBy = "user")
     private Creator creator;
 
+    @OneToOne(mappedBy = "user")
+    private BannedUser bannedUser;
+
     public void changeRole (Role role) {
         this.role = role;
     }
+
+
 }

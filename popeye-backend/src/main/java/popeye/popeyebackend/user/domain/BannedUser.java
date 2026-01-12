@@ -28,6 +28,10 @@ public class BannedUser {
 
     private Integer banDays;
 
+    @OneToOne
+    @JoinColumn(name = "ban_user")
+    private User user;
+
     @ManyToOne
     @JoinColumn(name = "admin_id")
     private User admin;
@@ -42,4 +46,7 @@ public class BannedUser {
         this.admin = admin;
     }
 
+    public boolean isUnbanned () {
+        return unbannedAt.isBefore(LocalDate.now());
+    }
 }

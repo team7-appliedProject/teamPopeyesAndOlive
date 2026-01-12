@@ -49,4 +49,19 @@ public class ContentService {
             contentBanRepository.save(contentBan);
         }
     }
+
+    @Transactional(readOnly = true)
+    public Content getContentById(Long contentId) {
+        return contentRepository.findById(contentId)
+                .orElseThrow(()-> new RuntimeException("no content"));
+    }
+
+    @Transactional
+    public void autoInactiveContent(Long contentId, String reason) {
+        Content content = contentRepository.findById(contentId)
+                .orElseThrow(()->new RuntimeException("no content"));
+        content.setContentStatus(ContentStatus.INACTIVE);
+        ContentBan ban = ContentBan.builder()
+                .reason(reason).build();
+    }
 }
