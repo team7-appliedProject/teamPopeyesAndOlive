@@ -10,6 +10,8 @@ import popeye.popeyebackend.content.repository.ContentBanRepository;
 import popeye.popeyebackend.content.repository.ContentRepository;
 import popeye.popeyebackend.user.domain.User;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ContentService {
@@ -26,6 +28,8 @@ public class ContentService {
             throw new RuntimeException("already active content");
         } else {
             content.setContentStatus(ContentStatus.ACTIVE);
+            ContentBan ban = contentBanRepository.findByContent(content);
+            ban.release();
         }
     }
 

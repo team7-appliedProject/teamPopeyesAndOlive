@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import popeye.popeyebackend.user.domain.User;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,13 +19,25 @@ public class ContentBan {
 
     private String reason;
     private LocalDateTime date = LocalDateTime.now();
+    private LocalDate releaseDate;
+
+    private boolean isBanned = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private User admin;
+
+    @OneToOne
+    @JoinColumn(name = "content_id")
+    private Content content;
 
     @Builder
     public ContentBan(String reason, User admin) {
         this.reason = reason;
         this.admin = admin;
+    }
+
+    public void release() {
+        this.date = LocalDateTime.now();
+        this.isBanned = false;
     }
 }
