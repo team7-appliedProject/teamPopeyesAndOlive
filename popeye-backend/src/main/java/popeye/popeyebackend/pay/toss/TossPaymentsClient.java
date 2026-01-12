@@ -21,7 +21,7 @@ public class TossPaymentsClient {
     private final RestTemplate restTemplate;
 
     public TossConfirmResponseDto confirm(String paymentKey, String orderId, int amount) {
-        String url = props.getBaseUrl() + "/v1/payments/confirm"; // :contentReference[oaicite:4]{index=4}
+        String url = props.getBaseUrl() + "/v1/payments/confirm";
         HttpHeaders headers = defaultHeaders();
         TossConfirmRequestDto body = new TossConfirmRequestDto(paymentKey, orderId, amount);
         return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(body, headers), TossConfirmResponseDto.class)
@@ -29,7 +29,6 @@ public class TossPaymentsClient {
     }
 
     public TossCancelResponseDto cancel(String paymentKey, String cancelReason) {
-        // POST /v1/payments/{paymentKey}/cancel :contentReference[oaicite:5]{index=5}
         String url = props.getBaseUrl() + "/v1/payments/" + paymentKey + "/cancel";
         HttpHeaders headers = defaultHeaders();
         TossCancelRequestDto body = new TossCancelRequestDto(cancelReason, null); // 전액 취소
