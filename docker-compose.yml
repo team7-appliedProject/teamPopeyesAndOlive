@@ -22,6 +22,11 @@ services:
     depends_on:
       - db
     restart: on-failure
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DB_URL}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
 
   frontend:
     image: corqu/popeye-frontend:latest
