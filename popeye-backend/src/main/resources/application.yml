@@ -1,7 +1,4 @@
 spring:
-  application:
-    name: PopeyeAndOlive
-
   datasource:
     url: ${SPRING_DB_URL}
     username: ${MYSQL_USER}
@@ -15,7 +12,6 @@ spring:
 popeye:
   secret-key: "my_super_secret_key_popeye_1234!"
 
-  # Redis설정(인증 및 캐시용)
   data:
     redis:
       host: ${REDIS_HOST:localhost}
