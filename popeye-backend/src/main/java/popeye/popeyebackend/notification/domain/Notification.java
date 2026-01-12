@@ -1,4 +1,4 @@
-package popeye.popeyebackend.notificaion.domain;
+package popeye.popeyebackend.notification.domain;
 
 import jakarta.persistence.*;
 import popeye.popeyebackend.user.domain.User;

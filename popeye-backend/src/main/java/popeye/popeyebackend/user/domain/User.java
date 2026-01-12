@@ -7,7 +7,7 @@ import popeye.popeyebackend.pay.domain.Credit;
 import popeye.popeyebackend.pay.domain.Order;
 import popeye.popeyebackend.pay.domain.Payment;
 import popeye.popeyebackend.pay.domain.Settlement;
-import popeye.popeyebackend.notificaion.domain.Notification;
+import popeye.popeyebackend.notification.domain.Notification;
 import popeye.popeyebackend.report.domain.Report;
 import popeye.popeyebackend.user.enums.Role;
 
