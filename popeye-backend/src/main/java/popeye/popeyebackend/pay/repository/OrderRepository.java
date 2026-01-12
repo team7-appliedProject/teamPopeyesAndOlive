@@ -3,7 +3,7 @@ package popeye.popeyebackend.pay.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import popeye.popeyebackend.pay.entity.Order;
+import popeye.popeyebackend.pay.domain.Order;
 
 import java.time.LocalDateTime;
 

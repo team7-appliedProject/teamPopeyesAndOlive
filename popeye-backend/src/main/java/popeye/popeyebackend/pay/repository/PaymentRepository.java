@@ -2,7 +2,7 @@ package popeye.popeyebackend.pay.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import popeye.popeyebackend.pay.entity.Payment;
+import popeye.popeyebackend.pay.domain.Payment;
 import popeye.popeyebackend.pay.enums.PaymentType;
 
 import java.time.LocalDateTime;

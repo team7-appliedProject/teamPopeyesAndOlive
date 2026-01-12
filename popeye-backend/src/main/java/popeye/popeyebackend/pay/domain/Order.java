@@ -1,4 +1,4 @@
-package popeye.popeyebackend.pay.entity;
+package popeye.popeyebackend.pay.domain;
 
 import jakarta.persistence.*;
 import popeye.popeyebackend.content.domain.Content;

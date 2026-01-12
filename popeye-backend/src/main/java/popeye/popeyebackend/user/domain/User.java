@@ -2,12 +2,11 @@ package popeye.popeyebackend.user.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.domain.ContentBookmark;
-import popeye.popeyebackend.pay.entity.Credit;
-import popeye.popeyebackend.pay.entity.Order;
-import popeye.popeyebackend.pay.entity.Payment;
-import popeye.popeyebackend.pay.entity.Settlement;
+import popeye.popeyebackend.pay.domain.Credit;
+import popeye.popeyebackend.pay.domain.Order;
+import popeye.popeyebackend.pay.domain.Payment;
+import popeye.popeyebackend.pay.domain.Settlement;
 import popeye.popeyebackend.notificaion.domain.Notification;
 import popeye.popeyebackend.report.domain.Report;
 import popeye.popeyebackend.user.enums.Role;

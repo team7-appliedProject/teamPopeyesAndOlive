@@ -2,10 +2,9 @@ package popeye.popeyebackend.content.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import popeye.popeyebackend.pay.entity.Order;
+import popeye.popeyebackend.pay.domain.Order;
 import popeye.popeyebackend.report.domain.Report;
 import popeye.popeyebackend.user.domain.Creator;
-import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.content.enums.ContentStatus;
 
 import java.time.LocalDateTime;
