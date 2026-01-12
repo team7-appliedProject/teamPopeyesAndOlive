@@ -1,16 +1,13 @@
 package popeye.popeyebackend.user.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "banned_users")
-@Getter
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class BannedUser {

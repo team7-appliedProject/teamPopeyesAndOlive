@@ -38,6 +38,10 @@ public class AdminController {
     }
 
     @PatchMapping("/devil-user/{userId}")
+    public ResponseEntity<Void> unbanUser(@PathVariable Long userId) {
+        adminService.unbanUser(userId);
+        return ResponseEntity.ok().build();
+    }
 
     @PatchMapping("/illegal-contents")
     public ResponseEntity<Void> banIllegalContents(@AuthenticationPrincipal UserDetails userDetails, @RequestBody InactiveContentDto dto) {

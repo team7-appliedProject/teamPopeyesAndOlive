@@ -38,6 +38,12 @@ public class AdminService {
         userService.executeBan(admin, userInfoDto.banUserId(), userInfoDto.banDays(), userInfoDto.reason());
     }
 
+    // 유저 차단 해제
+    @Transactional
+    public void unbanUser(Long userId) {
+        userService.unBanUser(userId);
+    }
+
     // 유저 악성 정보
     @Transactional(readOnly = true)
     public List<DevilUserDto> getDevilUsers(int page) {
