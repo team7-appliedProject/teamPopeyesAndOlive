@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import popeye.popeyebackend.admin.dto.AdminDailyDataDto;
 import popeye.popeyebackend.admin.dto.BanUserInfoDto;
 import popeye.popeyebackend.admin.dto.DevilUserDto;
+import popeye.popeyebackend.admin.dto.InactiveContentDto;
 import popeye.popeyebackend.dailystatistics.service.DailyStatisticsService;
 import popeye.popeyebackend.report.dto.ReportProcessDto;
 import popeye.popeyebackend.report.service.ReportService;
@@ -39,6 +40,11 @@ public class AdminService {
     @Transactional(readOnly = true)
     public List<DevilUserDto> getDevilUsers(int page) {
         return userService.getDevilUsers(page).stream().map(DevilUserDto::from).toList();
+    }
+
+    @Transactional
+    public void inactiveContent(User admin, InactiveContentDto inactiveContentDto){
+        contentService
     }
 
     // 신고 리스트

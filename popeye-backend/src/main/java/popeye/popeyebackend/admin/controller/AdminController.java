@@ -36,6 +36,11 @@ public class AdminController {
         return ResponseEntity.ok().build();
     }
 
+    @PatchMapping("/illegal-contents")
+    public ResponseEntity<Void> banIllegalContents(@AuthenticationPrincipal UserDetails userDetails) {
+
+    }
+
     @GetMapping("/reports")
     public ResponseEntity<List<ReportProcessDto>> getReports(
             @RequestParam(defaultValue = "0")int page,
