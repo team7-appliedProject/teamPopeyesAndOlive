@@ -44,7 +44,7 @@ public class TossPaymentsClient {
     }
 
     private String basicAuthHeader(String secretKey) {
-        // secretKey 뒤에 ":" 붙여 base64 인코딩 :contentReference[oaicite:4]{index=4}
+        // secretKey 뒤에 ":" 붙여 base64 인코딩
         String raw = secretKey + ":";
         String encoded = Base64.getEncoder().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
         return "Basic " + encoded;
