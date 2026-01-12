@@ -28,6 +28,10 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
 
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+
   frontend:
     image: corqu/popeye-frontend:latest
     container_name: frontend
@@ -52,10 +56,17 @@ services:
     volumes:
       - ./db/data:/var/lib/mysql
       - ./db/init:/docker-entrypoint-initdb.d
-
     restart: on-failure
     networks:
       - popeye-net
+
+  redis:
+    image: redis:alpine
+    container_name: popeye-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+    volumes:
+      - ./redis/data:/data
+    networks: -popeye-net
 
 networks:
   popeye-net:
