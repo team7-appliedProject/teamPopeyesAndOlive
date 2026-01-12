@@ -51,8 +51,14 @@ public class User {
     private List<Notification> notifications;
 
     @OneToMany(mappedBy = "user")
-    private List<Bookmark> bookmarks;
+    private List<ContentBookmark> bookmarks;
 
     @OneToOne(mappedBy = "user")
     private DevilUser devilUser;
+
+    @OneToMany(mappedBy = "reporter")
+    private List<Complain> complains;
+
+    @OneToMany(mappedBy = "reported")
+    private List<Complain> complained;
 }

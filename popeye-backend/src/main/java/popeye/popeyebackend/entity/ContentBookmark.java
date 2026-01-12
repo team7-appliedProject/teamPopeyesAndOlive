@@ -1,29 +1,27 @@
-package popeye.popeyebackend.entity.content;
+package popeye.popeyebackend.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import popeye.popeyebackend.entity.Content;
-import popeye.popeyebackend.entity.User;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "content_likes")
+@Table(name = "content_bookmarks")
 @Getter
 @NoArgsConstructor
-public class ContentLike {
+public class ContentBookmark {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "like_id")
+    @Column(name = "bookmark_id") //
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id") // BIGINT(FK)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "content_id")
+    @JoinColumn(name = "content_id") // BIGINT(FK)
     private Content content;
 
     @Column(name = "created_at", updatable = false)

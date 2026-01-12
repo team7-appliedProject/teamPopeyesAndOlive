@@ -1,9 +1,9 @@
 package popeye.popeyebackend.entity;
 
 import jakarta.persistence.*;
-import popeye.popeyebackend.entity.content.ContentBookmark;
 import popeye.popeyebackend.enums.ContentStatus;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -41,4 +41,19 @@ public class Content {
 
     @OneToMany(mappedBy = "content")
     private List<Order> orders;
+
+    public void activate() {    // 컨텐츠 공개
+        this.contentStatus = ContentStatus.ACTIVE;
+        this.modifiedAt = LocalDateTime.now();
+    }
+
+    public void deactivate() {
+        this.contentStatus = ContentStatus.INACTIVE;
+        this.modifiedAt = LocalDateTime.now();
+    }
+
+    public boolean isActive() {
+        return this.contentStatus.equals(ContentStatus.ACTIVE);
+    }
+
 }
