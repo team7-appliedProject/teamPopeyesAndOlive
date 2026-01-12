@@ -1,6 +1,8 @@
 package popeye.popeyebackend.user.domain;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import popeye.popeyebackend.content.domain.ContentBan;
 import popeye.popeyebackend.content.domain.ContentBookmark;
@@ -17,23 +19,30 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
+@AllArgsConstructor
+@Builder
 @Getter
 public class User {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(unique = true, nullable = false)
     private String nickname;
 
+    @Column(nullable = true)
     private String password;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Role role;
 
     private LocalDateTime createdAt =  LocalDateTime.now();
 
-    @Column(name = "phone_number", unique = true)
+    @Column(name = "phone_number", unique = true, nullable = false)
     private Long number;
 
     @Column(name = "total_spinach")
