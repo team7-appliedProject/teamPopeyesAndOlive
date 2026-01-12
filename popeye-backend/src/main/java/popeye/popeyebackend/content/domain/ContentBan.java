@@ -37,7 +37,7 @@ public class ContentBan {
     }
 
     public void release() {
-        this.date = LocalDateTime.now();
+        this.releaseDate = LocalDate.now();
         this.isBanned = false;
     }
 }

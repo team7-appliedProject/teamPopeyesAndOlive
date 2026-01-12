@@ -20,6 +20,7 @@ public class Order {
     @Column(name = "created_at")
     private LocalDateTime orderDate=LocalDateTime.now();
 
+    @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -23,6 +23,8 @@ public class Creator {
     @Column(length = 500)
     private String account;
 
+    private String bankName;
+
     @OneToMany(mappedBy = "creator")
     private List<Content> contents;
 }
