@@ -7,6 +7,7 @@ import popeye.popeyebackend.admin.dto.AdminDailyDataDto;
 import popeye.popeyebackend.admin.dto.BanUserInfoDto;
 import popeye.popeyebackend.admin.dto.DevilUserDto;
 import popeye.popeyebackend.admin.dto.InactiveContentDto;
+import popeye.popeyebackend.content.service.ContentService;
 import popeye.popeyebackend.dailystatistics.service.DailyStatisticsService;
 import popeye.popeyebackend.report.dto.ReportProcessDto;
 import popeye.popeyebackend.report.service.ReportService;
@@ -22,6 +23,7 @@ public class AdminService {
     private final DailyStatisticsService dailyStatisticsService;
     private final UserService userService;
     private final ReportService reportService;
+    private final ContentService contentService;
 
 
     // daily data 받기
@@ -44,7 +46,14 @@ public class AdminService {
 
     @Transactional
     public void inactiveContent(User admin, InactiveContentDto inactiveContentDto){
-        contentService
+        contentService.inactiveContent(inactiveContentDto.contentId()
+                , inactiveContentDto.reason()
+                , admin);
+    }
+
+    @Transactional
+    public void activeContent(Long contentId) {
+        contentService.activeContent(contentId);
     }
 
     // 신고 리스트

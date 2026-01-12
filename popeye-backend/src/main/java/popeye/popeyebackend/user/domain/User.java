@@ -1,7 +1,9 @@
 package popeye.popeyebackend.user.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import popeye.popeyebackend.content.domain.Content;
+import popeye.popeyebackend.content.domain.ContentBan;
 import popeye.popeyebackend.content.domain.ContentBookmark;
 import popeye.popeyebackend.notification.domain.Notification;
 import popeye.popeyebackend.pay.domain.Credit;
@@ -67,6 +69,9 @@ public class User {
 
     @OneToOne(mappedBy = "user")
     private DevilUser devilUser;
+
+    @OneToMany(mappedBy = "admin")
+    private List<ContentBan> contentBans;
 
     @OneToOne(mappedBy = "user")
     private Creator creator;

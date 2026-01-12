@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import popeye.popeyebackend.admin.dto.AdminDailyDataDto;
 import popeye.popeyebackend.admin.dto.BanUserInfoDto;
 import popeye.popeyebackend.admin.dto.DevilUserDto;
+import popeye.popeyebackend.admin.dto.InactiveContentDto;
 import popeye.popeyebackend.admin.service.AdminService;
 import popeye.popeyebackend.report.dto.ReportProcessDto;
 
@@ -37,8 +38,15 @@ public class AdminController {
     }
 
     @PatchMapping("/illegal-contents")
-    public ResponseEntity<Void> banIllegalContents(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Void> banIllegalContents(@AuthenticationPrincipal UserDetails userDetails, @RequestBody InactiveContentDto dto) {
+        adminService.inactiveContent(userDetails.getUser(), dto);
+        return ResponseEntity.ok().build();
+    }
 
+    @PatchMapping("/illegal-contents/{contentId}")
+    public ResponseEntity<Void> unbanContents(@PathVariable Long contentId) {
+        adminService.activeContent(contentId);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/reports")
