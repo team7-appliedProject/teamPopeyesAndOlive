@@ -34,8 +34,8 @@ public class AdminService {
 
     // 유저 차단 관리
     @Transactional
-    public void banUser(User admin, BanUserInfoDto userInfoDto){
-        userService.executeBan(admin, userInfoDto.banUserId(), userInfoDto.banDays(), userInfoDto.reason());
+    public void banUser(Long adminId, BanUserInfoDto userInfoDto){
+        userService.executeBan(adminId, userInfoDto.banUserId(), userInfoDto.banDays(), userInfoDto.reason());
     }
 
     // 유저 차단 해제
@@ -51,10 +51,10 @@ public class AdminService {
     }
 
     @Transactional
-    public void inactiveContent(User admin, InactiveContentDto inactiveContentDto){
+    public void inactiveContent(Long adminId, InactiveContentDto inactiveContentDto){
         contentService.inactiveContent(inactiveContentDto.contentId()
                 , inactiveContentDto.reason()
-                , admin);
+                , adminId);
     }
 
     @Transactional

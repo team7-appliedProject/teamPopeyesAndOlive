@@ -27,7 +27,9 @@ public class UserService {
     private final BannedUserRepository bannedUserRepository;
 
     @Transactional
-    public void executeBan(User admin, Long targetId, int banDays, String reason){
+    public void executeBan(Long adminId, Long targetId, int banDays, String reason){
+        User admin = userRepository.findById(adminId)
+                .orElseThrow(() -> new RuntimeException("admin not found"));
         User userFound = userRepository.findById(targetId)
                 .orElseThrow(()->new RuntimeException("no User found"));
         DevilUser devilUser = devilUserRepository.findByUser(userFound)
@@ -61,5 +63,11 @@ public class UserService {
     public Page<DevilUser> getDevilUsers(int page) {
         Pageable pageable = PageRequest.of(page, 30, Sort.by("user.nickname").ascending());
         return devilUserRepository.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public User getUser(Long id){
+        return userRepository.findById(id)
+                .orElseThrow(()->new RuntimeException("no User found"));
     }
 }

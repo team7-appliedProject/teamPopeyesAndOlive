@@ -10,6 +10,7 @@ import popeye.popeyebackend.admin.dto.BanUserInfoDto;
 import popeye.popeyebackend.admin.dto.DevilUserDto;
 import popeye.popeyebackend.admin.dto.InactiveContentDto;
 import popeye.popeyebackend.admin.service.AdminService;
+import popeye.popeyebackend.global.security.details.PrincipalDetails;
 import popeye.popeyebackend.report.dto.ReportProcessDto;
 
 import java.util.List;
@@ -32,8 +33,8 @@ public class AdminController {
     }
 
     @PatchMapping("/devil-users")
-    public ResponseEntity<Void> banUser(@AuthenticationPrincipal UserDetails userDetails, @RequestBody BanUserInfoDto banUserInfoDto) {
-        adminService.banUser(userDetails.getUser(), banUserInfoDto);
+    public ResponseEntity<Void> banUser(@AuthenticationPrincipal PrincipalDetails principalDetails, @RequestBody BanUserInfoDto banUserInfoDto) {
+        adminService.banUser(principalDetails.getUserId(), banUserInfoDto);
         return ResponseEntity.ok().build();
     }
 
@@ -44,8 +45,8 @@ public class AdminController {
     }
 
     @PatchMapping("/illegal-contents")
-    public ResponseEntity<Void> banIllegalContents(@AuthenticationPrincipal UserDetails userDetails, @RequestBody InactiveContentDto dto) {
-        adminService.inactiveContent(userDetails.getUser(), dto);
+    public ResponseEntity<Void> banIllegalContents(@AuthenticationPrincipal PrincipalDetails principalDetails, @RequestBody InactiveContentDto dto) {
+        adminService.inactiveContent(principalDetails.getUserId(), dto);
         return ResponseEntity.ok().build();
     }
 
