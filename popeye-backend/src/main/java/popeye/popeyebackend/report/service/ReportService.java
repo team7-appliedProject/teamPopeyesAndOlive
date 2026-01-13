@@ -17,6 +17,10 @@ import popeye.popeyebackend.report.dto.ReportProcessDto;
 import popeye.popeyebackend.report.dto.ReportResDto;
 import popeye.popeyebackend.report.enums.ReportState;
 import popeye.popeyebackend.report.enums.TargetType;
+import popeye.popeyebackend.report.exception.AlreadyProcessedException;
+import popeye.popeyebackend.report.exception.AlreadyReportException;
+import popeye.popeyebackend.report.exception.NoReportFoundException;
+import popeye.popeyebackend.report.exception.MissedReportTypeException;
 import popeye.popeyebackend.report.repository.ReportRepository;
 import popeye.popeyebackend.user.domain.DevilUser;
 import popeye.popeyebackend.user.service.UserService;
@@ -46,12 +50,12 @@ public class ReportService {
     @Transactional
     public void reportProcess(ReportProcessDto reportProcessDto) {
         Report report = reportRepository.findById(reportProcessDto.reportId())
-                .orElseThrow(() -> new RuntimeException("Report not found"));
+                .orElseThrow(() -> new NoReportFoundException("Report not found"));
 
         ReportState state = report.getState();
 
         if (state != ReportState.REQUESTED) {
-            throw new RuntimeException("이미 처리된 신고입니다.");
+            throw new AlreadyProcessedException("이미 처리된 신고입니다.");
         }
 
         switch (reportProcessDto.state()) {
@@ -96,7 +100,7 @@ public class ReportService {
         Long isAdded = redisTemplate.opsForSet().add(historyKey, userId.toString());
 
         if (isAdded == 0) {
-            throw new IllegalArgumentException("이미 신고한 게시글입니다.");
+            throw new AlreadyReportException("이미 신고한 게시글입니다.");
         }
 
         if (count != null && count == 1) {
@@ -123,7 +127,7 @@ public class ReportService {
                 yield saveReport;
             }
 
-            default -> throw new IllegalArgumentException("잘못된 신고 타입입니다.");
+            default -> throw new MissedReportTypeException("잘못된 신고 타입입니다.");
         };
 
         return ReportResDto.from(save);

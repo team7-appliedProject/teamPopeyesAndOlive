@@ -19,7 +19,6 @@ public class DailyStatisticsService {
         LocalDate startDate = LocalDate.now().minusDays(days);
         LocalDate endDate = LocalDate.now().minusDays(1);
 
-        List<DailyStatistics> dailyStatistics = dailyStatisticsRepository.findByDateBetween(startDate, endDate);
-        return dailyStatistics;
+        return dailyStatisticsRepository.findByDateBetween(startDate, endDate);
     }
 }
