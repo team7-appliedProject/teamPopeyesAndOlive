@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,10 +12,14 @@ import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.enums.ContentStatus;
 import popeye.popeyebackend.content.service.ContentService;
 import popeye.popeyebackend.report.domain.Report;
+import popeye.popeyebackend.report.dto.ReportReqDto;
 import popeye.popeyebackend.report.dto.ReportProcessDto;
+import popeye.popeyebackend.report.dto.ReportResDto;
 import popeye.popeyebackend.report.enums.ReportState;
+import popeye.popeyebackend.report.enums.TargetType;
 import popeye.popeyebackend.report.repository.ReportRepository;
 import popeye.popeyebackend.user.domain.DevilUser;
+import popeye.popeyebackend.user.service.UserService;
 
 import java.time.Duration;
 
@@ -30,6 +33,7 @@ public class ReportService {
     private static final int REPORT_LIMIT = 30; // 30번 신고되면 차단
     private static final long REPORT_TTL = 24;
     private final ContentService contentService;
+    private final UserService userService;
 
     @Transactional(readOnly = true)
     public Page<Report> getReports(int page, int size) {
@@ -97,5 +101,30 @@ public class ReportService {
         redisTemplate.delete(key);
 
         log.info("게시글 {}번이 신고 누적으로 자동 차단되었습니다.", contentId);
+    }
+
+    // 게시글 신고하기
+    @Transactional
+    public ReportResDto makeReport(ReportReqDto reportReqDto) {
+        Report save = switch (reportReqDto.type()) {
+            case CONTENT -> {
+                Report report = addContentReport(reportReqDto);
+                Report saveReport = reportRepository.save(report);
+                handleContentAutoBlock(saveReport.getId());
+                yield saveReport;
+            }
+
+            default -> throw new IllegalArgumentException("잘못된 신고 타입입니다.");
+        };
+
+        return ReportResDto.from(save);
+    }
+
+    private Report addContentReport(ReportReqDto reportReqDto) {
+        return Report.builder()
+                .reportDescription(reportReqDto.reason())
+                .targetType(TargetType.CONTENT)
+                .reporter(userService.getUser(reportReqDto.reportUserId()))
+                .targetContent(contentService.getContentById(reportReqDto.targetId())).build();
     }
 }

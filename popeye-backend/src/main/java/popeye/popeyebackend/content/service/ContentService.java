@@ -9,6 +9,7 @@ import popeye.popeyebackend.content.enums.ContentStatus;
 import popeye.popeyebackend.content.repository.ContentBanRepository;
 import popeye.popeyebackend.content.repository.ContentRepository;
 import popeye.popeyebackend.user.domain.User;
+import popeye.popeyebackend.user.service.UserService;
 
 import java.util.List;
 
@@ -17,6 +18,7 @@ import java.util.List;
 public class ContentService {
     private final ContentRepository contentRepository;
     private final ContentBanRepository contentBanRepository;
+    private final UserService userService;
 
     @Transactional
     public void activeContent(Long contentId){
@@ -34,7 +36,8 @@ public class ContentService {
     }
 
     @Transactional
-    public void inactiveContent(Long contentId, String reason, User admin) {
+    public void inactiveContent(Long contentId, String reason, Long adminId) {
+        User admin = userService.getUser(adminId);
         Content content = contentRepository.findById(contentId)
                 .orElseThrow(()->new RuntimeException("컨텐츠가 없습니다."));
 
