@@ -1,4 +1,4 @@
-package popeye.popeyebackend.user.service;
+package popeye.popeyebackend.global.security.service;
 
 import popeye.popeyebackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
