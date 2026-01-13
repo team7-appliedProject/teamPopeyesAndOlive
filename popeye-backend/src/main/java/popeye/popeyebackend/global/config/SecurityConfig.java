@@ -1,7 +1,7 @@
 package popeye.popeyebackend.global.config;
 
-import popeye.popeyebackend.global.security.JwtAuthenticationFilter;
-import popeye.popeyebackend.global.security.JwtTokenProvider;
+import popeye.popeyebackend.global.security.jwt.JwtAuthenticationFilter;
+import popeye.popeyebackend.global.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
