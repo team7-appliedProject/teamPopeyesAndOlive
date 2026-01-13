@@ -12,7 +12,5 @@ public enum Role {
     BLOCKED("ROLE_BLOCKED");
 
     private final String key;
-    public static Role findByKey(String key) {
-        for (Role role : Role.values()) {}
-    }
+
 }
