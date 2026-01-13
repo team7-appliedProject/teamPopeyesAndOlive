@@ -4,10 +4,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import popeye.popeyebackend.pay.dto.ChargeRequestDto;
-import popeye.popeyebackend.pay.dto.ConfirmPaymentRequestDto;
-import popeye.popeyebackend.pay.dto.PreparePaymentResponseDto;
-import popeye.popeyebackend.pay.dto.RefundRequestDto;
+import popeye.popeyebackend.pay.dto.payment.ChargeRequestDto;
+import popeye.popeyebackend.pay.dto.payment.ConfirmPaymentRequestDto;
+import popeye.popeyebackend.pay.dto.payment.PreparePaymentResponseDto;
+import popeye.popeyebackend.pay.dto.payment.RefundRequestDto;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.repository.UserRepository;
 import popeye.popeyebackend.pay.service.PaymentService;
@@ -50,8 +50,6 @@ public class PaymentController {
                 confirmPaymentRequestDto.getPgOrderId(),
                 confirmPaymentRequestDto.getPaymentKey(),
                 confirmPaymentRequestDto.getAmount()
-
-
         );
         return ResponseEntity.noContent().build();
     }

@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpStatusCodeException;
 import popeye.popeyebackend.pay.domain.Credit;
 import popeye.popeyebackend.pay.domain.Payment;
-import popeye.popeyebackend.pay.dto.PreparePaymentResponseDto;
+import popeye.popeyebackend.pay.dto.payment.PreparePaymentResponseDto;
 import popeye.popeyebackend.pay.toss.TossPaymentsClient;
 import popeye.popeyebackend.pay.toss.dto.confirm.TossConfirmResponseDto;
 import popeye.popeyebackend.user.domain.User;

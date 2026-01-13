@@ -1,6 +1,7 @@
 package popeye.popeyebackend.content.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.content.enums.ContentStatus;
 import popeye.popeyebackend.pay.domain.Order;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Getter
 @Table(name = "contents")
 public class Content {
     @Id

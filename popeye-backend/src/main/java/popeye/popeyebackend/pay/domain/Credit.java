@@ -53,5 +53,12 @@ public class Credit {
     public void zeroize(){
         this.amount = 0;
     }
+
+    // Credit 차감
+    public void deduct(int value) {
+        if (value < 0) throw new IllegalArgumentException("차감 값은 0이상이어야 합니다.");
+        if (this.amount < value) throw new IllegalStateException("Credit 수량이 부족합니다.");
+        this.amount -= value;
+    }
 }
 

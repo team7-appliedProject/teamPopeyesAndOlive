@@ -1,4 +1,4 @@
-package popeye.popeyebackend.pay.dto;
+package popeye.popeyebackend.pay.dto.payment;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;

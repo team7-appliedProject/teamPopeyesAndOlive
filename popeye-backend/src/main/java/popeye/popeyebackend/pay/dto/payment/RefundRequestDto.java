@@ -1,4 +1,4 @@
-package popeye.popeyebackend.pay.dto;
+package popeye.popeyebackend.pay.dto.payment;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
