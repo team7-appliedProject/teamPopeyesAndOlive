@@ -1,6 +1,6 @@
 package popeye.popeyebackend.admin.dto;
 
-import popeye.popeyebackend.content.domain.Content;
+import popeye.popeyebackend.content.domain.ContentBan;
 import popeye.popeyebackend.content.enums.ContentStatus;
 
 public record InactiveContentDto(
@@ -8,10 +8,11 @@ public record InactiveContentDto(
         String reason,
         ContentStatus status
 ) {
-    public static InactiveContentDto getInactiveContentDto(Content content) {
+    public static InactiveContentDto getInactiveContentDto(ContentBan contentBan) {
         return new InactiveContentDto(
-                content.getId(),
-
-        )
+                contentBan.getContent().getId(),
+                contentBan.getReason(),
+                contentBan.getContent().getContentStatus()
+        );
     }
 }
