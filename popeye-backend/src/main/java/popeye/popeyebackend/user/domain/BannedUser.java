@@ -7,7 +7,8 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "banned_users")
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class BannedUser {
@@ -43,7 +44,7 @@ public class BannedUser {
         this.admin = admin;
     }
 
-    public boolean isUnbanned () {
+    public boolean isUnbanned() {
         return unbannedAt.isBefore(LocalDate.now());
     }
 }

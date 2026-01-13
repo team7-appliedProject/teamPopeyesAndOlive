@@ -28,7 +28,7 @@ public class Content {
 
     private boolean isFree;
 
-    private LocalDateTime createdAt =  LocalDateTime.now();
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime modifiedAt;
 

@@ -58,7 +58,7 @@ public class ReportService {
             case REJECTED -> {
                 report.setReportState(ReportState.REJECTED);
             }
-            case TRUE ->{
+            case TRUE -> {
                 switch (reportProcessDto.targetType()) {
                     case CONTENT -> blockContent(report.getTargetContent());
                 }

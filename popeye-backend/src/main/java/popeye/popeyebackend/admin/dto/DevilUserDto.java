@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import popeye.popeyebackend.user.domain.DevilUser;
 
 @Schema(description = "유저 악성 정보")
-public record DevilUserDto (
+public record DevilUserDto(
         @Schema(description = "유저 pk값")
         Long userId,
         @Schema(description = "유저 닉네임")

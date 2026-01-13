@@ -36,7 +36,7 @@ public class AdminController {
     @Operation(summary = "유저 악성 정보 조회", description = "플랫폼 활동에서 잘못한 정보들을 모아서 보여줍니다.")
     @GetMapping("/devil-users")
     public ResponseEntity<List<DevilUserDto>> getDevilUsers(
-            @RequestParam(defaultValue = "0")int page) {
+            @RequestParam(defaultValue = "0") int page) {
         List<DevilUserDto> devilUsers = adminService.getDevilUsers(page);
         return ResponseEntity.ok(devilUsers);
     }
@@ -80,8 +80,8 @@ public class AdminController {
     @Operation(summary = "신고 조회", description = "유저들의 신고를 조회합니다.")
     @GetMapping("/reports")
     public ResponseEntity<List<ReportProcessDto>> getReports(
-            @RequestParam(defaultValue = "0")int page,
-            @RequestParam(defaultValue = "10")int size) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         List<ReportProcessDto> reports = adminService.getReports(page, size);
         return ResponseEntity.ok(reports);
     }

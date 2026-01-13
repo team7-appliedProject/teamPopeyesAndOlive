@@ -27,13 +27,13 @@ public class UserService {
     private final BannedUserRepository bannedUserRepository;
 
     @Transactional
-    public void executeBan(Long adminId, Long targetId, int banDays, String reason){
+    public void executeBan(Long adminId, Long targetId, int banDays, String reason) {
         User admin = userRepository.findById(adminId)
                 .orElseThrow(() -> new RuntimeException("admin not found"));
         User userFound = userRepository.findById(targetId)
-                .orElseThrow(()->new RuntimeException("no User found"));
+                .orElseThrow(() -> new RuntimeException("no User found"));
         DevilUser devilUser = devilUserRepository.findByUser(userFound)
-                .orElseThrow(()->new RuntimeException("no User found"));
+                .orElseThrow(() -> new RuntimeException("no User found"));
 
         userFound.changeRole(Role.BLOCKED);
         devilUser.plusBlockedDays(banDays);
@@ -50,11 +50,11 @@ public class UserService {
     }
 
     @Transactional
-    public void unBanUser(Long targetId){
+    public void unBanUser(Long targetId) {
         User targetUser = userRepository.findById(targetId)
-                .orElseThrow(()->new RuntimeException("no User found"));
+                .orElseThrow(() -> new RuntimeException("no User found"));
         BannedUser user = bannedUserRepository.findByUser(targetUser)
-                .orElseThrow(()->new RuntimeException("no User found"));
+                .orElseThrow(() -> new RuntimeException("no User found"));
         user.setUnbannedAt(LocalDate.now());
         // role을 바꿔주는 역할은 CustomUserDetailsService에서 실시
     }
@@ -66,8 +66,8 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public User getUser(Long id){
+    public User getUser(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(()->new RuntimeException("no User found"));
+                .orElseThrow(() -> new RuntimeException("no User found"));
     }
 }

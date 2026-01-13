@@ -31,7 +31,7 @@ public class User {
     @Enumerated
     private Role role;
 
-    private LocalDateTime createdAt =  LocalDateTime.now();
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "phone_number", unique = true)
     private Long number;
@@ -78,7 +78,7 @@ public class User {
     @OneToOne(mappedBy = "user")
     private BannedUser bannedUser;
 
-    public void changeRole (Role role) {
+    public void changeRole(Role role) {
         this.role = role;
     }
 

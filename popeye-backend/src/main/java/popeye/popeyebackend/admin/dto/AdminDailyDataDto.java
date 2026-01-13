@@ -28,7 +28,7 @@ public record AdminDailyDataDto(
 ) {
 
 
-    public static AdminDailyDataDto from(DailyStatistics dailyStatistics){
+    public static AdminDailyDataDto from(DailyStatistics dailyStatistics) {
         return new AdminDailyDataDto(
                 dailyStatistics.getDate(),
                 dailyStatistics.getDailyPaymentAmount(),

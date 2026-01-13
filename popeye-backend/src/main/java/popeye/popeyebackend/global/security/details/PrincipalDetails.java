@@ -10,6 +10,7 @@ import java.util.Collections;
 
 public class PrincipalDetails implements UserDetails {
     private final User user;
+
     public PrincipalDetails(User user) {
         this.user = user;
     }

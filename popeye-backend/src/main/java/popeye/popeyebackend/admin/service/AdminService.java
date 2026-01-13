@@ -28,13 +28,13 @@ public class AdminService {
 
     // daily data 받기
     @Transactional(readOnly = true)
-    public List<AdminDailyDataDto> getDailyData(int days){
+    public List<AdminDailyDataDto> getDailyData(int days) {
         return dailyStatisticsService.getDailyData(days).stream().map(AdminDailyDataDto::from).toList();
     }
 
     // 유저 차단 관리
     @Transactional
-    public void banUser(Long adminId, BanUserInfoDto userInfoDto){
+    public void banUser(Long adminId, BanUserInfoDto userInfoDto) {
         userService.executeBan(adminId, userInfoDto.banUserId(), userInfoDto.banDays(), userInfoDto.reason());
     }
 
@@ -51,7 +51,7 @@ public class AdminService {
     }
 
     @Transactional
-    public void inactiveContent(Long adminId, InactiveContentDto inactiveContentDto){
+    public void inactiveContent(Long adminId, InactiveContentDto inactiveContentDto) {
         contentService.inactiveContent(inactiveContentDto.contentId()
                 , inactiveContentDto.reason()
                 , adminId);
@@ -70,7 +70,7 @@ public class AdminService {
 
     // 신고 처리
     @Transactional
-    public void reportProcess(ReportProcessDto reportProcessDto){
+    public void reportProcess(ReportProcessDto reportProcessDto) {
         reportService.reportProcess(reportProcessDto);
     }
 }

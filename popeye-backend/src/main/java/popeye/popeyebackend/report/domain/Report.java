@@ -29,7 +29,7 @@ public class Report {
     @Enumerated(EnumType.STRING)
     private TargetType targetType;
 
-    private LocalDateTime reportAt =  LocalDateTime.now();
+    private LocalDateTime reportAt = LocalDateTime.now();
 
     @ManyToOne
     @JoinColumn(name = "reporter_id", nullable = true)

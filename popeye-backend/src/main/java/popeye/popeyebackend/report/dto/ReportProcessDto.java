@@ -17,11 +17,11 @@ public record ReportProcessDto(
         String reason,
         @Schema(description = "게시글 상태")
         ReportState state
-){
-    public static ReportProcessDto from(Report report){
+) {
+    public static ReportProcessDto from(Report report) {
         return new ReportProcessDto(
                 report.getId(),
-                switch (report.getTargetType()){
+                switch (report.getTargetType()) {
                     case CONTENT -> report.getTargetContent().getId();
                 },
                 report.getTargetType(),

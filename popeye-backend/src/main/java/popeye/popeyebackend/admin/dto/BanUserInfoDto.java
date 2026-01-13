@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import popeye.popeyebackend.user.domain.BannedUser;
 
 @Schema(description = "밴할 유저의 정보")
-public record BanUserInfoDto (
+public record BanUserInfoDto(
         @Schema(description = "해당 유저의 pk id값")
         Long banUserId,
 
