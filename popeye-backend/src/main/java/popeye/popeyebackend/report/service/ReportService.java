@@ -35,12 +35,14 @@ public class ReportService {
     private final ContentService contentService;
     private final UserService userService;
 
+    // 신고 목록 받기
     @Transactional(readOnly = true)
     public Page<Report> getReports(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return reportRepository.findByState(ReportState.REQUESTED, pageable);
     }
 
+    // 신고 처리
     @Transactional
     public void reportProcess(ReportProcessDto reportProcessDto) {
         Report report = reportRepository.findById(reportProcessDto.reportId())

@@ -1,18 +1,19 @@
 package popeye.popeyebackend.admin.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import popeye.popeyebackend.content.domain.ContentBan;
-import popeye.popeyebackend.content.enums.ContentStatus;
 
+@Schema(description = "게시글 차단 정보")
 public record InactiveContentDto(
+        @Schema(description = "차단할 게시글의 pk값")
         Long contentId,
-        String reason,
-        ContentStatus status
+        @Schema(description = "차단 사유")
+        String reason
 ) {
     public static InactiveContentDto getInactiveContentDto(ContentBan contentBan) {
         return new InactiveContentDto(
                 contentBan.getContent().getId(),
-                contentBan.getReason(),
-                contentBan.getContent().getContentStatus()
+                contentBan.getReason()
         );
     }
 }
