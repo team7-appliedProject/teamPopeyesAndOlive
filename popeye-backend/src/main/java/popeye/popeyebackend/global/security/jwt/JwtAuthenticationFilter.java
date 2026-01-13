@@ -1,4 +1,4 @@
-package popeye.popeyebackend.global.security;
+package popeye.popeyebackend.global.security.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

@@ -1,4 +1,4 @@
-package popeye.popeyebackend.global.security;
+package popeye.popeyebackend.global.security.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
