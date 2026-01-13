@@ -1,9 +1,7 @@
 package popeye.popeyebackend.user.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 import popeye.popeyebackend.content.domain.ContentBan;
 import popeye.popeyebackend.content.domain.ContentBookmark;
 import popeye.popeyebackend.notification.domain.Notification;
@@ -19,6 +17,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 @Getter
@@ -40,16 +39,16 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
-    private LocalDateTime createdAt =  LocalDateTime.now();
+    private final LocalDateTime createdAt =  LocalDateTime.now();
 
     @Column(name = "phone_number", unique = true, nullable = false)
-    private Long number;
+    private String phoneNumber;
 
     @Column(name = "total_spinach")
-    private Integer totalSpinach = 0;
+    private Integer totalSpinach;// = 0;
 
     @Column(name = "total_starcandy")
-    private Integer totalStarcandy = 0;
+    private Integer totalStarcandy;// = 0;
 
     @OneToMany(mappedBy = "creator")
     private List<Settlement> settlements;
