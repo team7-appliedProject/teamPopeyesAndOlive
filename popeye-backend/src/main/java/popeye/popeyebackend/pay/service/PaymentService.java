@@ -19,6 +19,7 @@ import popeye.popeyebackend.pay.repository.CreditRepository;
 import popeye.popeyebackend.pay.repository.PaymentRepository;
 
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -138,7 +139,12 @@ public class PaymentService {
                 .findByIdAndPaymentType(paymentId, PaymentType.DONE)
                 .orElseThrow(() -> new ApiException(ErrorCode.PAYMENT_NOT_FOUND));
 
-        // 멱등성: 이미 환불 완료면 재호출은 성공 처리
+        // 멱등성1: 이미 환불 완료면 성공 처리
+        if (payment.getPaymentType() == PaymentType.CANCELED){
+            return;
+        }
+
+        // 멱등성2: 환불 가능한 상태 검증
         if (payment.getPaymentType() != PaymentType.DONE){
             throw new ApiException(ErrorCode.INVALID_REQUEST);
         }
@@ -152,8 +158,14 @@ public class PaymentService {
         Credit credit = creditRepository.findByPayment_Id(paymentId)
                         .orElseThrow(() -> new ApiException(ErrorCode.INVALID_REQUEST));
 
-        // 이미 사용했는지 체크
+        // 크레딧 수량이 결제 당시와 다르다면 이미 사용한 것으로 간주
         if (credit.getAmount() != payment.getCreditAmount()) {
+            throw new ApiException(ErrorCode.INVALID_REQUEST);
+        }
+
+        // 7일 이내 환불 가능 여부 체크 (7일 이후는 수동 처리)
+        LocalDateTime deadline = credit.getPaidAt().plusDays(7);
+        if (LocalDateTime.now().isAfter(deadline)){
             throw new ApiException(ErrorCode.INVALID_REQUEST);
         }
 

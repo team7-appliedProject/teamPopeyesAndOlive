@@ -3,7 +3,6 @@ package popeye.popeyebackend.pay.toss;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import popeye.popeyebackend.pay.toss.dto.cancel.TossCancelRequestDto;
 import popeye.popeyebackend.pay.toss.dto.cancel.TossCancelResponseDto;

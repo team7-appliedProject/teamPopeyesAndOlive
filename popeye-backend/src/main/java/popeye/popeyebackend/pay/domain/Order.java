@@ -1,6 +1,10 @@
 package popeye.popeyebackend.pay.domain;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.pay.enums.OrderStatus;
@@ -8,6 +12,10 @@ import popeye.popeyebackend.pay.enums.OrderStatus;
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "orders")
 public class Order {
     @Id
