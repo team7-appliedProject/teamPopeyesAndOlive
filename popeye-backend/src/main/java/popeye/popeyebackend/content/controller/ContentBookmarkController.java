@@ -2,6 +2,8 @@ package popeye.popeyebackend.content.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import popeye.popeyebackend.content.service.ContentBookmarkService;
 
@@ -13,8 +15,9 @@ public class ContentBookmarkController {
     private final ContentBookmarkService bookmarkService;
 
     @PostMapping("/{id}/bookmark")
-    public ResponseEntity<Void> bookmark(@PathVariable Long id) {
-        bookmarkService.bookmark(1L, id); // 임시 userId
+    public ResponseEntity<Void> bookmark(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long id) {
+        Long userId = userDetails.getUserId();
+        bookmarkService.bookmark(userId, id);
         return ResponseEntity.ok().build();
     }
 

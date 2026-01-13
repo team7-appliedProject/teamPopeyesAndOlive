@@ -4,8 +4,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import popeye.popeyebackend.content.domain.Content;
-import popeye.popeyebackend.content.dto.ContentCreateRequest;
-import popeye.popeyebackend.content.dto.ContentResponse;
+import popeye.popeyebackend.content.dto.request.ContentCreateRequest;
+import popeye.popeyebackend.content.dto.response.ContentResponse;
 import popeye.popeyebackend.content.enums.ContentStatus;
 import popeye.popeyebackend.content.repository.ContentRepository;
 import popeye.popeyebackend.user.domain.User;
@@ -18,15 +18,15 @@ public class ContentService {
     private final ContentRepository contentRepository;
     private final UserRepository userRepository;
 
-    public Long createdContent(Long userId, ContentCreateRequest req) {
+    public Long createContent(Long userId, ContentCreateRequest req) {
         User creator = userRepository.findById(userId).orElseThrow();
 
-        Content content = Content.create(
+        Content content = Content.create( //build 패턴
                 creator,
                 req.getTitle(),
                 req.getBody(),
-                req.getPrice(),
-                req.getDiscountRate(),
+                req.getPrice(), //null 처리하기
+                req.getDiscountRate(), //여기도
                 req.isFree()
         );
 

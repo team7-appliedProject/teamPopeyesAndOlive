@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.domain.ContentBookmark;
+import popeye.popeyebackend.content.exception.ContentError;
 import popeye.popeyebackend.content.repository.ContentBookmarkRepository;
 import popeye.popeyebackend.content.repository.ContentRepository;
 import popeye.popeyebackend.user.domain.User;
@@ -20,14 +21,20 @@ public class ContentBookmarkService {
     private final UserRepository userRepository;
 
     public void bookmark(Long userId, Long contentId) {
-        User user = userRepository.findById(userId).orElseThrow();
-        Content content = contentRepository.findById(contentId).orElseThrow();
+        User user = userRepository.findById(userId)
+                .orElseThrow();
+        Content content = contentRepository.findById(contentId)
+                .orElseThrow(() -> new ContentError("컨텐츠를 찾을 수 없습니다."));
 
         if (bookmarkRepository.existsByUserAndContent(user, content)) {
             throw new IllegalStateException("이미 북마크됨");
         }
+        ContentBookmark contentBookmark = ContentBookmark.builder()
+                .user(user)
+                .content(content)
+                .price(content.getPrice()).build();
 
-        bookmarkRepository.save(ContentBookmark.create(user, content));
+        bookmarkRepository.save(contentBookmark);
     }
 
     public void unbookmark(Long userId, Long contentId) {

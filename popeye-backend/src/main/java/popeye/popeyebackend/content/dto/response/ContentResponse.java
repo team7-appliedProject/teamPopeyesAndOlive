@@ -1,4 +1,4 @@
-package popeye.popeyebackend.content.dto;
+package popeye.popeyebackend.content.dto.response;
 
 import lombok.Getter;
 import popeye.popeyebackend.content.domain.Content;

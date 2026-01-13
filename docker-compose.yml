@@ -1,0 +1,61 @@
+services:
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: popeye-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - popeye-net
+
+  backend:
+    image: corqu/popeye-backend:latest
+    container_name: backend
+    expose:
+      - "8080"
+    networks:
+      - popeye-net
+    depends_on:
+      - db
+    restart: on-failure
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DB_URL}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+
+  frontend:
+    image: corqu/popeye-frontend:latest
+    container_name: frontend
+    expose:
+      - "3000"
+    networks:
+      - popeye-net
+    depends_on:
+      - backend
+    env_file:
+      - .env
+
+  db:
+    image: mysql:8.0
+    container_name: popeye-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+    volumes:
+      - ./db/data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
+
+    restart: on-failure
+    networks:
+      - popeye-net
+
+networks:
+  popeye-net:

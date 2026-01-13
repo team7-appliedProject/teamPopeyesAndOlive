@@ -1,4 +1,4 @@
-package popeye.popeyebackend.content.dto;
+package popeye.popeyebackend.content.dto.request;
 
 public class ContentCreateRequest {
     private String title;
@@ -6,4 +6,3 @@ public class ContentCreateRequest {
     private int price;
     private int discountRate;
     private boolean isFree;
-}
