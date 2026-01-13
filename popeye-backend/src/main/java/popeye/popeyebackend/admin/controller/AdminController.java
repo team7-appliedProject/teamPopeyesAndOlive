@@ -3,14 +3,15 @@ package popeye.popeyebackend.admin.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import popeye.popeyebackend.admin.dto.AdminDailyDataDto;
 import popeye.popeyebackend.admin.dto.BanUserInfoDto;
 import popeye.popeyebackend.admin.dto.DevilUserDto;
 import popeye.popeyebackend.admin.dto.InactiveContentDto;
 import popeye.popeyebackend.admin.service.AdminService;
+import popeye.popeyebackend.global.security.details.PrincipalDetails;
 import popeye.popeyebackend.report.dto.ReportProcessDto;
+
 
 import java.util.List;
 
@@ -32,7 +33,7 @@ public class AdminController {
     }
 
     @PatchMapping("/devil-users")
-    public ResponseEntity<Void> banUser(@AuthenticationPrincipal UserDetails userDetails, @RequestBody BanUserInfoDto banUserInfoDto) {
+    public ResponseEntity<Void> banUser(@AuthenticationPrincipal PrincipalDetails userDetails, @RequestBody BanUserInfoDto banUserInfoDto) {
         adminService.banUser(userDetails.getUser(), banUserInfoDto);
         return ResponseEntity.ok().build();
     }
@@ -44,7 +45,7 @@ public class AdminController {
     }
 
     @PatchMapping("/illegal-contents")
-    public ResponseEntity<Void> banIllegalContents(@AuthenticationPrincipal UserDetails userDetails, @RequestBody InactiveContentDto dto) {
+    public ResponseEntity<Void> banIllegalContents(@AuthenticationPrincipal PrincipalDetails userDetails, @RequestBody InactiveContentDto dto) {
         adminService.inactiveContent(userDetails.getUser(), dto);
         return ResponseEntity.ok().build();
     }
