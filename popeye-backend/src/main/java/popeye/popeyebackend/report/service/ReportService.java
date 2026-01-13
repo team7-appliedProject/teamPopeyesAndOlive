@@ -82,25 +82,32 @@ public class ReportService {
 
     // 신고 누적시 자동 차단 기능 -> 신고 발생시 handleContentAutoBlock을 실행하면 차단 횟수 추가
     @Transactional
-    public void handleContentAutoBlock(Long contentId) {
+    public void handleContentAutoBlock(Long contentId, Long userId) {
         Content content = contentService.getContentById(contentId);
         if (content.getContentStatus() == ContentStatus.INACTIVE) {
             return;
         }
-        String key = "report:count:content:" + contentId;
+        String key = "report:count:content:" + contentId; // 신고 횟수
+        String historyKey = "report:history:content:" + contentId; // 신고자 중복 방지
 
         Long count = redisTemplate.opsForValue().increment(key);
+        Long isAdded = redisTemplate.opsForSet().add(historyKey, userId.toString());
+
+        if (isAdded == 0) {
+            throw new IllegalArgumentException("이미 신고한 게시글입니다.");
+        }
+
         if (count != null && count == 1) {
             redisTemplate.expire(key, Duration.ofHours(REPORT_TTL));
+            redisTemplate.expire(historyKey, Duration.ofHours(REPORT_TTL));
         }
 
         if (count != null && count >= REPORT_LIMIT) {
             contentService.autoInactiveContent(contentId, "신고 누적으로 차단되었습니다.");
+            redisTemplate.delete(key);
+            redisTemplate.delete(historyKey);
+            log.info("게시글 {}번이 신고 누적으로 자동 차단되었습니다.", contentId);
         }
-
-        redisTemplate.delete(key);
-
-        log.info("게시글 {}번이 신고 누적으로 자동 차단되었습니다.", contentId);
     }
 
     // 게시글 신고하기
@@ -110,7 +117,7 @@ public class ReportService {
             case CONTENT -> {
                 Report report = addContentReport(reportReqDto);
                 Report saveReport = reportRepository.save(report);
-                handleContentAutoBlock(saveReport.getId());
+                handleContentAutoBlock(saveReport.getId(), reportReqDto.reportUserId());
                 yield saveReport;
             }
 
