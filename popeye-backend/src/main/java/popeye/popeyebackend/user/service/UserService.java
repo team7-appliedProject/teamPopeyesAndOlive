@@ -34,7 +34,7 @@ public class UserService {
         User userFound = userRepository.findById(targetId)
                 .orElseThrow(() -> new UserNotFoundException("no User found"));
         DevilUser devilUser = devilUserRepository.findByUser(userFound)
-                .orElseThrow(() -> new UserNotFoundException("no User found"));
+                .orElseThrow(() -> new UserNotFoundException("no Devil-User found"));
 
         userFound.changeRole(Role.BLOCKED);
         devilUser.plusBlockedDays(banDays);
@@ -45,7 +45,8 @@ public class UserService {
                 .banDays(banDays)
                 .hashedPhoneNumber(devilUser.getHashedPhoneNumber())
                 .reason(reason)
-                .admin(admin).build();
+                .admin(admin)
+                .bannedUser(userFound).build();
 
         bannedUserRepository.save(bannedUser);
     }

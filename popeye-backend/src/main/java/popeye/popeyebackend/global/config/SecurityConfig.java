@@ -42,6 +42,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        .requestMatchers("/api/admin/**").permitAll()
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
 
 

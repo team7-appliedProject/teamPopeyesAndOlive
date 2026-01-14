@@ -1,0 +1,30 @@
+### 전역 변수 설정 (테스트할 주소)
+@baseUrl = http://localhost:8080/api/admin
+
+### 1. 관리자 일일 통계 확인
+GET {{baseUrl}}/statistics?days=7
+Content-Type: application/json
+
+### 2. 관리자 전용 - 유저 악성 정보 조회 - 성공
+# (보통 관리자만 볼 수 있게 막아두는 API)
+GET {{baseUrl}}/devil-users?page=0
+Content-Type: application/json
+
+### 2. 관리자 전용 - 유저 밴 - 성공
+# (2번 유저 관리자 권한 밴)
+PATCH {{baseUrl}}/devil-users
+Content-Type: application/json
+
+{
+  "banUserId": 2,
+  "reason": "테스트용 벤",
+  "banDays": 5
+}
+
+### 4. 관리자 전용 - 유저 밴 해제
+# 로그인 체크 여부는 reg와 합친 이후에 테스트
+PATCH {{baseUrl}}/devil-users/2
+Content-Type: application/json
+
+
+### 5. 관리자 전용 - 컨텐츠 벤

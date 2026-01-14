@@ -28,13 +28,13 @@ public class User {
 
     private String password;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     private Role role;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "phone_number", unique = true)
-    private Long number;
+    private String number;
 
     @Column(name = "total_spinach")
     private Integer totalSpinach = 0;

@@ -35,13 +35,15 @@ public class BannedUser {
     private User admin;
 
     @Builder
-    public BannedUser(LocalDate unbannedAt, String reason, String hashedPhoneNumber, LocalDate bannedAt, Integer banDays, User admin) {
+    public BannedUser(LocalDate unbannedAt, String reason, String hashedPhoneNumber,
+                      LocalDate bannedAt, Integer banDays, User admin, User bannedUser) {
         this.unbannedAt = unbannedAt;
         this.reason = reason;
         this.hashedPhoneNumber = hashedPhoneNumber;
         this.bannedAt = bannedAt;
         this.banDays = banDays;
         this.admin = admin;
+        this.user = bannedUser;
     }
 
     public boolean isUnbanned() {

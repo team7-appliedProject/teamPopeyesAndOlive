@@ -50,6 +50,7 @@ public class AdminService {
         return userService.getDevilUsers(page).stream().map(DevilUserDto::from).toList();
     }
 
+    // 컨텐츠 벤
     @Transactional
     public void inactiveContent(Long adminId, InactiveContentDto inactiveContentDto) {
         contentService.inactiveContent(inactiveContentDto.contentId()

@@ -44,9 +44,13 @@ public class AdminController {
     @Operation(summary = "유저 밴", description = "관리자가 유저를 차단합니다.")
     @PatchMapping("/devil-users")
     public ResponseEntity<Void> banUser(
-            @AuthenticationPrincipal PrincipalDetails principalDetails,
+//            @AuthenticationPrincipal PrincipalDetails principalDetails,
             @RequestBody BanUserInfoDto banUserInfoDto) {
-        adminService.banUser(principalDetails.getUserId(), banUserInfoDto);
+        Long userId = 1L;
+        adminService.banUser(
+//                principalDetails.getUserId(),
+                userId,
+                banUserInfoDto);
         return ResponseEntity.ok().build();
     }
 
