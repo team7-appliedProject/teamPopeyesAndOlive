@@ -1,4 +1,4 @@
-package popeye.popeyebackend.settlement.config;
+package popeye.popeyebackend.pay.config;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
