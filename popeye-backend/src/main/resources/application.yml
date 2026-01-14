@@ -1,13 +1,24 @@
 spring:
   datasource:
-    url: ${SPRING_DB_URL}
-    username: ${MYSQL_USER}
-    password: ${MYSQL_PASSWORD}
+    url: jdbc:mysql://localhost:3306/popeye?useSSL=false&serverTimezone=UTC
+    #    url: ${SPRING_DB_URL}
+    username: ${MYSQL_DB_USERNAME}
+    password: ${MYSQL_DB_PASSWORD}
+
+  batch:
+    jdbc:
+      initialize-schema: always
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        # SQL을 보기 좋게 정렬합니다.
+        format_sql: true
+        # SQL의 주석(어디서 실행된 쿼리인지)을 보여줍니다.
+        use_sql_comments: true
 
 popeye:
   secret-key: "my_super_secret_key_popeye_1234!"
@@ -16,3 +27,9 @@ popeye:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
