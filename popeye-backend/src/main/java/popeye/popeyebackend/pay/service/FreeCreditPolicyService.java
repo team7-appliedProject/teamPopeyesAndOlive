@@ -12,24 +12,26 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class EventFreeCreditService {
+public class FreeCreditPolicyService {
     private static final int FREE_CREDIT_EXPIRE_DAYS = 7;
     private final CreditRepository creditRepository;
 
     @Transactional
-    public Long grantFreeCredit(User user, int amount){
+    public Credit grantFreeCredit(User user, int amount){
         if (amount <= 0){
             throw new IllegalArgumentException("무료 크레딧 금액은 0보다 커야 합니다.");
         }
+
+        LocalDateTime now = LocalDateTime.now();
 
         Credit credit = Credit.builder()
                 .user(user)
                 .creditType(CreditType.FREE)
                 .amount(amount)
-                .expiredAt(LocalDateTime.now().plusDays(FREE_CREDIT_EXPIRE_DAYS))
+                .expiredAt(now.plusDays(FREE_CREDIT_EXPIRE_DAYS))
                 .build();
 
-        creditRepository.save(credit);
-        return credit.getId();
+
+        return creditRepository.save(credit);
     }
 }
