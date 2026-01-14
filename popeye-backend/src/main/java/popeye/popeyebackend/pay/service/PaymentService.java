@@ -30,6 +30,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final CreditRepository creditRepository;
     private final TossPaymentsClient tossPaymentsClient;
+    private final CreditHistoryService creditHistoryService;
 
     private String generatePgOrderId(){
         return "ORD_" + UUID.randomUUID().toString().replace("-", "");

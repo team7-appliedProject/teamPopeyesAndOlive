@@ -24,11 +24,10 @@ public interface CreditRepository extends JpaRepository<Credit, Long> {
             @Param("now")LocalDateTime now
     );
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("update Credit c set c.amount = 0 " +
+    @Query("select c from Credit c " +
             "where c.creditType = popeye.popeyebackend.pay.enums.CreditType.FREE " +
             "and c.expiredAt is not null " +
-            "and c.expiredAt <: now " +
+            "and c.expiredAt < :now " +
             "and c.amount > 0 ")
-    int expireFreeCredits(@Param("now") LocalDateTime now);
+    List<Credit> findExpiredFreeCredits(@Param("now") LocalDateTime now);
 }

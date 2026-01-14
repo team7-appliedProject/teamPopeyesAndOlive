@@ -14,8 +14,8 @@ public class CreditExpirationScheduler {
 
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
     public void expireFreeCreditsDaily(){
-        log.info("크레딧 만료 스케줄러 시작");
+        log.info("무료 크레딧 만료 스케줄러 시작");
         int updated = creditExpirationService.expireFreeCreditsNow();
-        log.info("크레딧 만료 처리 완료. 총 {}건의 크레딧 만료됨.", updated);
+        log.info("크레딧 만료 처리 완료. 업데이트된 행 개수= {}", updated);
     }
 }
