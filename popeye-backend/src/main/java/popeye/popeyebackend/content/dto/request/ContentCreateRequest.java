@@ -6,3 +6,4 @@ public class ContentCreateRequest {
     private int price;
     private int discountRate;
     private boolean isFree;
+}
