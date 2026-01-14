@@ -17,7 +17,9 @@ public class Order {
 
     private int quantity;
     private LocalDateTime orderDate=LocalDateTime.now();
-    private OrderStatus orderStatus;
+
+	@Enumerated(EnumType.STRING)
+	private OrderStatus orderStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
