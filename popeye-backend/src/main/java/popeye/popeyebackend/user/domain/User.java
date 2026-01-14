@@ -52,39 +52,39 @@ public class User {
 
     @OneToMany(mappedBy = "creator")
     private List<Settlement> settlements;
+//
+//    @OneToMany(mappedBy = "user")
+//    private List<Order> orders;
+//
+//    @OneToMany(mappedBy = "user")
+//    private List<Credit> credits;
+//
+//    @OneToMany(mappedBy = "user")
+//    private List<Payment> payments;
+//
+//    @OneToMany(mappedBy = "user")
+//    private List<Notification> notifications;
+//
+//    @OneToMany(mappedBy = "user")
+//    private List<ContentBookmark> bookmarks;
+//
+//    @OneToMany(mappedBy = "admin")
+//    private List<BannedUser> bannedUserList;
+//
+//    @OneToMany(mappedBy = "reporter")
+//    private List<Report> reports;
 
-    @OneToMany(mappedBy = "user")
-    private List<Order> orders;
-
-    @OneToMany(mappedBy = "user")
-    private List<Credit> credits;
-
-    @OneToMany(mappedBy = "user")
-    private List<Payment> payments;
-
-    @OneToMany(mappedBy = "user")
-    private List<Notification> notifications;
-
-    @OneToMany(mappedBy = "user")
-    private List<ContentBookmark> bookmarks;
-
-    @OneToMany(mappedBy = "admin")
-    private List<BannedUser> bannedUserList;
-
-    @OneToMany(mappedBy = "reporter")
-    private List<Report> reports;
-
-    @OneToOne(mappedBy = "user")
-    private DevilUser devilUser;
-
-    @OneToMany(mappedBy = "admin")
-    private List<ContentBan> contentBans;
-
-    @OneToOne(mappedBy = "user")
-    private Creator creator;
-
-    @OneToOne(mappedBy = "user")
-    private BannedUser bannedUser;
+      @OneToOne(mappedBy = "user")
+      private DevilUser devilUser;
+//
+//    @OneToMany(mappedBy = "admin")
+//    private List<ContentBan> contentBans;
+//
+//    @OneToOne(mappedBy = "user")
+//    private Creator creator;
+//
+//    @OneToOne(mappedBy = "user")
+//    private BannedUser bannedUser;
 
     public void changeRole (Role role) {
         this.role = role;
