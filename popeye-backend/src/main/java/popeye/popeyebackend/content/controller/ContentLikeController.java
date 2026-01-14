@@ -47,4 +47,3 @@ public class ContentLikeController {
         return ResponseEntity.ok().build();
     }
 }
-}

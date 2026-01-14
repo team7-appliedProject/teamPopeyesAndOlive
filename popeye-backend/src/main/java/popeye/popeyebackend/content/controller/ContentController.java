@@ -3,6 +3,7 @@ package popeye.popeyebackend.content.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import popeye.popeyebackend.content.dto.request.ContentCreateRequest;
 import popeye.popeyebackend.content.dto.response.ContentResponse;
@@ -25,6 +26,14 @@ public class ContentController {
     public Object get(@PathVariable Long id) {
         boolean hasPurchased = paymentService.hasPurchased(userId, contentId); //결제부분
         return contentService.getContentWithAccessControl(id, hasPurchased);
+    }
+    @DeleteMapping("/{contentId}")
+    public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @PathVariable Long contentId
+    ) {
+        contentService.deleteContent(user.getUserId(), contentId);
+        return ResponseEntity.noContent().build();
     }
 
 }

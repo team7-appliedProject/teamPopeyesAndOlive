@@ -54,4 +54,16 @@ public class ContentService {
         }
         return PreviewContentResponse.from(c);
     }
+
+    public void deleteContent(Long userId, Long contentId) {
+        Content content = contentRepository.findById(contentId)
+                .orElseThrow();
+
+        if (!content.getCreator().getId().equals(userId)) {
+            throw new IllegalStateException("작성자만 삭제할 수 있습니다.");
+        }
+
+        content.inactivate(); // 실제 삭제 아님 (비공개 처리)
+    }
+
 }
