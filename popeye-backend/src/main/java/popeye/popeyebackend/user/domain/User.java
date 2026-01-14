@@ -1,6 +1,11 @@
 package popeye.popeyebackend.user.domain;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.domain.ContentBookmark;
 import popeye.popeyebackend.notification.domain.Notification;
@@ -16,6 +21,10 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+@Getter
 public class User {
     @Id
     private Long id;
