@@ -9,8 +9,14 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  batch:
+    job:
+      enabled: false
+
 popeye:
   secret-key: "my_super_secret_key_popeye_1234!"
+  encryption:
+    account-secret-key: ${POPEYE_ACCOUNT_SECRET_KEY:?missing encryption key}
 
   data:
     redis:

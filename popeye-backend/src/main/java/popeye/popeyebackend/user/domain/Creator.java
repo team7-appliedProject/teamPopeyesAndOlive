@@ -19,4 +19,7 @@ public class Creator {
 
     @Column(length = 500)
     private String account;
+
+	// DB 명세서에 따라 bank_name 추가
+    private String bank_name;
 }
