@@ -17,3 +17,17 @@ Content-Type: application/json
   "email": "test1@popeye.com",
   "password": "qwer@123"
 }
+
+> {%
+    // 응답 바디의 구조에 따라 경로를 정확히 지정해야 합니다.
+    // 현재 구조: { "status": "success", "data": { "accessToken": "...", "tokenType": "Bearer" } }
+    if (response.status === 200) {
+        client.global.set("auth_token", response.body.data.accessToken);
+        client.log("토큰이 성공적으로 저장되었습니다: " + client.global.get("auth_token"));
+    }
+%}
+
+### 3. 크리에이터 승격 요청
+PATCH http://localhost:8080/api/users/me/creator
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
