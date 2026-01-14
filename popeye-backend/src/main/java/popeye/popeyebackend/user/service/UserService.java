@@ -1,6 +1,7 @@
 package popeye.popeyebackend.user.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import popeye.popeyebackend.global.security.jwt.JwtTokenProvider;
 import popeye.popeyebackend.user.domain.BannedUser;
+import popeye.popeyebackend.user.domain.Creator;
 import popeye.popeyebackend.user.domain.DevilUser;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.dto.request.LoginRequest;
@@ -23,6 +25,7 @@ import popeye.popeyebackend.user.repository.UserRepository;
 
 import java.time.LocalDate;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -104,5 +107,37 @@ public class UserService {
     public Page<DevilUser> getDevilUsers(int page) {
         Pageable pageable = PageRequest.of(page, 30, Sort.by("user.nickname").ascending());
         return devilUserRepository.findAll(pageable);
+    }
+
+    @Transactional
+    public void promoteToCreator(String email) {
+        log.info("권한 승격 프로세스 시작 - 대상 이메일: {}", email);
+
+        // 1. 사용자 존재 여부 확인
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("해당 이메일의 사용자를 찾을 수 없습니다."));
+
+        // 2. 이미 크리에이터인지 확인
+        if (user.getRole() == Role.CREATOR) {
+            log.warn("사용자 {}는 이미 크리에이터 권한을 가지고 있습니다.", email);
+            return;
+        }
+
+        // 3. 직접 UPDATE 쿼리 실행 (더티 체킹보다 확실한 방법)
+        int updatedCount = userRepository.updateRoleByEmail(email, Role.CREATOR);
+
+        if (updatedCount == 0) {
+            log.error("DB 업데이트에 실패했습니다. (영향받은 행 없음)");
+            throw new RuntimeException("권한 변경 중 오류가 발생했습니다.");
+        }
+        // 4. Creator 테이블에 레코드 추가
+        // 이미 Creator 정보가 있는지 한 번 더 체크 (안전 장치)
+        if (!creatorRepository.existsByUser(user)) {
+            Creator newCreator = Creator.from(user);
+            creatorRepository.save(newCreator);
+            log.info("creators 테이블에 레코드가 성공적으로 생성되었습니다.");
+        }
+
+        log.info("사용자 {} 권한 승격 완료 (USER -> CREATOR)", email);
     }
 }
