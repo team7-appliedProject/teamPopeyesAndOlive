@@ -14,6 +14,7 @@ import popeye.popeyebackend.user.enums.Role;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -49,6 +50,15 @@ public class User {
 
     @Column(name = "total_starcandy")
     private Integer totalStarcandy;// = 0;
+
+    // U-04: 프로필 이미지 URL
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
+    // U-04: 추천 코드
+    @Column(name = "referral_code", unique = true)
+    private String referralCode;
+
 
     @OneToMany(mappedBy = "creator")
     private List<Settlement> settlements;
@@ -86,9 +96,25 @@ public class User {
 //    @OneToOne(mappedBy = "user")
 //    private BannedUser bannedUser;
 
-    public void changeRole (Role role) {
-        this.role = role;
+    //U-04 프로필정보 수정
+    public void updateProfile(String nickname, String profileImageUrl) {
+        if (nickname != null && !nickname.isBlank()) {
+            this.nickname = nickname;
+        }
+        if (profileImageUrl != null) {
+            this.profileImageUrl = profileImageUrl;
+        }
     }
 
+    //U-04 추천코드 생성
+    public void generateReferralCode() {
+        if (this.referralCode == null) {
+            // UUID의 앞 8자리를 대문자로 추출하여 고유 코드 생성
+            this.referralCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        }
+    }
 
+    public void changeRole(Role role) {
+        this.role = role;
+    }
 }
