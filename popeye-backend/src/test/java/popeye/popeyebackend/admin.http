@@ -27,4 +27,62 @@ PATCH {{baseUrl}}/devil-users/2
 Content-Type: application/json
 
 
-### 5. 관리자 전용 - 컨텐츠 벤
+### 5. 관리자 전용 - 컨텐츠 벤 - 성공
+PATCH {{baseUrl}}/illegal-contents
+Content-Type: application/json
+
+{
+  "contentId": 1,
+  "reason": "test입니다."
+}
+
+### 6. 관리자 전용 - 게시글 차단 해제 - 성공
+PATCH {{baseUrl}}/illegal-contents/1
+Content-Type: application/json
+
+### 7. 게시글 신고
+POST http://localhost:8080/api/report
+Content-Type: application/json
+
+{
+  "reason": "test",
+  "type": "CONTENT",
+  "targetId": 3
+}
+
+### 8. 관리자 전용 - 신고 조회
+GET {{baseUrl}}/reports?page=0&size=10
+Content-Type: application/json
+
+### 9. 관리자 전용 - 신고 처리 (거부)
+PATCH {{baseUrl}}/reports/16
+Content-Type: application/json
+
+{
+  "targetId": 1,
+  "targetType": "CONTENT",
+  "reason": "거부",
+  "state": "REJECTED"
+}
+
+### 9. 관리자 전용 - 신고 처리 (가짜 신고)
+PATCH {{baseUrl}}/reports/11
+Content-Type: application/json
+
+{
+  "targetId": 1,
+  "targetType": "CONTENT",
+  "reason": "거부",
+  "state": "FALSE"
+}
+
+### 9. 관리자 전용 - 신고 처리 (신고 받아들이기)
+PATCH {{baseUrl}}/reports/19
+Content-Type: application/json
+
+{
+  "targetId": 1,
+  "targetType": "CONTENT",
+  "reason": "거부",
+  "state": "TRUE"
+}

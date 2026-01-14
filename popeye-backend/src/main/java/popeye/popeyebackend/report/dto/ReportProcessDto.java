@@ -7,8 +7,6 @@ import popeye.popeyebackend.report.enums.TargetType;
 
 @Schema(description = "신고 처리 과정 dto")
 public record ReportProcessDto(
-        @Schema(description = "신고자 식별값")
-        Long reportId,
         @Schema(description = "신고한 게시글 식별값")
         Long targetId,
         @Schema(description = "게시글 타입", example = "PICTURE")
@@ -20,7 +18,6 @@ public record ReportProcessDto(
 ) {
     public static ReportProcessDto from(Report report) {
         return new ReportProcessDto(
-                report.getId(),
                 switch (report.getTargetType()) {
                     case CONTENT -> report.getTargetContent().getId();
                 },

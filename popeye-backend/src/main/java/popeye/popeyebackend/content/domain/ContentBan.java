@@ -26,14 +26,15 @@ public class ContentBan {
     @ManyToOne(fetch = FetchType.LAZY)
     private User admin;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "content_id")
     private Content content;
 
     @Builder
-    public ContentBan(String reason, User admin) {
+    public ContentBan(String reason, User admin, Content content) {
         this.reason = reason;
         this.admin = admin;
+        this.content = content;
     }
 
     public void release() {

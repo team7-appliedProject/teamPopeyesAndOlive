@@ -71,7 +71,7 @@ public class AdminService {
 
     // 신고 처리
     @Transactional
-    public void reportProcess(ReportProcessDto reportProcessDto) {
-        reportService.reportProcess(reportProcessDto);
+    public void reportProcess(Long reportId, ReportProcessDto reportProcessDto) {
+        reportService.reportProcess(reportId, reportProcessDto);
     }
 }

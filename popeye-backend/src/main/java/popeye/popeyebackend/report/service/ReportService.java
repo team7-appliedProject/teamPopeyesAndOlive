@@ -23,6 +23,7 @@ import popeye.popeyebackend.report.exception.NoReportFoundException;
 import popeye.popeyebackend.report.exception.MissedReportTypeException;
 import popeye.popeyebackend.report.repository.ReportRepository;
 import popeye.popeyebackend.user.domain.DevilUser;
+import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.service.UserService;
 
 import java.time.Duration;
@@ -48,8 +49,8 @@ public class ReportService {
 
     // 신고 처리
     @Transactional
-    public void reportProcess(ReportProcessDto reportProcessDto) {
-        Report report = reportRepository.findById(reportProcessDto.reportId())
+    public void reportProcess(Long reportId, ReportProcessDto reportProcessDto) {
+        Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new NoReportFoundException("Report not found"));
 
         ReportState state = report.getState();
@@ -94,36 +95,29 @@ public class ReportService {
             return;
         }
         String key = "report:count:content:" + contentId; // 신고 횟수
-        String historyKey = "report:history:content:" + contentId; // 신고자 중복 방지
 
         Long count = redisTemplate.opsForValue().increment(key);
-        Long isAdded = redisTemplate.opsForSet().add(historyKey, userId.toString());
 
-        if (isAdded == 0) {
-            throw new AlreadyReportException("이미 신고한 게시글입니다.");
-        }
 
         if (count != null && count == 1) {
             redisTemplate.expire(key, Duration.ofHours(REPORT_TTL));
-            redisTemplate.expire(historyKey, Duration.ofHours(REPORT_TTL));
         }
 
         if (count != null && count >= REPORT_LIMIT) {
             contentService.autoInactiveContent(contentId, "신고 누적으로 차단되었습니다.");
             redisTemplate.delete(key);
-            redisTemplate.delete(historyKey);
             log.info("게시글 {}번이 신고 누적으로 자동 차단되었습니다.", contentId);
         }
     }
 
     // 게시글 신고하기
     @Transactional
-    public ReportResDto makeReport(ReportReqDto reportReqDto) {
+    public ReportResDto makeReport(Long reportUserId,ReportReqDto reportReqDto) {
         Report save = switch (reportReqDto.type()) {
             case CONTENT -> {
-                Report report = addContentReport(reportReqDto);
+                Report report = addContentReport(reportUserId, reportReqDto);
                 Report saveReport = reportRepository.save(report);
-                handleContentAutoBlock(saveReport.getId(), reportReqDto.reportUserId());
+                handleContentAutoBlock(saveReport.getTargetContent().getId(), reportUserId);
                 yield saveReport;
             }
 
@@ -133,11 +127,16 @@ public class ReportService {
         return ReportResDto.from(save);
     }
 
-    private Report addContentReport(ReportReqDto reportReqDto) {
+    private Report addContentReport(Long reportUserId, ReportReqDto reportReqDto) {
+        User reporter = userService.getUser(reportUserId);
+        Content content = contentService.getContentById(reportReqDto.targetId());
+        if (reportRepository.existsByTargetContentAndReporter(content, reporter)) {
+            throw new AlreadyReportException("이미 신고한 게시글입니다.");
+        }
         return Report.builder()
                 .reportDescription(reportReqDto.reason())
                 .targetType(TargetType.CONTENT)
-                .reporter(userService.getUser(reportReqDto.reportUserId()))
-                .targetContent(contentService.getContentById(reportReqDto.targetId())).build();
+                .reporter(reporter)
+                .targetContent(content).build();
     }
 }

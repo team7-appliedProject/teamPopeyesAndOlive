@@ -30,7 +30,7 @@ public class ContentService {
             throw new RuntimeException("already active content");
         } else {
             content.setContentStatus(ContentStatus.ACTIVE);
-            ContentBan ban = contentBanRepository.findByContent(content);
+            ContentBan ban = contentBanRepository.findByContentAndIsBanned(content, true);
             ban.release();
         }
     }
@@ -48,7 +48,8 @@ public class ContentService {
             content.setContentStatus(ContentStatus.INACTIVE);
             ContentBan contentBan = ContentBan.builder()
                     .reason(reason)
-                    .admin(admin).build();
+                    .admin(admin)
+                    .content(content).build();
             contentBanRepository.save(contentBan);
         }
     }

@@ -10,8 +10,6 @@ public record ReportReqDto(
         @Schema(description = "신고한 게시글 종류", example = "CONTENT")
         TargetType type,
         @Schema(description = "신고한 게시글의 pk값")
-        Long targetId,
-        @Schema(description = "신고한 사람의 pk값")
-        Long reportUserId
+        Long targetId
 ) {
 }

@@ -44,12 +44,10 @@ public class AdminController {
     @Operation(summary = "유저 밴", description = "관리자가 유저를 차단합니다.")
     @PatchMapping("/devil-users")
     public ResponseEntity<Void> banUser(
-//            @AuthenticationPrincipal PrincipalDetails principalDetails,
+            @AuthenticationPrincipal PrincipalDetails principalDetails,
             @RequestBody BanUserInfoDto banUserInfoDto) {
-        Long userId = 1L;
         adminService.banUser(
-//                principalDetails.getUserId(),
-                userId,
+                principalDetails.getUserId(),
                 banUserInfoDto);
         return ResponseEntity.ok().build();
     }
@@ -91,10 +89,11 @@ public class AdminController {
     }
 
     @Operation(summary = "신고 처리", description = "신고 처리를 결정합니다.")
-    @PatchMapping("/reports")
+    @PatchMapping("/reports/{reportId}")
     public ResponseEntity<Void> reportProcess(
+            @PathVariable Long reportId,
             @RequestBody ReportProcessDto reportProcessDto) {
-        adminService.reportProcess(reportProcessDto);
+        adminService.reportProcess(reportId, reportProcessDto);
         return ResponseEntity.ok().build();
     }
 }

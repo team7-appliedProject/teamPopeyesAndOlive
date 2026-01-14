@@ -49,8 +49,8 @@ public class Content {
     @OneToMany(mappedBy = "targetContent")
     private List<Report> reports;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    private ContentBan contentBan;
+    @OneToMany(fetch = FetchType.LAZY)
+    private List<ContentBan> contentBan;
 
     public void setContentStatus(ContentStatus contentStatus) {
         this.contentStatus = contentStatus;

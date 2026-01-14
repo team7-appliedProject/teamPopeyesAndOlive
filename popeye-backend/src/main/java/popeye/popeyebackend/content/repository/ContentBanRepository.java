@@ -7,5 +7,5 @@ import popeye.popeyebackend.content.domain.ContentBan;
 import java.util.List;
 
 public interface ContentBanRepository extends JpaRepository<ContentBan, Long> {
-    ContentBan findByContent(Content content);
+    ContentBan findByContentAndIsBanned(Content content, Boolean isBanned);
 }
