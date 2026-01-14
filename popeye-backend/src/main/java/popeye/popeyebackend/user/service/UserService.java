@@ -16,7 +16,9 @@ import popeye.popeyebackend.user.domain.DevilUser;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.dto.request.LoginRequest;
 import popeye.popeyebackend.user.dto.request.SignupRequest;
+import popeye.popeyebackend.user.dto.request.UpdateProfileRequest;
 import popeye.popeyebackend.user.dto.response.TokenResponse;
+import popeye.popeyebackend.user.dto.response.UserProfileResponse;
 import popeye.popeyebackend.user.enums.Role;
 import popeye.popeyebackend.user.repository.BannedUserRepository;
 import popeye.popeyebackend.user.repository.CreatorRepository;
@@ -57,9 +59,13 @@ public class UserService {
                 .totalStarcandy(0)
                 .build();
 
+        // 추천코드 생성
+        user.generateReferralCode();
+
         return userRepository.save(user).getId();
     }
 
+    //로그인: 인증 후 JWT 토큰 발급
     public TokenResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
@@ -70,6 +76,44 @@ public class UserService {
 
         String token = jwtTokenProvider.createToken(user.getEmail(), user.getRole().name());
         return TokenResponse.of(token);
+    }
+
+    //U-04: 내 프로필 정보 조회
+    @Transactional //추천코드 없을 때를 대비
+    public UserProfileResponse getMyProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 기존 사용자 중 코드가 없는 경우를 대비한 지연 생성
+        if (user.getReferralCode() == null) {
+            user.generateReferralCode();
+        }
+
+        return UserProfileResponse.builder()
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .profileImageUrl(user.getProfileImageUrl())
+                .role(user.getRole().name())
+                .referralCode(user.getReferralCode())
+                .totalSpinach(user.getTotalSpinach())
+                .totalStarcandy(user.getTotalStarcandy())
+                .build();
+    }
+
+    //U-04: 프로필 수정 (닉네임, 프로필 이미지)
+    @Transactional
+    public void updateProfile(String email, UpdateProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 닉네임 변경 시 중복 체크
+        if (request.getNickname() != null && !request.getNickname().equals(user.getNickname())) {
+            if (userRepository.existsByNickname(request.getNickname())) {
+                throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+            }
+        }
+
+        user.updateProfile(request.getNickname(), request.getProfileImageUrl());
     }
 
     @Transactional
