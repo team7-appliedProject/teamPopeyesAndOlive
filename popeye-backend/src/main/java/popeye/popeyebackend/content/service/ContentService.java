@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.dto.request.ContentCreateRequest;
 import popeye.popeyebackend.content.dto.response.ContentResponse;
+import popeye.popeyebackend.content.dto.response.FullContentResponse;
+import popeye.popeyebackend.content.dto.response.PreviewContentResponse;
 import popeye.popeyebackend.content.enums.ContentStatus;
 import popeye.popeyebackend.content.repository.ContentRepository;
 import popeye.popeyebackend.user.domain.User;
@@ -40,5 +42,16 @@ public class ContentService {
 
         content.increaseViewCount();
         return ContentResponse.from(content);
+    }
+
+    @Transactional(readOnly = true)
+    public Object getContentWithAccessControl(Long contentId, boolean hasPurchased) {
+        Content c = contentRepository.findByIdAndStatus(contentId, ContentStatus.ACTIVE).orElseThrow();
+        c.increaseViewCount();
+
+        if (c.isFree() || hasPurchased) {
+            return FullContentResponse.from(c);
+        }
+        return PreviewContentResponse.from(c);
     }
 }

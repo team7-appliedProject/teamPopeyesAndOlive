@@ -4,7 +4,7 @@ import lombok.Getter;
 import popeye.popeyebackend.content.domain.Content;
 
 @Getter
-public class FullContentResponse {
+public class FullContentResponse {  // 구매자는 전체보기가능
 
     private Long id;
     private String title;

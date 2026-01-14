@@ -22,7 +22,9 @@ public class ContentController {
     }
 
     @GetMapping("/{id}")
-    public ContentResponse read(@PathVariable Long id) {
-        return contentService.getContent(id);
+    public Object get(@PathVariable Long id) {
+        boolean hasPurchased = paymentService.hasPurchased(userId, contentId); //결제부분
+        return contentService.getContentWithAccessControl(id, hasPurchased);
     }
+
 }

@@ -1,6 +1,7 @@
 package popeye.popeyebackend.content.domain;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import popeye.popeyebackend.pay.domain.Order;
 import popeye.popeyebackend.content.enums.ContentStatus;
@@ -13,7 +14,7 @@ import java.util.List;
 @Entity
 @Table(name = "contents")
 @Getter
-//@Builder
+@Builder
 public class Content {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -63,7 +64,8 @@ public class Content {
         return this.contentStatus.equals(ContentStatus.ACTIVE);
     }
 
-    public void increaseViewCount(){
+    private long viewCount = 0;
+    public void increaseViewCount() {
         this.viewCount++;
     }
 
@@ -72,4 +74,15 @@ public class Content {
         this.modifiedAt = LocalDateTime.now();
     }
 
+    private long likeCount = 0;
+
+    public void increaseLike() {
+        this.likeCount++;
+    }
+
+    public void decreaseLike() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
 }
