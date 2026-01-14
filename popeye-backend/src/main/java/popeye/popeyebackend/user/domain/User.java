@@ -1,6 +1,7 @@
 package popeye.popeyebackend.user.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.domain.ContentBookmark;
 import popeye.popeyebackend.notification.domain.Notification;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
+@Getter
 public class User {
     @Id
     private Long id;
