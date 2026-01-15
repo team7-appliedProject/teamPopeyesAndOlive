@@ -33,9 +33,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 미사용
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**","/error").permitAll() // 인증 불필요 경로
                         .requestMatchers("/api/v1/auth/**", "/h2-console/**").permitAll() // 인증 불필요 경로
                         .requestMatchers(
                                 "/v3/api-docs/**",
@@ -45,8 +46,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").permitAll()
                         .requestMatchers("/api/report/**").permitAll()
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
-
-
                 )
                 // UsernamePasswordAuthenticationFilter 이전에 JWT 인증 필터를 실행
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);

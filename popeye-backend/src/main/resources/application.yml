@@ -8,6 +8,12 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        # SQL을 보기 좋게 정렬합니다.
+        format_sql: true
+        # SQL의 주석(어디서 실행된 쿼리인지)을 보여줍니다.
+        use_sql_comments: true
 
   batch:
     jdbc:
@@ -22,3 +28,8 @@ spring:
 popeye:
   secret-key: "my_super_secret_key_popeye_1234!"
 
+logging:
+  level:
+    root: INFO
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG

@@ -7,5 +7,7 @@ import popeye.popeyebackend.user.domain.User;
 import java.util.Optional;
 
 public interface CreatorRepository extends JpaRepository<Creator,Long> {
+    // 승격 유저에게 크리에이터 정보 있는지 판단
+    boolean existsByUser(User user);
     Optional<Creator> findByUser(User user);
 }
