@@ -120,4 +120,7 @@ public class User {
             this.referralCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         }
     }
+    public void updateRole(Role newRole) {
+        this.role = newRole;
+    }
 }
