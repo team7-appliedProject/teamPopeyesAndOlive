@@ -106,7 +106,7 @@ public class UserService {
                 .build();
     }
 
-    //U-04: 프로필 수정 (닉네임, 프로필 이미지)
+    //U-04: 프로필 수정 (닉네임)
     @Transactional
     public void updateProfile(String email, UpdateProfileRequest request) {
         User user = userRepository.findByEmail(email)
@@ -119,7 +119,7 @@ public class UserService {
             }
         }
 
-        user.updateProfile(request.getNickname(), request.getProfileImageUrl());
+        user.updateProfile(request.getNickname());
     }
 
     @Transactional

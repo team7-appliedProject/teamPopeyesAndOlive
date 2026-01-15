@@ -43,9 +43,7 @@ public class User {
     @Builder.Default
     private final LocalDateTime createdAt =  LocalDateTime.now();
 
-    @Column(name = "profile_image_url")
-    @Builder.Default
-    private String profilePicture = "https://popeye-project-media-bucket.s3.ap-northeast-2.amazonaws.com/user_profile/%EB%BD%80%EB%B9%A0%EC%9D%B4.jpg";
+
 
     @Builder.Default
     private final LocalDateTime updatedAt = LocalDateTime.now();
@@ -63,7 +61,8 @@ public class User {
 
     // U-04: 프로필 이미지 URL
     @Column(name = "profile_image_url")
-    private String profileImageUrl;
+    @Builder.Default
+    private String profileImageUrl = "https://popeye-project-media-bucket.s3.ap-northeast-2.amazonaws.com/user_profile/%EB%BD%80%EB%B9%A0%EC%9D%B4.jpg";
 
     // U-04: 추천 코드
     @Column(name = "referral_code", unique = true)
@@ -111,12 +110,9 @@ public class User {
     }
 
     //U-04 프로필정보 수정
-    public void updateProfile(String nickname, String profileImageUrl) {
+    public void updateProfile(String nickname) {
         if (nickname != null && !nickname.isBlank()) {
             this.nickname = nickname;
-        }
-        if (profileImageUrl != null) {
-            this.profileImageUrl = profileImageUrl;
         }
     }
 
@@ -128,7 +124,7 @@ public class User {
         }
     }
 
-    public void changeProfilePhoto(String profilePicture) {
-        this.profilePicture = profilePicture;
+    public void changeProfilePhoto(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }
