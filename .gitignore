@@ -41,4 +41,8 @@ out/
 .env.*
 
 ### MYSQL ###
-.mysql-data/
+/mysql-data/**
+/db/**
+
+### pem
+*.pem
