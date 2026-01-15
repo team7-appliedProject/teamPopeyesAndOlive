@@ -1,4 +1,4 @@
-package popeye.popeyebackend.global.error;
+package popeye.popeyebackend.global.exception;
 
 import lombok.Getter;
 
