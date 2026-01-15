@@ -1,3 +1,6 @@
+### 전역 변수 설정
+@host = http://localhost:8080
+
 ###1. 회원가입 테스트
 POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
@@ -58,11 +61,13 @@ Content-Type: application/json
   "password": "qwer@123"
 }
 
-{%
-if (response.status === 200) {
-client.global.set("auth_token", response.body.data.accessToken);
-client.log("토큰 저장 완료: " + client.global.get("auth_token"));
-}
+> {%
+    // 응답 바디의 구조에 따라 경로를 정확히 지정해야 합니다.
+    // 현재 구조: { "status": "success", "data": { "accessToken": "...", "tokenType": "Bearer" } }
+    if (response.status === 200) {
+        client.global.set("auth_token", response.body.data.accessToken);
+        client.log("토큰이 성공적으로 저장되었습니다: " + client.global.get("auth_token"));
+    }
 %}
 
 ###3. 내 프로필 조회 (U-04)
@@ -79,7 +84,7 @@ Authorization: Bearer {{auth_token}}
 Content-Type: application/json
 
 {
-"nickname": "멋진올리브",
+"nickname": "토메이뤄",
 "profileImageUrl": "https://www.google.com/search?q=https://popeye.com/profiles/olive.png"
 }
 
