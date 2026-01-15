@@ -43,6 +43,13 @@ public class User {
     @Builder.Default
     private final LocalDateTime createdAt =  LocalDateTime.now();
 
+    @Column(name = "profile_image_url")
+    @Builder.Default
+    private String profilePicture = "https://popeye-project-media-bucket.s3.ap-northeast-2.amazonaws.com/user_profile/%EB%BD%80%EB%B9%A0%EC%9D%B4.jpg";
+
+    @Builder.Default
+    private final LocalDateTime updatedAt = LocalDateTime.now();
+
     @Column(name = "phone_number", unique = true, nullable = false)
     private String phoneNumber;
 
@@ -119,5 +126,9 @@ public class User {
             // UUID의 앞 8자리를 대문자로 추출하여 고유 코드 생성
             this.referralCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         }
+    }
+
+    public void changeProfilePhoto(String profilePicture) {
+        this.profilePicture = profilePicture;
     }
 }

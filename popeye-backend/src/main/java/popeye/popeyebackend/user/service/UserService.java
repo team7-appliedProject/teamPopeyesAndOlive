@@ -9,14 +9,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import popeye.popeyebackend.content.global.s3.S3Uploader;
 import popeye.popeyebackend.global.security.jwt.JwtTokenProvider;
 import popeye.popeyebackend.user.domain.BannedUser;
 import popeye.popeyebackend.user.domain.Creator;
 import popeye.popeyebackend.user.domain.DevilUser;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.dto.request.LoginRequest;
+import popeye.popeyebackend.user.dto.request.ProfileImageUpdateRequest;
 import popeye.popeyebackend.user.dto.request.SignupRequest;
 import popeye.popeyebackend.user.dto.request.UpdateProfileRequest;
+import popeye.popeyebackend.user.dto.response.ProfilePhotoRes;
 import popeye.popeyebackend.user.dto.response.TokenResponse;
 import popeye.popeyebackend.user.dto.response.UserProfileResponse;
 import popeye.popeyebackend.user.enums.Role;
@@ -39,6 +43,7 @@ public class UserService {
     private final DevilUserRepository devilUserRepository;
     private final CreatorRepository creatorRepository;
     private final BannedUserRepository bannedUserRepository;
+    private final S3Uploader s3Uploader;
 
     //회원가입 부분이라 기존 코드 위에 구현
     @Transactional
@@ -193,5 +198,18 @@ public class UserService {
     public User getUser(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("no User found"));
+    }
+
+    @Transactional
+    public ProfilePhotoRes updateProfile(
+            Long userId, MultipartFile file) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("no User found"));
+
+        String dirName = "user_profile";
+        String uploadUrl = s3Uploader.upload(file, dirName);
+
+        user.changeProfilePhoto(uploadUrl);
+        return new ProfilePhotoRes(uploadUrl);
     }
 }
