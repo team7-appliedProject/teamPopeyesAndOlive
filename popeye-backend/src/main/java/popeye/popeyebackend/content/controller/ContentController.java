@@ -22,11 +22,11 @@ public class ContentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
-    @GetMapping("/{userId}")
-    public Object get(@PathVariable Long userId) {
-        boolean hasPurchased = orderService.hasPurchased(userId, contentId); //유료서비스
-        return contentService.getContentWithAccessControl(id, hasPurchased);
-    } //제작자랑 어드민은 자기꺼보게
+//    @GetMapping("/{userId}")
+//    public Object get(@PathVariable Long userId) {
+//        boolean hasPurchased = orderService.hasPurchased(userId, contentId); //유료서비스
+//        return contentService.getContentWithAccessControl(id, hasPurchased);
+//    } //제작자랑 어드민은 자기꺼보게
 
     @DeleteMapping("/{contentId}")
     public ResponseEntity<Void> delete(
