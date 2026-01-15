@@ -49,6 +49,12 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+
+    // cloud 기능
+    implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
+
+    // content 내역에시 url을 뽑아내는 기능
+    implementation 'org.jsoup:jsoup:1.17.2'
 }
 
 tasks.named('test') {

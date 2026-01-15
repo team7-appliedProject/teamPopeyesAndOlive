@@ -66,6 +66,9 @@ public class Content {
     @OneToMany(fetch = FetchType.LAZY)
     private List<ContentBan> contentBan;
 
+    @OneToMany(mappedBy = "content")
+    private List<ContentMedia> contentMedia;
+
     public void activate() {    // 컨텐츠 공개
         this.contentStatus = ContentStatus.ACTIVE;
         this.modifiedAt = LocalDateTime.now();
