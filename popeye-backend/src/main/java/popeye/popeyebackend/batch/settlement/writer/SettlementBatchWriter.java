@@ -19,8 +19,8 @@ import popeye.popeyebackend.batch.settlement.dto.SettlementItemDto;
 import popeye.popeyebackend.pay.domain.Settlement;
 import popeye.popeyebackend.pay.repository.OrderSettlementRepository;
 import popeye.popeyebackend.pay.repository.SettlementRepository;
-import popeye.popeyebackend.user.domain.User;
-import popeye.popeyebackend.user.repository.UserRepository;
+import popeye.popeyebackend.user.domain.Creator;
+import popeye.popeyebackend.user.repository.CreatorRepository;
 
 /**
  * 정산 배치 Writer
@@ -33,7 +33,7 @@ public class SettlementBatchWriter implements ItemWriter<SettlementItemDto> {
 
 	private final SettlementRepository settlementRepository;
 	private final OrderSettlementRepository orderSettlementRepository;
-	private final UserRepository userRepository;
+	private final CreatorRepository creatorRepository;
 	private final ContentRepository contentRepository;
 
 	@Value("#{jobParameters['fromDate']}")
@@ -63,15 +63,15 @@ public class SettlementBatchWriter implements ItemWriter<SettlementItemDto> {
 			.distinct()
 			.toList();
 
-		// User와 Content 엔티티에 @Getter가 없으므로 리플렉션으로 id 접근
-		Map<Long, User> creatorMap = userRepository.findAllById(creatorIds).stream()
+		// Creator와 Content 엔티티 조회
+		Map<Long, Creator> creatorMap = creatorRepository.findAllById(creatorIds).stream()
 			.collect(Collectors.toMap(
-				this::getUserId,
+				Creator::getId,
 				creator -> creator
 			));
 		Map<Long, Content> contentMap = contentRepository.findAllById(contentIds).stream()
 			.collect(Collectors.toMap(
-				this::getContentId,
+				Content::getId,
 				content -> content
 			));
 
@@ -79,7 +79,7 @@ public class SettlementBatchWriter implements ItemWriter<SettlementItemDto> {
 
 		// Settlement 저장
 		for (SettlementItemDto item : items) {
-			User creator = creatorMap.get(item.creatorId());
+			Creator creator = creatorMap.get(item.creatorId());
 			Content content = contentMap.get(item.contentId());
 
 			if (creator == null || content == null) {
@@ -107,30 +107,5 @@ public class SettlementBatchWriter implements ItemWriter<SettlementItemDto> {
 		}
 	}
 
-	/**
-	 * User 엔티티의 id 필드 접근 (리플렉션 사용)
-	 */
-	private Long getUserId(User user) {
-		try {
-			java.lang.reflect.Field idField = popeye.popeyebackend.user.domain.User.class.getDeclaredField("id");
-			idField.setAccessible(true);
-			return (Long) idField.get(user);
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to get user id", e);
-		}
-	}
-
-	/**
-	 * Content 엔티티의 id 필드 접근 (리플렉션 사용)
-	 */
-	private Long getContentId(Content content) {
-		try {
-			java.lang.reflect.Field idField = popeye.popeyebackend.content.domain.Content.class.getDeclaredField("id");
-			idField.setAccessible(true);
-			return (Long) idField.get(content);
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to get content id", e);
-		}
-	}
 }
 

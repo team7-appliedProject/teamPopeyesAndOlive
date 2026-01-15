@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import popeye.popeyebackend.content.domain.Content;
-import popeye.popeyebackend.user.domain.User;
+import popeye.popeyebackend.user.domain.Creator;
 
 import java.time.LocalDateTime;
 
@@ -33,7 +33,7 @@ public class Settlement {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id", nullable = false)
-    private User creator;
+    private Creator creator;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "content_id", nullable = false)
