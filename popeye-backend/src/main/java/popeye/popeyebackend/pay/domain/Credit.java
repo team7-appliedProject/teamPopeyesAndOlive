@@ -1,8 +1,8 @@
 package popeye.popeyebackend.pay.domain;
 
 import jakarta.persistence.*;
-import popeye.popeyebackend.pay.enums.CreditType;
 import popeye.popeyebackend.user.domain.User;
+import popeye.popeyebackend.pay.enums.CreditType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

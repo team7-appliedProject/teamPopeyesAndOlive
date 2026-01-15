@@ -2,8 +2,8 @@ package popeye.popeyebackend.pay.domain;
 
 import jakarta.persistence.*;
 import popeye.popeyebackend.content.domain.Content;
-import popeye.popeyebackend.pay.enums.OrderStatus;
 import popeye.popeyebackend.user.domain.User;
+import popeye.popeyebackend.pay.enums.OrderStatus;
 
 import java.time.LocalDateTime;
 
@@ -16,7 +16,11 @@ public class Order {
     private Long id; // 주문 ID
 
     private int quantity;
+
+    @Column(name = "created_at")
     private LocalDateTime orderDate=LocalDateTime.now();
+
+    @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)

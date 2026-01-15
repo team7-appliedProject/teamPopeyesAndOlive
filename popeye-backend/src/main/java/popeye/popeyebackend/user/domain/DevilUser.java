@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Getter
 @Table(name = "devil_users")
@@ -19,11 +17,19 @@ public class DevilUser {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private LocalDateTime blockedAt;
+    private Long blockedDays = 0L;
 
     @Column
-    private Integer devilCount;
+    private Integer devilCount = 0;
 
     @Column
     private String hashedPhoneNumber;
+
+    public void plusBlockedDays(int days) {
+        this.blockedDays += days;
+    }
+
+    public void plusDevilCount() {
+        this.devilCount++;
+    }
 }

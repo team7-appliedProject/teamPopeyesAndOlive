@@ -3,6 +3,9 @@ package popeye.popeyebackend.user.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import popeye.popeyebackend.content.domain.Content;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -19,4 +22,9 @@ public class Creator {
 
     @Column(length = 500)
     private String account;
+
+    private String bankName;
+
+    @OneToMany(mappedBy = "creator")
+    private List<Content> contents;
 }

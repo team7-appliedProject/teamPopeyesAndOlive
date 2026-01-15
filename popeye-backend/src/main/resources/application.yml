@@ -9,10 +9,16 @@ spring:
       ddl-auto: update
     show-sql: true
 
-popeye:
-  secret-key: "my_super_secret_key_popeye_1234!"
+  batch:
+    jdbc:
+      initialize-schema: always
 
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD}
+
+popeye:
+  secret-key: "my_super_secret_key_popeye_1234!"
+

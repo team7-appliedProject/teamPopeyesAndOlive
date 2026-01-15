@@ -1,7 +1,8 @@
 package popeye.popeyebackend.user.domain;
 
 import jakarta.persistence.*;
-import popeye.popeyebackend.content.domain.Content;
+import lombok.Getter;
+import popeye.popeyebackend.content.domain.ContentBan;
 import popeye.popeyebackend.content.domain.ContentBookmark;
 import popeye.popeyebackend.notification.domain.Notification;
 import popeye.popeyebackend.pay.domain.Credit;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
+@Getter
 public class User {
     @Id
     private Long id;
@@ -26,22 +28,19 @@ public class User {
 
     private String password;
 
+    @Enumerated(EnumType.STRING)
     private Role role;
 
-    private LocalDateTime createdAt =  LocalDateTime.now();
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "phone_number", unique = true)
-    private Long number;
+    private String number;
 
     @Column(name = "total_spinach")
     private Integer totalSpinach = 0;
 
     @Column(name = "total_starcandy")
     private Integer totalStarcandy = 0;
-
-
-    @OneToMany(mappedBy = "creator")
-    private List<Content> contents;
 
     @OneToMany(mappedBy = "creator")
     private List<Settlement> settlements;
@@ -61,12 +60,27 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<ContentBookmark> bookmarks;
 
-    @OneToOne(mappedBy = "user")
-    private DevilUser devilUser;
+    @OneToMany(mappedBy = "admin")
+    private List<BannedUser> bannedUserList;
 
     @OneToMany(mappedBy = "reporter")
     private List<Report> reports;
 
-    @OneToMany(mappedBy = "reported")
-    private List<Report> complained;
+    @OneToOne(mappedBy = "user")
+    private DevilUser devilUser;
+
+    @OneToMany(mappedBy = "admin")
+    private List<ContentBan> contentBans;
+
+    @OneToOne(mappedBy = "user")
+    private Creator creator;
+
+    @OneToOne(mappedBy = "user")
+    private BannedUser bannedUser;
+
+    public void changeRole(Role role) {
+        this.role = role;
+    }
+
+
 }
