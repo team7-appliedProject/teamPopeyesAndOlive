@@ -20,7 +20,17 @@ bin/
 ### IntelliJ IDEA ###
 .idea
 *.iws
+*.pem
+
+# IDE 설정 무시
+.idea/
+.vscode/
 *.iml
+
+build/
+
+.gradle/
+
 *.ipr
 out/
 !**/src/main/**/out/

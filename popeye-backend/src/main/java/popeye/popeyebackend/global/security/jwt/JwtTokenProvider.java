@@ -48,7 +48,7 @@ public class JwtTokenProvider {
                 .signWith(key)
                 .compact();
     }
-
+//principaldetails
     public Authentication getAuthentication(String token) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUserEmail(token));
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
