@@ -30,11 +30,13 @@ public class WithdrawalController {
 	 */
 	@PostMapping
 	public ResponseEntity<WithdrawalResponse> requestWithdrawal(
-		@AuthenticationPrincipal PrincipalDetails userDetails,
+		// @AuthenticationPrincipal PrincipalDetails userDetails,
 		@PathVariable Long creatorId,
 		@Valid @RequestBody WithdrawalRequest request
 	) {
-		Long loginUserId = userDetails.getUserId();
+		// Long loginUserId = userDetails.getUserId();
+		Long loginUserId = 1L;
+
 		return ResponseEntity.ok(withdrawalService.requestWithdrawal(loginUserId, creatorId, request));
 	}
 
@@ -43,9 +45,11 @@ public class WithdrawalController {
 	 */
 	@GetMapping
 	public ResponseEntity<List<WithdrawalResponse>> getWithdrawals(
-		@AuthenticationPrincipal PrincipalDetails userDetails,
+		// @AuthenticationPrincipal PrincipalDetails userDetails,
 		@PathVariable Long creatorId) {
-		Long loginUserId = userDetails.getUserId();
+		// Long loginUserId = userDetails.getUserId();
+		Long loginUserId = 1L;
+
 		return ResponseEntity.ok(withdrawalService.getWithdrawals(loginUserId, creatorId));
 	}
 }

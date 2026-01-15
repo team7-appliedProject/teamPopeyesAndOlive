@@ -20,16 +20,18 @@ import popeye.popeyebackend.pay.service.SettlementService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/settlements")
+@RequestMapping("/api/creators/{creatorId}/settlements")
 public class SettlementController {
 
 	private final SettlementService settlementService;
 
-	@GetMapping("/creators/{creatorId}/available")
+	@GetMapping("/available-balance")
 	public ResponseEntity<AvailableBalanceResponse> getAvailableBalance(
-		@AuthenticationPrincipal PrincipalDetails userDetails,
+		// @AuthenticationPrincipal PrincipalDetails userDetails,
 		@PathVariable Long creatorId) {
-		Long loginUserId = userDetails.getUserId();
+		// Long loginUserId = userDetails.getUserId();
+		Long loginUserId = 1L;
+
 		return ResponseEntity.ok(settlementService.getAvailableBalance(loginUserId, creatorId));
 	}
 /*
