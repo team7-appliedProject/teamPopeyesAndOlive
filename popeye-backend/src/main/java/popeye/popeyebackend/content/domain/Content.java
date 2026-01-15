@@ -58,6 +58,9 @@ public class Content {
     @OneToMany(mappedBy = "content")
     private List<Order> orders;
 
+    @OneToMany(mappedBy = "content")
+    private List<ContentMedia> contentMedia;
+
     public void activate() {    // 컨텐츠 공개
         this.contentStatus = ContentStatus.ACTIVE;
         this.modifiedAt = LocalDateTime.now();
