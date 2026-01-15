@@ -1,0 +1,23 @@
+package popeye.popeyebackend.content.dto.response;
+
+import lombok.Getter;
+import popeye.popeyebackend.content.domain.Content;
+
+@Getter
+public class PreviewContentResponse { // 비로그인,미구매자는 미리보기만 봄
+
+    private Long id;
+    private String title;
+    private String preview;
+    private boolean isFree;
+
+    public static PreviewContentResponse from(Content c) {
+        PreviewContentResponse r = new PreviewContentResponse();
+        r.id = c.getId();
+        r.title = c.getTitle();
+        r.isFree = c.isFree();
+        r.preview = c.getContent().substring(0,
+                Math.min(100, c.getContent().length()));
+        return r;
+    }
+}

@@ -45,6 +45,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/admin/**").permitAll()
                         .requestMatchers("/api/report/**").permitAll()
+                        .requestMatchers("/api/contents/**").permitAll()
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
                 )
                 // UsernamePasswordAuthenticationFilter 이전에 JWT 인증 필터를 실행
