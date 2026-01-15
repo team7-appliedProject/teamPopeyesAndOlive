@@ -27,9 +27,15 @@ spring:
 
 popeye:
   secret-key: "my_super_secret_key_popeye_1234!"
+  toss:
+    secret-key: ${TOSS_SECRET_KEY}
+    client-key: ${TOSS_CLIENT_KEY}
+    base-url: https://api.tosspayments.com
 
 logging:
   level:
     root: INFO
     org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
+
+
