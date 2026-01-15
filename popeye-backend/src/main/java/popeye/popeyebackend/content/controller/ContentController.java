@@ -35,5 +35,4 @@ public class ContentController {
         contentService.deleteContent(user.getUserId(), contentId);
         return ResponseEntity.noContent().build();
     }
-
 }
