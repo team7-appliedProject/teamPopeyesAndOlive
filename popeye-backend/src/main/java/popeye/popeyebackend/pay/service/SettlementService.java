@@ -48,18 +48,4 @@ public class SettlementService {
 		return new AvailableBalanceResponse(settlementSum, withdrawnSum, available);
 	}
 
-	// /**
-	//  * Creator의 각 컨텐츠별 누적 정산 조회
-	//  */
-	// public List<ContentSettlementSummaryResponse> getContentSettlementSummaries(Long contentId) {
-	//
-	// }
-	//
-	// /**
-	//  * 컨텐츠의 정산 내역 조회
-	//  */
-	// public DailyContentSettlementResponse getDailyContentSettlement(Long contentId, LocalDate from, LocalDate to) {
-	//
-	// }
-
 }
