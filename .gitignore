@@ -42,5 +42,6 @@ out/
 
 ### Database
 /db/**
+/mysql-data**
 
 *.pem

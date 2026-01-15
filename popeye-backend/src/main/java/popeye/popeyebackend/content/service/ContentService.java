@@ -1,8 +1,9 @@
 package popeye.popeyebackend.content.service;
 
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.dto.request.ContentCreateRequest;
 import popeye.popeyebackend.content.dto.response.ContentResponse;
@@ -23,14 +24,12 @@ public class ContentService {
     public Long createContent(Long userId, ContentCreateRequest req) {
         User creator = userRepository.findById(userId).orElseThrow();
 
-        Content content = Content.create( //build 패턴
-                creator,
-                req.getTitle(),
-                req.getBody(),
-                req.getPrice(), //null 처리하기
-                req.getDiscountRate(), //여기도
-                req.isFree()
-        );
+        Content content = Content.builder()
+                .title(req.getTitle())
+                .content(req.getContent())
+                .price(req.getPrice())
+                .discountRate(req.getDiscountRate())
+                .isFree(req.isFree()).build();
 
         return contentRepository.save(content).getId();
     }
@@ -46,7 +45,8 @@ public class ContentService {
 
     @Transactional(readOnly = true)
     public Object getContentWithAccessControl(Long contentId, boolean hasPurchased) {
-        Content c = contentRepository.findByIdAndStatus(contentId, ContentStatus.ACTIVE).orElseThrow();
+        Content c = contentRepository.findByIdAndContentStatus(contentId, ContentStatus.ACTIVE)
+                .orElseThrow();
         c.increaseViewCount();
 
         if (c.isFree() || hasPurchased) {

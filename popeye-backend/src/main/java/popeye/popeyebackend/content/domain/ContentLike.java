@@ -1,6 +1,7 @@
 package popeye.popeyebackend.content.domain;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import popeye.popeyebackend.user.domain.User;
@@ -28,12 +29,10 @@ public class ContentLike {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    public static ContentLike create(User user, Content content) {
-        ContentLike like = new ContentLike();
-        like.user = user;
-        like.content = content;
-        like.createdAt = LocalDateTime.now();
-        return like;
+    @Builder
+    public ContentLike (User user, Content content) {
+        this.user = user;
+        this.content = content;
     }
 
 }

@@ -33,7 +33,11 @@ public class ContentLikeService {
             likeRepository.deleteByUserAndContent(user, content);
             content.decreaseLike();
         } else {
-            likeRepository.save(ContentLike.create(user, content));
+            ContentLike contentLike = ContentLike.builder()
+                    .user(user)
+                    .content(content).build();
+
+            likeRepository.save(contentLike);
             content.increaseLike();
         }
     }

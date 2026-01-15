@@ -1,13 +1,14 @@
 package popeye.popeyebackend.content.domain;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import popeye.popeyebackend.pay.domain.Order;
 import popeye.popeyebackend.content.enums.ContentStatus;
 import popeye.popeyebackend.user.domain.User;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -15,26 +16,33 @@ import java.util.List;
 @Table(name = "contents")
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Content {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String title;
-
+    @Column(nullable = false)
     private String content;
-
+    @Column(nullable = false)
     private int price;
-
+    @Column(nullable = false)
     private int discountRate;
-
+    @Column(nullable = false)
     private boolean isFree;
 
-    private Integer viewCount;
+    private LocalDateTime modifiedAt;
 
+    @Builder.Default
+    private Integer viewCount = 0;
+    @Builder.Default
     private LocalDateTime createdAt =  LocalDateTime.now();
 
-    private LocalDateTime modifiedAt;
+    @Builder.Default
+    private long likeCount = 0;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
@@ -64,17 +72,14 @@ public class Content {
         return this.contentStatus.equals(ContentStatus.ACTIVE);
     }
 
-    private long viewCount = 0;
     public void increaseViewCount() {
         this.viewCount++;
     }
 
     public void publish() {
-        this.status = ContentStatus.ACTIVE;
+        this.contentStatus = ContentStatus.ACTIVE;
         this.modifiedAt = LocalDateTime.now();
     }
-
-    private long likeCount = 0;
 
     public void increaseLike() {
         this.likeCount++;
