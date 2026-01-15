@@ -3,6 +3,7 @@ package popeye.popeyebackend.pay.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import popeye.popeyebackend.global.security.details.PrincipalDetails;
 import popeye.popeyebackend.pay.dto.withdrawal.WithdrawalRequest;
 import popeye.popeyebackend.pay.dto.withdrawal.WithdrawalResponse;
 import popeye.popeyebackend.pay.service.WithdrawalService;
@@ -28,17 +30,22 @@ public class WithdrawalController {
 	 */
 	@PostMapping
 	public ResponseEntity<WithdrawalResponse> requestWithdrawal(
+		@AuthenticationPrincipal PrincipalDetails userDetails,
 		@PathVariable Long creatorId,
 		@Valid @RequestBody WithdrawalRequest request
 	) {
-		return ResponseEntity.ok(withdrawalService.requestWithdrawal(creatorId, request));
+		Long loginUserId = userDetails.getUserId();
+		return ResponseEntity.ok(withdrawalService.requestWithdrawal(loginUserId, creatorId, request));
 	}
 
 	/**
 	 * 크리에이터의 출금 내역 조회
 	 */
 	@GetMapping
-	public ResponseEntity<List<WithdrawalResponse>> getWithdrawals(@PathVariable Long creatorId) {
-		return ResponseEntity.ok(withdrawalService.getWithdrawals(creatorId));
+	public ResponseEntity<List<WithdrawalResponse>> getWithdrawals(
+		@AuthenticationPrincipal PrincipalDetails userDetails,
+		@PathVariable Long creatorId) {
+		Long loginUserId = userDetails.getUserId();
+		return ResponseEntity.ok(withdrawalService.getWithdrawals(loginUserId, creatorId));
 	}
 }

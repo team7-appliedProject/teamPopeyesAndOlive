@@ -30,18 +30,21 @@ public class SettlementService {
 	 * 따라서 Creator를 조회하여 User의 id를 얻어야 합니다.
 	 */
 	@Transactional(readOnly = true)
-	public AvailableBalanceResponse getAvailableBalance(Long creatorId) {
+	public AvailableBalanceResponse getAvailableBalance(Long loginUserId, Long creatorId) {
 		// Creator 조회하여 User의 id 얻기 (fetch join으로 user도 함께 로드)
 		Creator creator = creatorRepository.findByIdWithUser(creatorId)
 			.orElseThrow(() -> new IllegalArgumentException("크리에이터를 찾을 수 없습니다: " + creatorId));
-		Long userId = getUserId(creator.getUser());
+		Long userId = creator.getUser().getId();
+
+		if (!loginUserId.equals(userId)) {
+			throw new IllegalArgumentException("크리에이터 본인만 조회할 수 있습니다.");
+		}
 
 		// Settlement는 User를 creator로 사용하므로 User의 id를 전달
 		long settlementSum = settlementRepository.sumTotalAmountByCreator(userId);
 		// Withdrawal는 Creator를 사용하므로 Creator의 id를 전달
 		long withdrawnSum = withdrawalRepository.sumAmountByCreatorIdAndStatus(creatorId, WithdrawalStatus.SUC);
 		long available = settlementSum - withdrawnSum;
-
 		return new AvailableBalanceResponse(settlementSum, withdrawnSum, available);
 	}
 
@@ -58,18 +61,5 @@ public class SettlementService {
 	// public DailyContentSettlementResponse getDailyContentSettlement(Long contentId, LocalDate from, LocalDate to) {
 	//
 	// }
-
-	/**
-	 * User 엔티티의 id 필드 접근 (리플렉션 사용)
-	 */
-	private Long getUserId(popeye.popeyebackend.user.domain.User user) {
-		try {
-			java.lang.reflect.Field idField = popeye.popeyebackend.user.domain.User.class.getDeclaredField("id");
-			idField.setAccessible(true);
-			return (Long)idField.get(user);
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to get user id", e);
-		}
-	}
 
 }
