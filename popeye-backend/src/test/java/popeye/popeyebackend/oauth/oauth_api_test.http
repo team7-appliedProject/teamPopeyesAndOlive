@@ -31,3 +31,84 @@ Content-Type: application/json
 PATCH http://localhost:8080/api/users/me/creator
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
+
+
+###===================회원가입2차
+###1. 회원가입 (U-01/U-04)
+#가입 시 1000 시금치가 자동 지급되고 추천 코드가 생성됩니다.
+
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+"email": "test2@pp.com",
+"password": "qwer@123",
+"nickname": "울퉁불퉁토마토",
+"phoneNumber": "01012345677"
+}
+
+###2. 로그인 (U-02)
+#로그인 후 발급된 토큰을 전역 변수(auth_token)에 저장합니다.
+
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test2@pp.com",
+  "password": "qwer@123"
+}
+
+{%
+if (response.status === 200) {
+client.global.set("auth_token", response.body.data.accessToken);
+client.log("토큰 저장 완료: " + client.global.get("auth_token"));
+}
+%}
+
+###3. 내 프로필 조회 (U-04)
+#추천 코드(8자리), 시금치(1000), 별사탕(0)이 나오는지 확인합니다.
+
+GET {{host}}/api/users/me
+Authorization: Bearer {{auth_token}}
+
+###4. 프로필 정보 수정 (U-04)
+#닉네임과 프로필 이미지를 변경합니다.
+
+PATCH {{host}}/api/users/me
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+"nickname": "멋진올리브",
+"profileImageUrl": "https://www.google.com/search?q=https://popeye.com/profiles/olive.png"
+}
+
+###5. 수정 결과 확인 (U-04)
+
+###닉네임이 변경되었는지, 추천 코드는 그대로 유지되는지 확인합니다.
+
+GET {{host}}/api/users/me
+Authorization: Bearer {{auth_token}}
+
+###6. 닉네임 중복 체크 테스트
+###이미 사용 중인 닉네임('멋진올리브')으로 변경 시도 시 에러가 나야 합니다.
+
+PATCH {{host}}/api/users/me
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+"nickname": "멋진올리브"
+}
+
+###7. 크리에이터 승격 요청 (U-03)
+###Role이 CREATOR로 바뀌고 creators 테이블에 레코드가 생깁니다.
+
+PATCH {{host}}/api/users/me/creator
+Authorization: Bearer {{auth_token}}
+
+###8. 승격 후 최종 상태 확인
+###Role이 ROLE_CREATOR로 변경되었는지 확인합니다.
+
+GET {{host}}/api/users/me
+Authorization: Bearer {{auth_token}}
