@@ -10,6 +10,7 @@ import popeye.popeyebackend.pay.domain.Credit;
 import popeye.popeyebackend.pay.domain.Order;
 import popeye.popeyebackend.pay.enums.CreditType;
 import popeye.popeyebackend.pay.enums.OrderStatus;
+import popeye.popeyebackend.pay.enums.ReasonType;
 import popeye.popeyebackend.pay.exception.ApiException;
 import popeye.popeyebackend.pay.exception.ErrorCode;
 import popeye.popeyebackend.pay.repository.CreditRepository;
@@ -26,6 +27,7 @@ public class OrderService {
     private final ContentRepository contentRepository;
     private final CreditRepository creditRepository;
     private final OrderRepository orderRepository;
+    private final CreditHistoryService creditHistoryService;
 
     @Transactional
     public Long purchase(User user, Long contentId){
@@ -39,7 +41,8 @@ public class OrderService {
         int priceCredits = calculatePriceCredits(content);
 
         if (priceCredits == 0){
-            return saveOrder(user, content, 0, 0, 0);
+            Long orderId = saveOrder(user, content, 0, 0, 0);
+            return orderId;
         }
 
         //사용 가능한 credit 조회
@@ -51,12 +54,13 @@ public class OrderService {
             throw new ApiException(ErrorCode.NOT_ENOUGH_CREDIT);
         }
 
-        // FREE -> PAID 순으로 차감
+
         int remain = priceCredits;
 
         int usedFree = 0;
         int usedPaid = 0;
 
+        // FREE -> PAID 순으로 차감
         List<Credit> freeCredits = usable.stream()
                 .filter(c -> c.getCreditType() == CreditType.FREE)
                 .sorted(Comparator.comparing(Credit::getExpiredAt, Comparator.naturalOrder()))
@@ -88,8 +92,33 @@ public class OrderService {
             throw new ApiException(ErrorCode.NOT_ENOUGH_CREDIT);
         }
 
-        return saveOrder(user, content, priceCredits, usedFree, usedPaid);
+        Long orderId = saveOrder(user, content, priceCredits, usedFree, usedPaid);
+
+        if (usedFree > 0){
+            creditHistoryService.record(
+                    user,
+                    CreditType.FREE,
+                    ReasonType.PURCHASE,
+                    -usedFree,
+                    orderId,
+                    null
+            );
+        }
+        if (usedPaid > 0){
+            creditHistoryService.record(
+                    user,
+                    CreditType.FREE,
+                    ReasonType.PURCHASE,
+                    -usedPaid,
+                    orderId,
+                    null
+            );
+        }
+
+        return orderId;
     }
+
+
 
     private Long saveOrder(User user, Content content, int totalUsed, int usedFree, int usedPaid){
         try{

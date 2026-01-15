@@ -7,6 +7,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import popeye.popeyebackend.pay.domain.Credit;
 import popeye.popeyebackend.pay.domain.Payment;
 import popeye.popeyebackend.pay.dto.payment.PreparePaymentResponseDto;
+import popeye.popeyebackend.pay.enums.ReasonType;
 import popeye.popeyebackend.pay.toss.TossPaymentsClient;
 import popeye.popeyebackend.pay.toss.dto.confirm.TossConfirmResponseDto;
 import popeye.popeyebackend.user.domain.User;
@@ -115,19 +116,18 @@ public class PaymentService {
                 .expiredAt(null)
                 .build();
         creditRepository.save(credit);
+
+        creditHistoryService.record(
+                payment.getUser(),
+                CreditType.PAID,
+                ReasonType.CHARGE,
+                +payment.getCreditAmount(),
+                null,
+                payment.getId()
+        );
     }
 
-    /**
-     * 결제 승인 실패 반영:
-     * - Payment: CREATED -> ABORTED
-     * - Credit 생성 없음
-     */
-    @Transactional
-    public void abortCharge(Long paymentId, String reason){
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new ApiException(ErrorCode.PAYMENT_NOT_FOUND));
-        payment.abort(reason);
-    }
+
 
     /**
     * 환불:
@@ -181,6 +181,27 @@ public class PaymentService {
         // 2) PG 취소 성공 후에만 로컬 상태 변경
         credit.zeroize();
         payment.cancel();
+
+        creditHistoryService.record(
+                payment.getUser(),
+                CreditType.PAID,
+                ReasonType.REFUND,
+                -payment.getCreditAmount(),
+                null,
+                payment.getId()
+        );
+    }
+
+    /**
+     * 결제 승인 실패 반영:
+     * - Payment: CREATED -> ABORTED
+     * - Credit 생성 없음
+     */
+    @Transactional
+    public void abortCharge(Long paymentId, String reason){
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new ApiException(ErrorCode.PAYMENT_NOT_FOUND));
+        payment.abort(reason);
     }
 
 
