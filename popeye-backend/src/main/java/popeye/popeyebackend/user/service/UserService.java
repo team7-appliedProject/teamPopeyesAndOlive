@@ -27,6 +27,7 @@ import popeye.popeyebackend.user.repository.CreatorRepository;
 import popeye.popeyebackend.user.repository.DevilUserRepository;
 import popeye.popeyebackend.user.repository.UserRepository;
 import popeye.popeyebackend.global.util.HashUtil;
+import popeye.popeyebackend.user.service.PhoneVerificationService;
 
 import java.time.LocalDate;
 
@@ -41,10 +42,16 @@ public class UserService {
     private final DevilUserRepository devilUserRepository;
     private final CreatorRepository creatorRepository;
     private final BannedUserRepository bannedUserRepository;
+    private final PhoneVerificationService phoneVerificationService;
 
-    //U-01: 회원가입 - 완료
+    //U-01: 회원가입, U-02: 본인 인증 검증 추가
     @Transactional
     public Long signup(SignupRequest request) {
+        // 휴대폰폰 본인 인증 완료 여부 확인
+        if (!phoneVerificationService.isVerified(request.getPhoneNumber())) {
+            throw new IllegalArgumentException("본인 인증이 완료되지 않았습니다. 먼저 휴대폰 인증을 완료해주세요.");
+        }
+
         String hashedPhone = HashUtil.hashPhoneNumber(request.getPhoneNumber());
         if (bannedUserRepository.existsByHashedPhoneNumber(hashedPhone)) {
             throw new IllegalArgumentException("차단된 휴대폰 번호로는 가입할 수 없습니다.");
