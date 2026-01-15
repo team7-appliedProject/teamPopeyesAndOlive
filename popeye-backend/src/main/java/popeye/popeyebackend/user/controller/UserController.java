@@ -5,6 +5,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import popeye.popeyebackend.global.common.ApiResponse;
+import popeye.popeyebackend.user.dto.request.SettlementInfoRequest;
 import popeye.popeyebackend.user.dto.request.UpdateProfileRequest;
 import popeye.popeyebackend.user.dto.response.UserProfileResponse;
 import popeye.popeyebackend.user.service.UserService;
@@ -38,5 +39,14 @@ public class UserController {
             @RequestBody UpdateProfileRequest request) {
         userService.updateProfile(userDetails.getUsername(), request);
         return ApiResponse.success("프로필 정보가 수정되었습니다.", null);
+    }
+
+    //U-08: 크리에이터 정산 정보 업데이트
+    @PatchMapping("/me/settlement")
+    public ApiResponse<Void> updateSettlementInfo(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody SettlementInfoRequest request) {
+        userService.updateSettlementInfo(userDetails.getUsername(), request);
+        return ApiResponse.success("정산 정보가 업데이트되었습니다.", null);
     }
 }
