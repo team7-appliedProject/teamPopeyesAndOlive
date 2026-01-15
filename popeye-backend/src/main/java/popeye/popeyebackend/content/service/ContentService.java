@@ -11,6 +11,8 @@ import popeye.popeyebackend.content.dto.response.FullContentResponse;
 import popeye.popeyebackend.content.dto.response.PreviewContentResponse;
 import popeye.popeyebackend.content.enums.ContentStatus;
 import popeye.popeyebackend.content.repository.ContentRepository;
+import popeye.popeyebackend.pay.enums.OrderStatus;
+import popeye.popeyebackend.pay.repository.OrderRepository;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.repository.UserRepository;
 
@@ -20,6 +22,7 @@ import popeye.popeyebackend.user.repository.UserRepository;
 public class ContentService {
     private final ContentRepository contentRepository;
     private final UserRepository userRepository;
+    private final OrderRepository orderRepository; // 추가
 
     public Long createContent(Long userId, ContentCreateRequest req) {
         User creator = userRepository.findById(userId).orElseThrow();
