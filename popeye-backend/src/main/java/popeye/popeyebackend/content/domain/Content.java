@@ -1,6 +1,7 @@
 package popeye.popeyebackend.content.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import popeye.popeyebackend.pay.domain.Order;
 import popeye.popeyebackend.content.enums.ContentStatus;
 import popeye.popeyebackend.user.domain.User;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "contents")
+@Getter
 public class Content {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
