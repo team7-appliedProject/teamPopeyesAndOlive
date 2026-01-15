@@ -29,11 +29,11 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
-			//.csrf(AbstractHttpConfigurer::disable)
 			.csrf(csrf -> csrf.disable())
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 미사용
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/api/auth/**","/error").permitAll() // 인증 불필요 경로
+				.requestMatchers("/error", "/api/auth/**").permitAll()
+				.requestMatchers("/api/creators/{creatorId}/**").permitAll() // 테스트용: 정산 관련 엔드포인트만 허용
 				.anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
 			)
 			// UsernamePasswordAuthenticationFilter 이전에 JWT 인증 필터를 실행
