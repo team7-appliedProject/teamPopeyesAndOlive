@@ -10,10 +10,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import lombok.RequiredArgsConstructor;
-import popeye.popeyebackend.batch.dto.SettlementItemDto;
-import popeye.popeyebackend.batch.processor.SettlementBatchProcessor;
-import popeye.popeyebackend.batch.reader.SettlementBatchReader;
-import popeye.popeyebackend.batch.writer.SettlementBatchWriter;
+import popeye.popeyebackend.batch.settlement.dto.SettlementItemDto;
+import popeye.popeyebackend.batch.settlement.processor.SettlementBatchProcessor;
+import popeye.popeyebackend.batch.settlement.reader.SettlementBatchReader;
+import popeye.popeyebackend.batch.settlement.writer.SettlementBatchWriter;
+import popeye.popeyebackend.batch.statistics.DailyStatsTasklet;
 import popeye.popeyebackend.pay.repository.SettlementAggregateProjection;
 
 /**
@@ -22,7 +23,7 @@ import popeye.popeyebackend.pay.repository.SettlementAggregateProjection;
  */
 @Configuration
 @RequiredArgsConstructor
-public class SettlementBatchConfig {
+public class PopeyeBatchConfig {
 
 	private final JobRepository jobRepository;
 	private final PlatformTransactionManager transactionManager;
@@ -30,7 +31,10 @@ public class SettlementBatchConfig {
 	private final SettlementBatchProcessor settlementBatchProcessor;
 	private final SettlementBatchWriter settlementBatchWriter;
 
-	@Bean
+    private final DailyStatsTasklet dailyStatsTasklet;
+
+
+    @Bean
 	public Job settlementJob() {
 		return new JobBuilder("settlementJob", jobRepository)
 			.start(settlementStep())
@@ -46,5 +50,18 @@ public class SettlementBatchConfig {
 			.writer(settlementBatchWriter)
 			.build();
 	}
-}
 
+    @Bean
+    public Job statisticsJob() {
+        return new JobBuilder("statisticsJob", jobRepository)
+                .start(statisticsStep())
+                .build();
+    }
+
+    @Bean
+    public Step statisticsStep() {
+        return new StepBuilder("statisticsStep", jobRepository)
+                .tasklet(dailyStatsTasklet, transactionManager)
+                .build();
+    }
+}

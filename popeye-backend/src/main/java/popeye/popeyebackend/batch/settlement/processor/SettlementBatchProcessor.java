@@ -1,4 +1,4 @@
-package popeye.popeyebackend.batch.processor;
+package popeye.popeyebackend.batch.settlement.processor;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
-import popeye.popeyebackend.batch.dto.SettlementItemDto;
+import popeye.popeyebackend.batch.settlement.dto.SettlementItemDto;
 import popeye.popeyebackend.pay.repository.SettlementAggregateProjection;
 
 /**

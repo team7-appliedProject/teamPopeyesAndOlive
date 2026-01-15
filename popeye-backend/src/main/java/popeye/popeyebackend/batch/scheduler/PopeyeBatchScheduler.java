@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import popeye.popeyebackend.pay.service.CreditExpirationService;
 
 /**
  * 정산 배치 스케줄러
@@ -23,12 +24,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SettlementBatchScheduler {
+public class PopeyeBatchScheduler {
 
 	private final JobLauncher jobLauncher;
 	private final Job settlementJob;
+    private final Job statisticsJob;
 
-	private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
+    private final CreditExpirationService creditExpirationService;
+
+
+    private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
 	private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 	private static final double FEE_RATE = 0.10;
 
@@ -63,6 +68,26 @@ public class SettlementBatchScheduler {
 			throw new RuntimeException("Settlement batch failed", e);
 		}
 	}
+
+    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
+    public void expireFreeCreditsDaily(){
+        log.info("무료 크레딧 만료 스케줄러 시작");
+        int updated = creditExpirationService.expireFreeCreditsNow();
+        log.info("크레딧 만료 처리 완료. 업데이트된 행 개수= {}", updated);
+    }
+
+    @Scheduled(cron = "0 10 0 * * *")
+    public void runDailyStatistics() {
+        try {
+            JobParameters jobParameters = new JobParametersBuilder()
+                    .addLong("time", System.currentTimeMillis())
+                    .toJobParameters();
+
+            jobLauncher.run(statisticsJob, jobParameters);
+        } catch (Exception e) {
+            log.error("통계 배치 실패", e);
+        }
+    }
 }
 
 

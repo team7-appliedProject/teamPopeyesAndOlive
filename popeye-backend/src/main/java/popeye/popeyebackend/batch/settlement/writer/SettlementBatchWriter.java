@@ -1,4 +1,4 @@
-package popeye.popeyebackend.batch.writer;
+package popeye.popeyebackend.batch.settlement.writer;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.repository.ContentRepository;
-import popeye.popeyebackend.batch.dto.SettlementItemDto;
+import popeye.popeyebackend.batch.settlement.dto.SettlementItemDto;
 import popeye.popeyebackend.pay.domain.Settlement;
 import popeye.popeyebackend.pay.repository.OrderSettlementRepository;
 import popeye.popeyebackend.pay.repository.SettlementRepository;

@@ -1,4 +1,4 @@
-package popeye.popeyebackend.batch.dto;
+package popeye.popeyebackend.batch.settlement.dto;
 
 /**
  * 정산 배치 Processor에서 생성하는 DTO
