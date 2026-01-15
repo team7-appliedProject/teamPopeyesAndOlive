@@ -1,0 +1,11 @@
+### 1. contents 만들기
+POST http://localhost:8080/api/contents
+Content-Type: application/json
+
+{
+  "title": "test title",
+  "content": "test content",
+  "price": 0,
+  "discountRate": 0,
+  "isFree": true
+}

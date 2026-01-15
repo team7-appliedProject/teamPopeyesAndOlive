@@ -4,7 +4,7 @@ import lombok.Getter;
 import popeye.popeyebackend.content.domain.Content;
 
 @Getter
-public class PreviewContentResponse {
+public class PreviewContentResponse { // 비로그인,미구매자는 미리보기만 봄
 
     private Long id;
     private String title;

@@ -1,6 +1,5 @@
 package popeye.popeyebackend.content.service;
 
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -9,10 +8,13 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.domain.ContentMedia;
 import popeye.popeyebackend.content.dto.request.ContentCreateRequest;
 import popeye.popeyebackend.content.dto.response.ContentResponse;
+import popeye.popeyebackend.content.dto.response.FullContentResponse;
+import popeye.popeyebackend.content.dto.response.PreviewContentResponse;
 import popeye.popeyebackend.content.enums.ContentStatus;
 import popeye.popeyebackend.content.enums.MediaType;
 import popeye.popeyebackend.content.repository.ContentMediaRepository;
@@ -34,14 +36,12 @@ public class ContentService {
     public Long createContent(Long userId, ContentCreateRequest req) {
         User creator = userRepository.findById(userId).orElseThrow();
 
-        Content content = Content.create( //build 패턴
-                creator,
-                req.getTitle(),
-                req.getBody(),
-                req.getPrice(), //null 처리하기
-                req.getDiscountRate(), //여기도
-                req.isFree()
-        );
+        Content content = Content.builder()
+                .title(req.getTitle())
+                .content(req.getContent())
+                .price(req.getPrice())
+                .discountRate(req.getDiscountRate())
+                .isFree(req.isFree()).build();
 
         Content saved = contentRepository.save(content);
 
@@ -71,6 +71,30 @@ public class ContentService {
         content.increaseViewCount();
         return ContentResponse.from(content);
     }
+
+    @Transactional(readOnly = true)
+    public Object getContentWithAccessControl(Long contentId, boolean hasPurchased) {
+        Content c = contentRepository.findByIdAndContentStatus(contentId, ContentStatus.ACTIVE)
+                .orElseThrow();
+        c.increaseViewCount();
+
+        if (c.isFree() || hasPurchased) {
+            return FullContentResponse.from(c);
+        }
+        return PreviewContentResponse.from(c);
+    }
+
+    public void deleteContent(Long userId, Long contentId) {
+        Content content = contentRepository.findById(contentId)
+                .orElseThrow();
+
+        if (!content.getCreator().getId().equals(userId)) {
+            throw new IllegalStateException("작성자만 삭제할 수 있습니다.");
+        }
+
+        content.inactivate(); // 실제 삭제 아님 (비공개 처리)
+    }
+
 
     // content에서 media url 추출
     private List<ExtractedMediaInfo> extractImageUrls(String htmlContent) {

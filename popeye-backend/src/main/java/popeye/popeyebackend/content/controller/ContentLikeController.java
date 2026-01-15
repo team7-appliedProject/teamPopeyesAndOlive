@@ -1,0 +1,27 @@
+package popeye.popeyebackend.content.controller;
+
+import jakarta.persistence.*;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import popeye.popeyebackend.content.service.ContentLikeService;
+
+@RestController
+@RequestMapping("/api/contents")
+@RequiredArgsConstructor
+public class ContentLikeController {
+    ContentLikeService contentLikeService;
+
+    @PostMapping("/{id}/like")
+    public ResponseEntity<Void> toggleLike(
+//            @AuthenticationPrincipal PrincipalDetails details,
+            @PathVariable Long id) {
+        contentLikeService.toggleLike(1L, id); // 임시 userId
+        return ResponseEntity.ok().build();
+    }
+}
