@@ -1,0 +1,12 @@
+*.pem
+
+# IDE 설정 무시
+.idea/
+.vscode/
+*.iml
+
+build/
+
+.gradle/
+
+out/
