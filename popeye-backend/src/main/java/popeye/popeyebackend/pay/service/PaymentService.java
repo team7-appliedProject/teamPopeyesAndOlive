@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpStatusCodeException;
+import popeye.popeyebackend.global.exception.ErrorCode;
 import popeye.popeyebackend.pay.domain.Credit;
 import popeye.popeyebackend.pay.domain.Payment;
 import popeye.popeyebackend.pay.dto.payment.PreparePaymentResponseDto;
@@ -15,7 +16,6 @@ import popeye.popeyebackend.pay.enums.CreditType;
 import popeye.popeyebackend.pay.enums.PaymentType;
 import popeye.popeyebackend.pay.enums.PgProvider;
 import popeye.popeyebackend.pay.exception.ApiException;
-import popeye.popeyebackend.pay.exception.ErrorCode;
 import popeye.popeyebackend.pay.repository.CreditRepository;
 import popeye.popeyebackend.pay.repository.PaymentRepository;
 

@@ -20,7 +20,13 @@ public enum ErrorCode {
     LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "U003", "이메일 또는 비밀번호가 일치하지 않습니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U004", "해당 사용자를 찾을 수 없습니다."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "U005", "유효하지 않은 토능입니다."),
-    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "U006", "만료된 토큰입니다.");
+    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "U006", "만료된 토큰입니다."),
+
+    // pay
+    INVALID_REQUEST(HttpStatus.BAD_REQUEST,"P001", "잘못된 요청입니다."),
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "P002","결제 정보를 찾을 수 없습니다."),
+    ALREADY_REFUNDED(HttpStatus.BAD_REQUEST, "P003","이미 환불된 결제입니다."),
+    NOT_ENOUGH_CREDIT(HttpStatus.BAD_REQUEST, "P004","크레딧이 부족합니다.");
 
     private final HttpStatus status;
     private final String code;

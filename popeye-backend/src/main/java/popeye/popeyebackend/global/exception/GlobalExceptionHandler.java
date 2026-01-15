@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import popeye.popeyebackend.global.common.ApiResponse;
 import popeye.popeyebackend.global.exception.dto.ErrorResponse;
+import popeye.popeyebackend.pay.exception.ApiException;
 import popeye.popeyebackend.report.exception.AlreadyProcessedException;
 import popeye.popeyebackend.report.exception.AlreadyReportException;
 import popeye.popeyebackend.report.exception.MissedReportTypeException;
@@ -96,6 +97,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ApiResponse.error(errorCode.getMessage()));
+    }
+
+    /**
+     * 비즈니스 예외
+     */
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ErrorResponse> handleApiException(ApiException e) {
+        return ResponseEntity
+                .status(e.getErrorCode().getStatus())
+                .body(ErrorResponse.of(e.getErrorCode().name(),e.getErrorCode().getMessage()));
     }
 
     //기타 최상위 예외처리
