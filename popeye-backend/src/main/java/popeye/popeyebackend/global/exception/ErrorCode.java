@@ -26,7 +26,11 @@ public enum ErrorCode {
     INVALID_REQUEST(HttpStatus.BAD_REQUEST,"P001", "잘못된 요청입니다."),
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "P002","결제 정보를 찾을 수 없습니다."),
     ALREADY_REFUNDED(HttpStatus.BAD_REQUEST, "P003","이미 환불된 결제입니다."),
-    NOT_ENOUGH_CREDIT(HttpStatus.BAD_REQUEST, "P004","크레딧이 부족합니다.");
+    NOT_ENOUGH_CREDIT(HttpStatus.BAD_REQUEST, "P004","크레딧이 부족합니다."),
+
+    // notification
+    NO_NOTIFICATION(HttpStatus.NOT_FOUND, "N001", "알림이 없습니다."),
+    ALREADY_READ(HttpStatus.BAD_REQUEST, "N002", "이미 읽은 알림입니다.");
 
     private final HttpStatus status;
     private final String code;
