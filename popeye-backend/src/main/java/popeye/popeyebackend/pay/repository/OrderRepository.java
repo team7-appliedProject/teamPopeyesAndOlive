@@ -8,7 +8,9 @@ import popeye.popeyebackend.pay.domain.Order;
 import java.time.LocalDateTime;
 
 public interface OrderRepository extends JpaRepository<Order,Long> {
-    @Query("select coalesce(sum(o.usedSpinach), 0) from Order o " +
-            "where o.orderDate between :start and :end")
+    @Query("select coalesce(sum(o.usedFreeCredit), 0) from Order o " +
+            "where o.createdAt between :start and :end")
     Long sumDailySpinachUsedByDate(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    boolean existsByUser_IdAndContent_Id(Long userId, Long contentId);
+
 }

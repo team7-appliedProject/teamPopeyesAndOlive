@@ -43,6 +43,9 @@ public class User {
     @Builder.Default
     private final LocalDateTime createdAt =  LocalDateTime.now();
 
+    @Builder.Default
+    private final LocalDateTime updatedAt = LocalDateTime.now();
+
     @Column(name = "phone_number", unique = true, nullable = false)
     private String phoneNumber;
 
@@ -56,15 +59,15 @@ public class User {
 
     // U-04: 프로필 이미지 URL
     @Column(name = "profile_image_url")
-    private String profileImageUrl;
+    @Builder.Default
+    private String profileImageUrl = "https://popeye-project-media-bucket.s3.ap-northeast-2.amazonaws.com/user_profile/%EB%BD%80%EB%B9%A0%EC%9D%B4.jpg";
 
     // U-04: 추천 코드
     @Column(name = "referral_code", unique = true)
     private String referralCode;
 
-
-    @OneToMany(mappedBy = "creator")
-    private List<Settlement> settlements;
+    // @OneToMany(mappedBy = "creator")
+    // private List<Settlement> settlements;
 
     @OneToMany(mappedBy = "user")
     private List<Order> orders;
@@ -96,20 +99,17 @@ public class User {
     @OneToOne(mappedBy = "user")
     private Creator creator;
 
-    @OneToOne(mappedBy = "user")
-    private BannedUser bannedUser;
+    @OneToMany(mappedBy = "user")
+    private List<BannedUser> bannedUser;
 
     public void changeRole (Role role) {
         this.role = role;
     }
 
     //U-04 프로필정보 수정
-    public void updateProfile(String nickname, String profileImageUrl) {
+    public void updateProfile(String nickname) {
         if (nickname != null && !nickname.isBlank()) {
             this.nickname = nickname;
-        }
-        if (profileImageUrl != null) {
-            this.profileImageUrl = profileImageUrl;
         }
     }
 
@@ -122,5 +122,10 @@ public class User {
     }
     public void updateRole(Role newRole) {
         this.role = newRole;
+    }
+}
+
+    public void changeProfilePhoto(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }

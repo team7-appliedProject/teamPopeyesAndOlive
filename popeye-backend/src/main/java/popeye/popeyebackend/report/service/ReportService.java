@@ -83,7 +83,7 @@ public class ReportService {
     }
 
     private void blockContent(Content content) {
-        content.setContentStatus(ContentStatus.INACTIVE);
+        content.inactivate();
         content.getCreator().getUser().getDevilUser().plusDevilCount();
     }
 

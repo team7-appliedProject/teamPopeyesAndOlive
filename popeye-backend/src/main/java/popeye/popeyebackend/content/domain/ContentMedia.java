@@ -1,6 +1,7 @@
 package popeye.popeyebackend.content.domain;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import popeye.popeyebackend.content.enums.MediaType;
@@ -25,4 +26,11 @@ public class ContentMedia {
     @Enumerated(EnumType.STRING)
     @Column(name = "media_type")
     private MediaType mediaType;
+
+    @Builder
+    public ContentMedia(Content content, String mediaUrl, MediaType mediaType) {
+        this.content = content;
+        this.mediaUrl = mediaUrl;
+        this.mediaType = mediaType;
+    }
 }

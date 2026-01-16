@@ -9,6 +9,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import popeye.popeyebackend.content.global.s3.S3Uploader;
 import popeye.popeyebackend.global.security.jwt.JwtTokenProvider;
 import popeye.popeyebackend.user.domain.BannedUser;
 import popeye.popeyebackend.user.domain.Creator;
@@ -18,6 +20,8 @@ import popeye.popeyebackend.user.dto.request.LoginRequest;
 import popeye.popeyebackend.user.dto.request.SettlementInfoRequest;
 import popeye.popeyebackend.user.dto.request.SignupRequest;
 import popeye.popeyebackend.user.dto.request.UpdateProfileRequest;
+import popeye.popeyebackend.user.dto.response.BanUserRes;
+import popeye.popeyebackend.user.dto.response.ProfilePhotoRes;
 import popeye.popeyebackend.user.dto.response.TokenResponse;
 import popeye.popeyebackend.user.dto.response.UserProfileResponse;
 import popeye.popeyebackend.user.enums.Role;
@@ -29,6 +33,7 @@ import popeye.popeyebackend.user.repository.UserRepository;
 import popeye.popeyebackend.global.util.HashUtil;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -41,6 +46,7 @@ public class UserService {
     private final DevilUserRepository devilUserRepository;
     private final CreatorRepository creatorRepository;
     private final BannedUserRepository bannedUserRepository;
+    private final S3Uploader s3Uploader;
 
     //U-01: 회원가입 - 완료
     @Transactional
@@ -62,8 +68,6 @@ public class UserService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)
                 .phoneNumber(request.getPhoneNumber())
-                .totalSpinach(1000)
-                .totalStarcandy(0)
                 .build();
 
         // U-04: 고유 추천 코드 자동 생성
@@ -120,7 +124,7 @@ public class UserService {
             }
         }
 
-        user.updateProfile(request.getNickname(), request.getProfileImageUrl());
+        user.updateProfile(request.getNickname());
     }
 
     @Transactional
@@ -229,4 +233,23 @@ public class UserService {
         log.info("크리에이터 {}님의 정산 정보(예금주: {})가 업데이트되었습니다.", email, request.getRealName());
     }
 
+    @Transactional
+    public ProfilePhotoRes updateProfile(
+            Long userId, MultipartFile file) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("no User found"));
+
+        String dirName = "user_profile";
+        String uploadUrl = s3Uploader.upload(file, dirName);
+
+        user.changeProfilePhoto(uploadUrl);
+        return new ProfilePhotoRes(uploadUrl);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BanUserRes> getBannedUsers(int size, int page) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<BannedUser> allByBlockedUser = bannedUserRepository.findAllByUserRole(Role.BLOCKED, pageable);
+        return allByBlockedUser.stream().map(BanUserRes::from).toList();
+    }
 }

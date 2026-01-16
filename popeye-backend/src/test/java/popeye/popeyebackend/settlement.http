@@ -1,0 +1,34 @@
+@host = http://localhost:8080
+@creatorId = 1
+@contentId = 1
+@month = 2026-01
+
+### [Settlement] 1) 출금 가능 잔액 조회 (정상)
+GET {{host}}/api/creators/{{creatorId}}/settlements/available-balance
+Accept: application/json
+
+### [Settlement] 2) 컨텐츠별 누적 정산 요약 조회 (정상)
+GET {{host}}/api/creators/{{creatorId}}/settlements/by-content
+Accept: application/json
+
+### [Settlement] 3) 컨텐츠 월 단위 상세 정산(일별 리스트) 조회 (정상)
+# month=YYYY-MM 형식 필수
+GET {{host}}/api/creators/{{creatorId}}/settlements/contents/{{contentId}}?month={{month}}
+Accept: application/json
+
+### [Settlement] 4) 월 파라미터 형식 오류(실패 기대: 400)
+# 예: "2026-1" (YYYY-MM 아님)
+GET {{host}}/api/creators/{{creatorId}}/settlements/contents/{{contentId}}?month=2026-1
+Accept: application/json
+
+### [Settlement] 5) month 누락(실패 기대: 400)
+GET {{host}}/api/creators/{{creatorId}}/settlements/contents/{{contentId}}
+Accept: application/json
+
+### [Settlement] 6) 존재하지 않는 contentId (실패 기대: 400 또는 404 - 서비스 구현에 따라)
+GET {{host}}/api/creators/{{creatorId}}/settlements/contents/999999?month={{month}}
+Accept: application/json
+
+### [Settlement] 7) 미래 월 조회 (정책 없으면 정상 + items 빈 리스트 기대)
+GET {{host}}/api/creators/{{creatorId}}/settlements/contents/{{contentId}}?month=2099-01
+Accept: application/json
