@@ -62,8 +62,6 @@ public class UserService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)
                 .phoneNumber(request.getPhoneNumber())
-                .totalSpinach(1000)
-                .totalStarcandy(0)
                 .build();
 
         // 추천코드 생성

@@ -2,6 +2,7 @@ package popeye.popeyebackend.user.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import popeye.popeyebackend.user.dto.request.UpdateProfileRequest;
 import popeye.popeyebackend.user.dto.response.BanUserRes;
 import popeye.popeyebackend.user.dto.response.ProfilePhotoRes;
 import popeye.popeyebackend.user.dto.response.UserProfileResponse;
+import popeye.popeyebackend.user.enums.Role;
 import popeye.popeyebackend.user.service.UserService;
 
 import java.util.List;
@@ -58,6 +60,7 @@ public class UserController {
     }
 
     // 밴 유저 조회
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/ban-user")
     public ResponseEntity<List<BanUserRes>> getBanUser(
             @RequestParam(defaultValue = "10") int size,
