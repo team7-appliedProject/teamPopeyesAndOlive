@@ -8,14 +8,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import popeye.popeyebackend.global.common.ApiResponse;
-import popeye.popeyebackend.user.dto.request.SettlementInfoRequest;
 import popeye.popeyebackend.global.security.details.PrincipalDetails;
-import popeye.popeyebackend.user.dto.request.ProfileImageUpdateRequest;
+import popeye.popeyebackend.user.dto.request.SettlementInfoRequest;
 import popeye.popeyebackend.user.dto.request.UpdateProfileRequest;
 import popeye.popeyebackend.user.dto.response.BanUserRes;
 import popeye.popeyebackend.user.dto.response.ProfilePhotoRes;
 import popeye.popeyebackend.user.dto.response.UserProfileResponse;
-import popeye.popeyebackend.user.enums.Role;
 import popeye.popeyebackend.user.service.UserService;
 
 import java.util.List;
@@ -58,6 +56,7 @@ public class UserController {
             @RequestBody SettlementInfoRequest request) {
         userService.updateSettlementInfo(userDetails.getUsername(), request);
         return ApiResponse.success("정산 정보가 업데이트되었습니다.", null);
+    }
     // 프로필 사진 변경
     @PatchMapping("/me/profile_photo")
     public ResponseEntity<ProfilePhotoRes> updatePhoto(
