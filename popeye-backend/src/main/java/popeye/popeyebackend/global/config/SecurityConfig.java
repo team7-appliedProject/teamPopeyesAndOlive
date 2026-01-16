@@ -55,6 +55,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/contents/**").permitAll()
                         .requestMatchers("/api/creators/{creatorId}/**").permitAll() // 테스트용: 정산 관련 엔드포인트만 허용
                         .requestMatchers("/api/users/**").permitAll()
+                        .requestMatchers("/api/payments/**").permitAll() // 테스트용: 결제 API 허용
+                        .requestMatchers("/api/orders/**").permitAll() // 테스트용: 주문 API 허용
+                        .requestMatchers("/api/events/**").permitAll() // 테스트용: 이벤트 API 허용
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
