@@ -43,8 +43,6 @@ public class User {
     @Builder.Default
     private final LocalDateTime createdAt =  LocalDateTime.now();
 
-
-
     @Builder.Default
     private final LocalDateTime updatedAt = LocalDateTime.now();
 
