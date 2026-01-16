@@ -123,7 +123,6 @@ public class User {
     public void updateRole(Role newRole) {
         this.role = newRole;
     }
-}
 
     public void changeProfilePhoto(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
