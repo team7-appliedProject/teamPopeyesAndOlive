@@ -18,6 +18,7 @@ import popeye.popeyebackend.pay.enums.PgProvider;
 import popeye.popeyebackend.global.exception.ApiException;
 import popeye.popeyebackend.pay.repository.CreditRepository;
 import popeye.popeyebackend.pay.repository.PaymentRepository;
+import popeye.popeyebackend.user.service.UserService;
 
 
 import java.time.LocalDateTime;
@@ -32,6 +33,7 @@ public class PaymentService {
     private final CreditRepository creditRepository;
     private final TossPaymentsClient tossPaymentsClient;
     private final CreditHistoryService creditHistoryService;
+    private final UserService userService;
 
     private String generatePgOrderId(){
         return "ORD_" + UUID.randomUUID().toString().replace("-", "");
@@ -42,7 +44,9 @@ public class PaymentService {
      * - Toss 결제창 호출 전에 서버에 결제 의도를 저장하는 단계
      */
     @Transactional
-    public PreparePaymentResponseDto prepareCharge(User user, int creditAmount, PgProvider pgProvider){
+    public PreparePaymentResponseDto prepareCharge(Long userId, int creditAmount, PgProvider pgProvider){
+
+        User user = userService.getUser(userId);
 
         if (creditAmount <= 0){
             throw new ApiException(ErrorCode.INVALID_REQUEST);
@@ -135,10 +139,15 @@ public class PaymentService {
     * - 처리: Payment -> CANCELED, 해당 PAID Credit amount = 0
     */
     @Transactional
-    public void refund(Long paymentId, String cancelReason){
+    public void refund(Long paymentId, String cancelReason, Long userId){
         Payment payment = paymentRepository
                 .findByIdAndPaymentType(paymentId, PaymentType.DONE)
                 .orElseThrow(() -> new ApiException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        // 권한 체크
+        if (!payment.getUser().getId().equals(userId)) {
+            throw new ApiException(ErrorCode.HANDLE_ACCESS_DENIED);
+        }
 
         // 멱등성1: 이미 환불 완료면 성공 처리
         if (payment.getPaymentType() == PaymentType.CANCELED){
@@ -172,7 +181,7 @@ public class PaymentService {
 
         // 1) PG 취소 먼저 호출 (성공해야만 로컬 상태 변경)
         try {
-            tossPaymentsClient.cancel(payment.getPaymentKey(), "사용자 요청 환불"); // cancelReason 필수 :contentReference[oaicite:8]{index=8}
+            tossPaymentsClient.cancel(payment.getPaymentKey(), cancelReason);
         } catch (HttpStatusCodeException e) {
             payment.abort("TOSS_CANCEL_FAILED: " + e.getResponseBodyAsString());
             throw new ApiException(ErrorCode.INVALID_REQUEST);

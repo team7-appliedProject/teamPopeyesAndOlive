@@ -11,7 +11,6 @@ import popeye.popeyebackend.content.service.ContentService;
 import popeye.popeyebackend.dailystatistics.service.DailyStatisticsService;
 import popeye.popeyebackend.report.dto.ReportProcessDto;
 import popeye.popeyebackend.report.service.ReportService;
-import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.service.UserService;
 
 

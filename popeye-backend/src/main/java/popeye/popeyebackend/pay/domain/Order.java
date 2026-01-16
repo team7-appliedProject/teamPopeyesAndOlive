@@ -45,6 +45,10 @@ public class Order {
     @Column(name = "used_starcandy")
     private Integer usedPaidCredit; // 사용된 별사탕 수
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer quantity = 1;
+
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
