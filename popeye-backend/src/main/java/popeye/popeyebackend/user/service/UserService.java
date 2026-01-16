@@ -17,9 +17,9 @@ import popeye.popeyebackend.user.domain.Creator;
 import popeye.popeyebackend.user.domain.DevilUser;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.dto.request.LoginRequest;
-import popeye.popeyebackend.user.dto.request.ProfileImageUpdateRequest;
 import popeye.popeyebackend.user.dto.request.SignupRequest;
 import popeye.popeyebackend.user.dto.request.UpdateProfileRequest;
+import popeye.popeyebackend.user.dto.response.BanUserRes;
 import popeye.popeyebackend.user.dto.response.ProfilePhotoRes;
 import popeye.popeyebackend.user.dto.response.TokenResponse;
 import popeye.popeyebackend.user.dto.response.UserProfileResponse;
@@ -31,6 +31,7 @@ import popeye.popeyebackend.user.repository.DevilUserRepository;
 import popeye.popeyebackend.user.repository.UserRepository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -211,5 +212,12 @@ public class UserService {
 
         user.changeProfilePhoto(uploadUrl);
         return new ProfilePhotoRes(uploadUrl);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BanUserRes> getBannedUsers(int size, int page) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<BannedUser> allByBlockedUser = bannedUserRepository.findAllByUserRole(Role.BLOCKED, pageable);
+        return allByBlockedUser.stream().map(BanUserRes::from).toList();
     }
 }

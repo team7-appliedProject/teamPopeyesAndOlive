@@ -7,12 +7,17 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.domain.ContentBan;
 import popeye.popeyebackend.content.domain.ContentMedia;
 import popeye.popeyebackend.content.dto.request.ContentCreateRequest;
+import popeye.popeyebackend.content.dto.response.BannedContentRes;
 import popeye.popeyebackend.content.dto.response.ContentResponse;
 import popeye.popeyebackend.content.dto.response.FullContentResponse;
 import popeye.popeyebackend.content.dto.response.PreviewContentResponse;
@@ -197,5 +202,12 @@ public class ContentService {
 
     private boolean isValidUrl(String url) {
         return url != null && !url.isBlank();
+    }
+
+    @Transactional(readOnly = true)
+    public List<BannedContentRes> getBannedContentList(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ContentBan> banned = contentBanRepository.findAllByIsBanned(true, pageable);
+        return banned.stream().map(BannedContentRes::from).toList();
     }
 }
