@@ -1,8 +1,9 @@
 "use client";
 
-import { Shield, Users, DollarSign, FileText, AlertTriangle, TrendingUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Shield, Users, DollarSign, FileText, AlertTriangle, Star, Leaf } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -14,81 +15,77 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
 } from 'recharts';
-
-// Mock data
-const dailyStats = [
-  { date: '01/03', revenue: 245000, users: 12, credits: 150000 },
-  { date: '01/04', revenue: 312000, users: 18, credits: 200000 },
-  { date: '01/05', revenue: 289000, users: 15, credits: 180000 },
-  { date: '01/06', revenue: 425000, users: 24, credits: 280000 },
-  { date: '01/07', revenue: 378000, users: 21, credits: 240000 },
-  { date: '01/08', revenue: 456000, users: 28, credits: 320000 },
-  { date: '01/09', revenue: 512000, users: 32, credits: 380000 },
-];
-
-const reportedUsers = [
-  {
-    id: '1',
-    nickname: '악성유저123',
-    email: 'bad@example.com',
-    reportCount: 15,
-    status: 'blocked',
-    reason: '스팸 글 반복 게시',
-  },
-  {
-    id: '2',
-    nickname: '문제유저456',
-    email: 'problem@example.com',
-    reportCount: 8,
-    status: 'warning',
-    reason: '부적절한 댓글 작성',
-  },
-  {
-    id: '3',
-    nickname: '의심유저789',
-    email: 'suspect@example.com',
-    reportCount: 5,
-    status: 'monitoring',
-    reason: '저작권 침해 의심',
-  },
-];
-
-const reportedContents = [
-  {
-    id: '1',
-    title: '의심스러운 글 제목',
-    creator: '악성올리브',
-    reportCount: 23,
-    status: 'blocked',
-    reason: '저작권 침해',
-  },
-  {
-    id: '2',
-    title: '부적절한 내용 포함 글',
-    creator: '문제올리브',
-    reportCount: 12,
-    status: 'reviewing',
-    reason: '부적절한 내용',
-  },
-];
+import { adminApi } from '@/app/lib/api';
 
 export default function AdminPage() {
-  const overviewStats = {
-    totalRevenue: 2617000,
-    totalUsers: 150,
-    totalCredits: 1750000,
-    activeCreators: 45,
+  const [statistics, setStatistics] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const data = await adminApi.getStatistics(7);
+        setStatistics(data);
+      } catch (err) {
+        setError(err.message || '데이터를 불러오는데 실패했습니다.');
+        console.error('Statistics fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // 최근 7일 날짜 생성 (데이터가 없을 때 사용)
+  const generateLast7Days = () => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      days.push({
+        date: `${month}-${day}`,
+        revenue: 0,
+        users: 0,
+      });
+    }
+    return days;
   };
+
+  // 가장 최신 데이터 (배열의 마지막)
+  const latestStats = statistics.length > 0 ? statistics[statistics.length - 1] : null;
+
+  // 차트용 데이터 포맷 (데이터가 없으면 최근 7일을 0으로 표시)
+  const chartData = statistics.length > 0 
+    ? statistics.map((stat) => ({
+        date: stat.localDate?.slice(5) || '', // "2024-01-03" -> "01-03"
+        revenue: stat.dailyPaymentAmount || 0,
+        users: stat.dailyNewUserCount || 0,
+      }))
+    : generateLast7Days();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground">데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -99,9 +96,34 @@ export default function AdminPage() {
             <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
               <Shield className="h-6 w-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold">관리자 대시보드</h1>
-              <p className="text-muted-foreground">StarP 플랫폼 전체 관리</p>
+            <div className="flex items-center gap-6">
+              <h1 className="text-3xl font-bold">관리자 페이지</h1>
+              <nav className="flex items-center gap-4">
+                <Link 
+                  href="/admin" 
+                  className="text-sm font-medium text-primary border-b-2 border-primary pb-1"
+                >
+                  대시보드
+                </Link>
+                <Link 
+                  href="/admin/reports" 
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  신고 관리
+                </Link>
+                <Link 
+                  href="/admin/users" 
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  밴 유저 관리
+                </Link>
+                <Link 
+                  href="/admin/bans" 
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  밴 게시글 관리
+                </Link>
+              </nav>
             </div>
           </div>
 
@@ -109,13 +131,13 @@ export default function AdminPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card>
               <CardHeader className="pb-3">
-                <CardDescription>일주일 매출</CardDescription>
+                <CardDescription>전날 매출</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5 text-[#22c55e]" />
                   <span className="text-2xl font-bold">
-                    ₩{overviewStats.totalRevenue.toLocaleString()}
+                    ₩{latestStats?.dailyPaymentAmount?.toLocaleString() ?? '-'}
                   </span>
                 </div>
               </CardContent>
@@ -128,33 +150,33 @@ export default function AdminPage() {
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-blue-500" />
                   <span className="text-2xl font-bold">
-                    {overviewStats.totalUsers.toLocaleString()}
+                    {latestStats?.dailyNewUserCount?.toLocaleString() ?? '-'}
                   </span>
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-3">
-                <CardDescription>크레딧 유통량</CardDescription>
+                <CardDescription>총 별사탕</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-[#fbbf24]" />
+                  <Star className="h-5 w-5 text-[#fbbf24]" />
                   <span className="text-2xl font-bold">
-                    {overviewStats.totalCredits.toLocaleString()}
+                    {latestStats?.totalStarcandy?.toLocaleString() ?? '-'}
                   </span>
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-3">
-                <CardDescription>활동 올리브</CardDescription>
+                <CardDescription>시금치 발행량</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-[#5b21b6]" />
+                  <Leaf className="h-5 w-5 text-[#22c55e]" />
                   <span className="text-2xl font-bold">
-                    {overviewStats.activeCreators.toLocaleString()}
+                    {latestStats?.totalSpinachIssued?.toLocaleString() ?? '-'}
                   </span>
                 </div>
               </CardContent>
@@ -170,13 +192,28 @@ export default function AdminPage() {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={dailyStats}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="revenue" fill="#5b21b6" />
-                  </BarChart>
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#5b21b6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#5b21b6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} />
+                    <YAxis stroke="#9ca3af" fontSize={12} tickFormatter={(value) => `₩${(value / 1000).toFixed(0)}k`} />
+                    <Tooltip 
+                      formatter={(value) => [`₩${value.toLocaleString()}`, '매출']}
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="#5b21b6" 
+                      strokeWidth={2}
+                      fill="url(#colorRevenue)"
+                    />
+                  </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
@@ -188,24 +225,34 @@ export default function AdminPage() {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={dailyStats}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line 
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} />
+                    <YAxis stroke="#9ca3af" fontSize={12} />
+                    <Tooltip 
+                      formatter={(value) => [`${value}명`, '신규 가입자']}
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                    />
+                    <Area 
                       type="monotone" 
                       dataKey="users" 
                       stroke="#22c55e" 
                       strokeWidth={2}
+                      fill="url(#colorUsers)"
                     />
-                  </LineChart>
+                  </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
           </div>
 
-          {/* Management Tabs */}
+          {/* Management Tabs - 데이터 없음 표시 */}
           <Tabs defaultValue="users" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="users">신고된 사용자</TabsTrigger>
@@ -237,48 +284,11 @@ export default function AdminPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {reportedUsers.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">
-                            {user.nickname}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {user.email}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="destructive">
-                              {user.reportCount}회
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {user.reason}
-                          </TableCell>
-                          <TableCell>
-                            {user.status === 'blocked' && (
-                              <Badge className="bg-red-500">차단됨</Badge>
-                            )}
-                            {user.status === 'warning' && (
-                              <Badge className="bg-orange-500">경고</Badge>
-                            )}
-                            {user.status === 'monitoring' && (
-                              <Badge className="bg-yellow-500">모니터링</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              {user.status === 'blocked' ? (
-                                <Button size="sm" variant="outline">
-                                  차단 해제
-                                </Button>
-                              ) : (
-                                <Button size="sm" variant="destructive">
-                                  차단
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          신고된 사용자가 없습니다.
+                        </TableCell>
+                      </TableRow>
                     </TableBody>
                   </Table>
                 </CardContent>
@@ -310,48 +320,11 @@ export default function AdminPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {reportedContents.map((content) => (
-                        <TableRow key={content.id}>
-                          <TableCell className="font-medium">
-                            {content.title}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {content.creator}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="destructive">
-                              {content.reportCount}회
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {content.reason}
-                          </TableCell>
-                          <TableCell>
-                            {content.status === 'blocked' && (
-                              <Badge className="bg-red-500">비활성화</Badge>
-                            )}
-                            {content.status === 'reviewing' && (
-                              <Badge className="bg-orange-500">검토중</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button size="sm" variant="outline">
-                                보기
-                              </Button>
-                              {content.status === 'blocked' ? (
-                                <Button size="sm" variant="outline">
-                                  복구
-                                </Button>
-                              ) : (
-                                <Button size="sm" variant="destructive">
-                                  비활성화
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          신고된 글이 없습니다.
+                        </TableCell>
+                      </TableRow>
                     </TableBody>
                   </Table>
                 </CardContent>
@@ -363,4 +336,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
