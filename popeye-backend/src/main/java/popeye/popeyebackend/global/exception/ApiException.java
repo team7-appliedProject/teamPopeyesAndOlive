@@ -1,7 +1,6 @@
-package popeye.popeyebackend.pay.exception;
+package popeye.popeyebackend.global.exception;
 
 import lombok.Getter;
-import popeye.popeyebackend.global.exception.ErrorCode;
 
 @Getter
 public class ApiException extends RuntimeException{

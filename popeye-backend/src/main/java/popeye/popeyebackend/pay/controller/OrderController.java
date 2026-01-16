@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import popeye.popeyebackend.global.exception.ErrorCode;
 import popeye.popeyebackend.pay.domain.Order;
 import popeye.popeyebackend.pay.dto.order.PurchaseResponseDto;
-import popeye.popeyebackend.pay.exception.ApiException;
+import popeye.popeyebackend.global.exception.ApiException;
 import popeye.popeyebackend.pay.repository.OrderRepository;
 import popeye.popeyebackend.pay.service.OrderService;
 import popeye.popeyebackend.user.domain.User;

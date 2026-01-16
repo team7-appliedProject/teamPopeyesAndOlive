@@ -15,7 +15,7 @@ import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.pay.enums.CreditType;
 import popeye.popeyebackend.pay.enums.PaymentType;
 import popeye.popeyebackend.pay.enums.PgProvider;
-import popeye.popeyebackend.pay.exception.ApiException;
+import popeye.popeyebackend.global.exception.ApiException;
 import popeye.popeyebackend.pay.repository.CreditRepository;
 import popeye.popeyebackend.pay.repository.PaymentRepository;
 
