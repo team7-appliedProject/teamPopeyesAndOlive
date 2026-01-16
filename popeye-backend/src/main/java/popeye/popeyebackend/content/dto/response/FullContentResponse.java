@@ -4,7 +4,7 @@ import lombok.Getter;
 import popeye.popeyebackend.content.domain.Content;
 
 @Getter
-public class FullContentResponse {
+public class FullContentResponse extends ContentResponse{
 
     private Long id;
     private String title;

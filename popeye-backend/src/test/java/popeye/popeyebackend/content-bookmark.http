@@ -1,0 +1,18 @@
+@baseUrl = http://localhost:8080/api/bookmark
+@token = Bearer {{access_token}}
+
+### 1. 북마크 추가
+POST {{baseUrl}}/contents/1
+Authorization: {{token}}
+
+### 2. 북마크 중복 추가
+POST {{baseUrl}}/contents/1
+Authorization: {{token}}
+
+### 3. 북마크 삭제
+DELETE {{baseUrl}}/contents/1
+Authorization: {{token}}
+
+### 4. 북마크 없는 상태에서 삭제
+DELETE {{baseUrl}}/contents/1
+Authorization: {{token}}

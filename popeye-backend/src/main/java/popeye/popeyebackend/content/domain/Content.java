@@ -1,13 +1,17 @@
 package popeye.popeyebackend.content.domain;
 
 import jakarta.persistence.*;
+import jakarta.persistence.criteria.Order;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import popeye.popeyebackend.pay.domain.Order;
 import popeye.popeyebackend.content.enums.ContentStatus;
-import popeye.popeyebackend.user.domain.User;
+//import popeye.popeyebackend.pay.domain.Order;
+//import popeye.popeyebackend.report.domain.Report;
+//import popeye.popeyebackend.user.domain.Creator;
+//import popeye.popeyebackend.content.enums.ContentStatus;
+//import popeye.popeyebackend.user.domain.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -48,15 +52,24 @@ public class Content {
     @Column(name = "status")
     private ContentStatus contentStatus = ContentStatus.INACTIVE;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "creator_id")
-    private User creator;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "creator_id")
+//    private Creator creator;
 
     @OneToMany(mappedBy = "content")
     private List<ContentBookmark> bookmarks;
 
     @OneToMany(mappedBy = "content")
     private List<Order> orders;
+
+//    @OneToMany(mappedBy = "targetContent")
+//    private List<Report> reports;
+
+    @OneToMany(fetch = FetchType.LAZY)
+    private List<ContentBan> contentBan;
+
+    @OneToMany(mappedBy = "content")
+    private List<ContentMedia> contentMedia;
 
     public void activate() {    // 컨텐츠 공개
         this.contentStatus = ContentStatus.ACTIVE;
@@ -66,6 +79,20 @@ public class Content {
     public void inactivate() {
         this.contentStatus = ContentStatus.INACTIVE;
         this.modifiedAt = LocalDateTime.now();
+    }
+
+    // 관리자 밴
+    public void ban() {
+        this.contentStatus = ContentStatus.INACTIVE;
+    }
+
+    // 작성자 소프트 삭제
+    public void softDelete() {
+        this.contentStatus = ContentStatus.SOFTDELETED;
+    }
+
+    public boolean isSoftDeleted() {
+        return this.contentStatus == ContentStatus.SOFTDELETED;
     }
 
     public boolean isActive() {
