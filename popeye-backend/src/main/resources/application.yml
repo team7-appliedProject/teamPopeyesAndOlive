@@ -41,8 +41,8 @@ cloud:
     stack:
       auto: false
     credentials:
-      access-key: ${AWS_ACCESS_KEY}
-      secret-key: ${AWS_SECRET_KEY}
+      access-key: ${AWS_ACCESS_KEY:none}
+      secret-key: ${AWS_SECRET_KEY:none}
 
 popeye:
   secret-key: "my_super_secret_key_popeye_1234!"
