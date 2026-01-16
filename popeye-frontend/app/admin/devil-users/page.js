@@ -6,6 +6,17 @@ import { Shield, Users, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
   Table,
   TableBody,
   TableCell,
@@ -19,23 +30,80 @@ export default function DevilUsersPage() {
   const [devilUsers, setDevilUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // 밴 모달 상태
+  const [banModalOpen, setBanModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [banReason, setBanReason] = useState('');
+  const [banDays, setBanDays] = useState('');
+  const [isPermanent, setIsPermanent] = useState(false);
+  const [banLoading, setBanLoading] = useState(false);
+
+  const fetchDevilUsers = async () => {
+    try {
+      setLoading(true);
+      const data = await adminApi.getDevilUsers(0).catch(() => []);
+      setDevilUsers(data);
+    } catch (err) {
+      setError(err.message || '데이터를 불러오는데 실패했습니다.');
+      console.error('Devil users fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const data = await adminApi.getDevilUsers(0).catch(() => []);
-        setDevilUsers(data);
-      } catch (err) {
-        setError(err.message || '데이터를 불러오는데 실패했습니다.');
-        console.error('Devil users fetch error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchDevilUsers();
   }, []);
+
+  // 밴 처리 버튼 클릭
+  const handleBanClick = (user) => {
+    setSelectedUser(user);
+    setBanReason('');
+    setBanDays('');
+    setIsPermanent(false);
+    setBanModalOpen(true);
+  };
+
+  // 밴 처리 실행
+  const handleBanSubmit = async () => {
+    if (!selectedUser) return;
+    if (!banReason.trim()) {
+      alert('사유를 입력해주세요.');
+      return;
+    }
+    if (!isPermanent && !banDays) {
+      alert('밴 기간을 입력하거나 영구 밴을 선택해주세요.');
+      return;
+    }
+
+    try {
+      setBanLoading(true);
+      
+      const banData = {
+        userId: selectedUser.userId,
+        reason: banReason.trim(),
+      };
+      
+      // 영구 밴이 아닌 경우에만 banDays 추가
+      if (!isPermanent && banDays) {
+        banData.banDays = parseInt(banDays, 10);
+      }
+
+      await adminApi.banUser(banData);
+      
+      alert(`${selectedUser.nickname || selectedUser.userId}님이 밴 처리되었습니다.`);
+      setBanModalOpen(false);
+      
+      // 목록 새로고침
+      fetchDevilUsers();
+    } catch (err) {
+      console.error('Ban user error:', err);
+      alert(err.message || '밴 처리 중 오류가 발생했습니다.');
+    } finally {
+      setBanLoading(false);
+    }
+  };
 
   // 신고 횟수에 따른 배지 색상
   const getDevilCountBadge = (count) => {
@@ -151,7 +219,11 @@ export default function DevilUsersPage() {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="destructive" size="sm">
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => handleBanClick(user)}
+                          >
                             밴 처리
                           </Button>
                         </TableCell>
@@ -170,6 +242,86 @@ export default function DevilUsersPage() {
           </Card>
         </div>
       </div>
+
+      {/* 밴 처리 모달 */}
+      <Dialog open={banModalOpen} onOpenChange={setBanModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>유저 밴 처리</DialogTitle>
+            <DialogDescription>
+              {selectedUser && (
+                <>
+                  <span className="font-semibold text-foreground">{selectedUser.nickname || `유저 #${selectedUser.userId}`}</span>
+                  님을 밴 처리합니다.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            {/* 사유 입력 */}
+            <div className="grid gap-2">
+              <Label htmlFor="reason">밴 사유 *</Label>
+              <Textarea
+                id="reason"
+                placeholder="밴 사유를 입력하세요..."
+                value={banReason}
+                onChange={(e) => setBanReason(e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+
+            {/* 밴 기간 입력 */}
+            <div className="grid gap-2">
+              <Label htmlFor="banDays">밴 기간 (일)</Label>
+              <div className="flex items-center gap-3">
+                <Input
+                  id="banDays"
+                  type="number"
+                  placeholder="예: 7"
+                  value={banDays}
+                  onChange={(e) => setBanDays(e.target.value)}
+                  disabled={isPermanent}
+                  min="1"
+                  className="flex-1"
+                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="permanent"
+                    checked={isPermanent}
+                    onChange={(e) => {
+                      setIsPermanent(e.target.checked);
+                      if (e.target.checked) setBanDays('');
+                    }}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="permanent" className="text-sm font-normal cursor-pointer">
+                    영구 밴
+                  </Label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setBanModalOpen(false)}
+              disabled={banLoading}
+            >
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleBanSubmit}
+              disabled={banLoading}
+            >
+              {banLoading ? '처리 중...' : '밴 처리'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

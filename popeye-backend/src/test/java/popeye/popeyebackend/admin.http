@@ -97,10 +97,10 @@ POST {{url}}/api/auth/signup
 Content-Type: application/json
 
 {
-  "email" : "test12345@test.com",
+  "email" : "test123456@test.com",
   "password" : "!@#123QWEqwe",
-  "nickname" : "banuser",
-  "phoneNumber" : "0120120123"
+  "nickname" : "banuser1",
+  "phoneNumber" : "01201201235"
 }
 
 ### 로그인

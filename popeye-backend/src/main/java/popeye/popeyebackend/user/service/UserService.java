@@ -73,7 +73,11 @@ public class UserService {
         // U-04: 고유 추천 코드 자동 생성
         user.generateReferralCode();
 
-
+        DevilUser devilUser = DevilUser.builder()
+                .user(user)
+                .hashedPhoneNumber(HashUtil.hashPhoneNumber(request.getPhoneNumber()))
+                .build();
+        devilUserRepository.save(devilUser);
 
         return userRepository.save(user).getId();
     }
