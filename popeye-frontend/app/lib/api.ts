@@ -319,6 +319,49 @@ export const notificationApi = {
     fetchApi<NotiReadRes>(`/api/notification/${notiId}`, {
       method: 'PATCH',
     }),
+// Settlement API
+// ============================================
+export const settlementApi = {
+  /** 정산 가능 잔액 조회 */
+  getAvailableBalance: (creatorId: number) =>
+    fetchApi<AvailableBalanceResponse>(
+      `/api/creators/${creatorId}/settlements/available-balance`
+    ),
+
+  /** 컨텐츠별 누적 정산 요약 조회 */
+  getContentSettlementSummaries: (creatorId: number) =>
+    fetchApi<ContentSettlementSummaryResponse[]>(
+      `/api/creators/${creatorId}/settlements/by-content`
+    ),
+
+  /** 컨텐츠 월 단위 상세 정산(일별 리스트) 조회 */
+  getMonthlyContentSettlement: (
+    creatorId: number,
+    contentId: number,
+    month: string
+  ) =>
+    fetchApi<DailyContentSettlementResponse>(
+      `/api/creators/${creatorId}/settlements/contents/${contentId}`,
+      {
+        params: { month },
+      }
+    ),
+};
+
+// ============================================
+// Withdrawal API
+// ============================================
+export const withdrawalApi = {
+  /** 출금 신청 */
+  requestWithdrawal: (creatorId: number, data: WithdrawalRequest) =>
+    fetchApi<WithdrawalResponse>(`/api/creators/${creatorId}/withdrawals`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /** 출금 내역 조회 */
+  getWithdrawals: (creatorId: number) =>
+    fetchApi<WithdrawalResponse[]>(`/api/creators/${creatorId}/withdrawals`),
 };
 
 // ============================================
@@ -464,4 +507,51 @@ export interface NotificationRes {
 export interface NotiReadRes {
   notiId: number;
   isRead: boolean;
+// Settlement Types
+export interface AvailableBalanceResponse {
+  settlementSum: number;
+  withdrawnSum: number;
+  available: number;
+}
+
+export interface ContentSettlementSummaryResponse {
+  contentId: number;
+  title: string;
+  totalRevenue: number;
+  platformFee: number;
+  totalPayout: number;
+  lastSettledAt: string;
+  settlementCount: number;
+}
+
+export interface ContentSettlementPeriodItem {
+  periodStart: string;
+  periodEnd: string;
+  orderCount: number;
+  totalRevenue: number;
+  totalPlatformFee: number;
+  totalPayout: number;
+  latestSettledAt: string | null;
+}
+
+export interface DailyContentSettlementResponse {
+  contentId: number;
+  from: string;
+  to: string;
+  items: ContentSettlementPeriodItem[];
+}
+
+// Withdrawal Types
+export interface WithdrawalRequest {
+  amount: number;
+}
+
+export interface WithdrawalResponse {
+  id: number;
+  creatorId: number;
+  amount: number;
+  status: 'REQ' | 'SUC' | 'REJ';
+  requestedAt: string;
+  processedAt: string | null;
+  failureReason: string | null;
 }
