@@ -71,27 +71,27 @@ public interface SettlementRepository extends JpaRepository<Settlement,Long> {
 	 */
 	@Query(value = """
 		SELECT 
-			CAST(DATE(s.settled_at) AS DATETIME) AS periodStart,
-			COUNT(*) AS orderCount,
-			COALESCE(SUM(
-				CASE 
-					WHEN s.fee_rate <= 0 OR s.fee_rate >= 100 THEN s.total_amount
-					ELSE FLOOR(s.total_amount * 100.0 / (100 - s.fee_rate))
-				END
-			), 0) AS totalRevenue,
-			COALESCE(SUM(
-				CASE 
-					WHEN s.fee_rate <= 0 OR s.fee_rate >= 100 THEN 0
-					ELSE FLOOR(s.total_amount * 100.0 / (100 - s.fee_rate)) - s.total_amount
-				END
-			), 0) AS totalPlatformFee,
-			COALESCE(SUM(s.total_amount), 0) AS totalPayout,
-			MAX(s.settled_at) AS latestSettledAt
+		    CAST(DATE(s.settled_at) AS DATETIME) AS periodStart,
+		    COUNT(*) AS orderCount,
+		    COALESCE(SUM(
+		        CASE 
+		            WHEN s.fee_rate <= 0 OR s.fee_rate >= 100 THEN s.total_amount
+		            ELSE FLOOR(s.total_amount * 100.0 / (100 - s.fee_rate))
+		        END
+		    ), 0) AS totalRevenue,
+		    COALESCE(SUM(
+		        CASE 
+		            WHEN s.fee_rate <= 0 OR s.fee_rate >= 100 THEN 0
+		            ELSE FLOOR(s.total_amount * 100.0 / (100 - s.fee_rate)) - s.total_amount
+		        END
+		    ), 0) AS totalPlatformFee,
+		    COALESCE(SUM(s.total_amount), 0) AS totalPayout,
+		    MAX(s.settled_at) AS latestSettledAt
 		FROM settlements s
 		WHERE s.content_id = :contentId
-		AND s.settled_at >= :from
-		AND s.settled_at < :to
-		GROUP BY DATE(s.settled_at)
+		  AND s.settled_at >= :from
+		  AND s.settled_at < :to
+		GROUP BY CAST(DATE(s.settled_at) AS DATETIME)
 		ORDER BY periodStart ASC
 		""", nativeQuery = true)
 	List<ContentSettlementPeriodProjection> findContentSettlementPeriodsByDay(
