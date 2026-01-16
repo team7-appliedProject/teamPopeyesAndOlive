@@ -67,6 +67,8 @@ public class UserService {
         // 추천코드 생성
         user.generateReferralCode();
 
+
+
         return userRepository.save(user).getId();
     }
 

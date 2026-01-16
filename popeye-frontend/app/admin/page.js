@@ -23,10 +23,13 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-import { adminApi } from '@/app/lib/api';
+import { adminApi, userApi, contentApi } from '@/app/lib/api';
+import { Ban } from 'lucide-react';
 
 export default function AdminPage() {
   const [statistics, setStatistics] = useState([]);
+  const [bannedUsers, setBannedUsers] = useState([]);
+  const [bannedContents, setBannedContents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -34,11 +37,22 @@ export default function AdminPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await adminApi.getStatistics(7);
-        setStatistics(data);
+        
+        // 통계 데이터 가져오기
+        const statsData = await adminApi.getStatistics(7).catch(() => []);
+        setStatistics(statsData);
+        
+        // 밴 유저 목록 가져오기
+        const bannedUsersData = await userApi.getBannedUsers(0, 10).catch(() => []);
+        setBannedUsers(bannedUsersData);
+        
+        // 밴 컨텐츠 목록 가져오기
+        const bannedContentsData = await contentApi.getBannedContents(0, 10).catch(() => []);
+        setBannedContents(bannedContentsData);
+        
       } catch (err) {
         setError(err.message || '데이터를 불러오는데 실패했습니다.');
-        console.error('Statistics fetch error:', err);
+        console.error('Data fetch error:', err);
       } finally {
         setLoading(false);
       }
@@ -110,6 +124,12 @@ export default function AdminPage() {
                   className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
                 >
                   신고 관리
+                </Link>
+                <Link 
+                  href="/admin/devil-users" 
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  유저 관리
                 </Link>
                 <Link 
                   href="/admin/users" 
@@ -252,15 +272,17 @@ export default function AdminPage() {
             </Card>
           </div>
 
-          {/* Management Tabs - 데이터 없음 표시 */}
-          <Tabs defaultValue="users" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="users">신고된 사용자</TabsTrigger>
-              <TabsTrigger value="contents">신고된 글</TabsTrigger>
+          {/* Management Tabs */}
+          <Tabs defaultValue="reportedUsers" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="reportedUsers">신고된 사용자</TabsTrigger>
+              <TabsTrigger value="reportedContents">신고된 글</TabsTrigger>
+              <TabsTrigger value="bannedUsers">밴 유저</TabsTrigger>
+              <TabsTrigger value="bannedContents">밴 컨텐츠</TabsTrigger>
             </TabsList>
 
             {/* Reported Users */}
-            <TabsContent value="users" className="mt-6">
+            <TabsContent value="reportedUsers" className="mt-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -296,7 +318,7 @@ export default function AdminPage() {
             </TabsContent>
 
             {/* Reported Contents */}
-            <TabsContent value="contents" className="mt-6">
+            <TabsContent value="reportedContents" className="mt-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -325,6 +347,112 @@ export default function AdminPage() {
                           신고된 글이 없습니다.
                         </TableCell>
                       </TableRow>
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Banned Users */}
+            <TabsContent value="bannedUsers" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Ban className="h-5 w-5 text-destructive" />
+                    밴 유저
+                  </CardTitle>
+                  <CardDescription>
+                    제재된 유저 목록 관리
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>유저 ID</TableHead>
+                        <TableHead>밴 시작일</TableHead>
+                        <TableHead>밴 해제일</TableHead>
+                        <TableHead>밴 기간</TableHead>
+                        <TableHead>사유</TableHead>
+                        <TableHead className="text-right">작업</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {bannedUsers.length > 0 ? (
+                        bannedUsers.map((user) => (
+                          <TableRow key={user.id}>
+                            <TableCell className="font-medium">{user.id}</TableCell>
+                            <TableCell>{user.bannedAt || '-'}</TableCell>
+                            <TableCell>{user.unbannedAt || '영구'}</TableCell>
+                            <TableCell>{user.banDays ? `${user.banDays}일` : '영구'}</TableCell>
+                            <TableCell className="max-w-[200px] truncate">{user.reason || '-'}</TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="outline" size="sm">
+                                해제
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                            밴된 유저가 없습니다.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Banned Contents */}
+            <TabsContent value="bannedContents" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Ban className="h-5 w-5 text-destructive" />
+                    밴 컨텐츠
+                  </CardTitle>
+                  <CardDescription>
+                    차단된 게시글 목록 관리
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>제목</TableHead>
+                        <TableHead>내용</TableHead>
+                        <TableHead>차단일</TableHead>
+                        <TableHead>사유</TableHead>
+                        <TableHead className="text-right">작업</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {bannedContents.length > 0 ? (
+                        bannedContents.map((content) => (
+                          <TableRow key={content.id}>
+                            <TableCell className="font-medium">{content.id}</TableCell>
+                            <TableCell className="max-w-[150px] truncate">{content.title || '-'}</TableCell>
+                            <TableCell className="max-w-[200px] truncate">{content.content || '-'}</TableCell>
+                            <TableCell>{content.date ? new Date(content.date).toLocaleDateString() : '-'}</TableCell>
+                            <TableCell className="max-w-[150px] truncate">{content.reason || '-'}</TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="outline" size="sm">
+                                해제
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                            밴된 컨텐츠가 없습니다.
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </CardContent>
