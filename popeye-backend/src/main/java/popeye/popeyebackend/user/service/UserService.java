@@ -17,6 +17,7 @@ import popeye.popeyebackend.user.domain.Creator;
 import popeye.popeyebackend.user.domain.DevilUser;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.dto.request.LoginRequest;
+import popeye.popeyebackend.user.dto.request.SettlementInfoRequest;
 import popeye.popeyebackend.user.dto.request.SignupRequest;
 import popeye.popeyebackend.user.dto.request.UpdateProfileRequest;
 import popeye.popeyebackend.user.dto.response.BanUserRes;
@@ -29,6 +30,7 @@ import popeye.popeyebackend.user.repository.BannedUserRepository;
 import popeye.popeyebackend.user.repository.CreatorRepository;
 import popeye.popeyebackend.user.repository.DevilUserRepository;
 import popeye.popeyebackend.user.repository.UserRepository;
+import popeye.popeyebackend.global.util.HashUtil;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -46,9 +48,13 @@ public class UserService {
     private final BannedUserRepository bannedUserRepository;
     private final S3Uploader s3Uploader;
 
-    //회원가입 부분이라 기존 코드 위에 구현
+    //U-01: 회원가입 - 완료
     @Transactional
     public Long signup(SignupRequest request) {
+        String hashedPhone = HashUtil.hashPhoneNumber(request.getPhoneNumber());
+        if (bannedUserRepository.existsByHashedPhoneNumber(hashedPhone)) {
+            throw new IllegalArgumentException("차단된 휴대폰 번호로는 가입할 수 없습니다.");
+        }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("이미 가입된 이메일입니다.");
         }
@@ -64,7 +70,7 @@ public class UserService {
                 .phoneNumber(request.getPhoneNumber())
                 .build();
 
-        // 추천코드 생성
+        // U-04: 고유 추천 코드 자동 생성
         user.generateReferralCode();
 
 
@@ -72,7 +78,7 @@ public class UserService {
         return userRepository.save(user).getId();
     }
 
-    //로그인: 인증 후 JWT 토큰 발급
+    //로그인: 인증 후 JWT 토큰 발급 - 완료
     public TokenResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
@@ -85,13 +91,13 @@ public class UserService {
         return TokenResponse.of(token);
     }
 
-    //U-04: 내 프로필 정보 조회
+    //U-04: 내 프로필 정보 조회 - 완료
     @Transactional //추천코드 없을 때를 대비
     public UserProfileResponse getMyProfile(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        // 기존 사용자 중 코드가 없는 경우를 대비한 지연 생성
+        // U-04: 기존 사용자 중 코드가 없는 경우를 대비한 지연 생성
         if (user.getReferralCode() == null) {
             user.generateReferralCode();
         }
@@ -107,7 +113,7 @@ public class UserService {
                 .build();
     }
 
-    //U-04: 프로필 수정 (닉네임)
+    //U-04: 프로필 수정 (닉네임, 프로필 이미지) - 완료
     @Transactional
     public void updateProfile(String email, UpdateProfileRequest request) {
         User user = userRepository.findByEmail(email)
@@ -121,30 +127,6 @@ public class UserService {
         }
 
         user.updateProfile(request.getNickname());
-    }
-
-    @Transactional
-    public void executeBan(Long adminId, Long targetId, int banDays, String reason) {
-        User admin = userRepository.findById(adminId)
-                .orElseThrow(() -> new UserNotFoundException("admin not found"));
-        User userFound = userRepository.findById(targetId)
-                .orElseThrow(() -> new UserNotFoundException("no User found"));
-        DevilUser devilUser = devilUserRepository.findByUser(userFound)
-                .orElseThrow(() -> new UserNotFoundException("no Devil-User found"));
-
-        userFound.changeRole(Role.BLOCKED);
-        devilUser.plusBlockedDays(banDays);
-
-        BannedUser bannedUser = BannedUser.builder()
-                .bannedAt(LocalDate.now())
-                .unbannedAt(LocalDate.now().plusDays(banDays))
-                .banDays(banDays)
-                .hashedPhoneNumber(devilUser.getHashedPhoneNumber())
-                .reason(reason)
-                .admin(admin)
-                .bannedUser(userFound).build();
-
-        bannedUserRepository.save(bannedUser);
     }
 
     @Transactional
@@ -163,6 +145,7 @@ public class UserService {
         return devilUserRepository.findAll(pageable);
     }
 
+    //U-03: 권한 등록 (크리에이터 권한 신청 및 획득) - 완료
     @Transactional
     public void promoteToCreator(String email) {
         log.info("권한 승격 프로세스 시작 - 대상 이메일: {}", email);
@@ -199,6 +182,57 @@ public class UserService {
     public User getUser(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("no User found"));
+    }
+
+    //U-07: 유저 차단 실행 (휴대폰 번호 해싱 저장) - 완료
+    @Transactional
+    public void executeBan(Long adminId, Long targetId, int banDays, String reason) {
+        User admin = userRepository.findById(adminId)
+                .orElseThrow(() -> new IllegalArgumentException("관리자를 찾을 수 없습니다."));
+        User targetUser = userRepository.findById(targetId)
+                .orElseThrow(() -> new IllegalArgumentException("대상 사용자를 찾을 수 없습니다."));
+
+        DevilUser devilUser = devilUserRepository.findByUser(targetUser)
+                .orElseThrow(() -> new IllegalArgumentException("악성 유저 정보가 없습니다."));
+
+        // 1. 상태 변경
+        targetUser.changeRole(Role.BLOCKED);
+        devilUser.plusBlockedDays(banDays);
+
+        // 2. [U-07] 휴대폰 번호 해싱
+        String hashedPhone = HashUtil.hashPhoneNumber(targetUser.getPhoneNumber());
+
+        // 3. 차단 기록 저장 (BannedUser 엔티티의 Builder는 bannedUser 파라미터 사용)
+        BannedUser bannedUser = BannedUser.builder()
+                .bannedAt(LocalDate.now())
+                .unbannedAt(LocalDate.now().plusDays(banDays))
+                .banDays(banDays)
+                .hashedPhoneNumber(hashedPhone) // 해시값 보관
+                .reason(reason)
+                .admin(admin)
+                .bannedUser(targetUser) // Builder 파라미터명에 맞춰 수정
+                .build();
+
+        bannedUserRepository.save(bannedUser);
+        log.info("사용자 {} 차단 및 번호 해싱 완료", targetUser.getEmail());
+    }
+
+    //U-08: 크리에이터 정산 정보 업데이트 (실명, 은행, 암호화 계좌)
+    @Transactional
+    public void updateSettlementInfo(String email, SettlementInfoRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        Creator creator = creatorRepository.findByUser(user)
+                .orElseThrow(() -> new IllegalArgumentException("크리에이터 권한이 없습니다."));
+
+        creator.updateSettlementInfo(
+                request.getRealName(),
+                request.getBank_name(),
+                request.getAccount()
+        );
+
+        log.info("크리에이터 {}님의 정산 정보(예금주: {})가 업데이트되었습니다.", email, request.getRealName());
     }
 
     @Transactional

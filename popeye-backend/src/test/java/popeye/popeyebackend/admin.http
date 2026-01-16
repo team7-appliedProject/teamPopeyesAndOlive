@@ -97,9 +97,9 @@ POST {{url}}/api/auth/signup
 Content-Type: application/json
 
 {
-  "email" : "test1234@test.com",
+  "email" : "test12345@test.com",
   "password" : "!@#123QWEqwe",
-  "nickname" : "setadmin",
+  "nickname" : "banuser",
   "phoneNumber" : "0120120123"
 }
 
@@ -108,7 +108,7 @@ POST {{url}}/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "test1234@test.com",
+  "email": "test123@test.com",
   "password": "!@#123QWEqwe"
 }
 
