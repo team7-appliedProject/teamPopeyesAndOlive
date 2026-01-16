@@ -4,12 +4,12 @@ import lombok.Getter;
 import popeye.popeyebackend.content.domain.Content;
 
 @Getter
-public class FullContentResponse {  // 구매자는 전체보기가능
+public class FullContentResponse {
 
     private Long id;
     private String title;
     private String content;
-    private int price;
+    private Integer price;   // Integer로 변경
     private boolean isFree;
 
     public static FullContentResponse from(Content c) {
@@ -17,8 +17,11 @@ public class FullContentResponse {  // 구매자는 전체보기가능
         r.id = c.getId();
         r.title = c.getTitle();
         r.content = c.getContent();
-        r.price = c.getPrice();
         r.isFree = c.isFree();
+
+        // 무료 콘텐츠면 가격 숨김
+        r.price = c.isFree() ? null : c.getPrice();
+
         return r;
     }
 }

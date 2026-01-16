@@ -1,15 +1,17 @@
 package popeye.popeyebackend.content.service;
 
-
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.dto.request.ContentCreateRequest;
 import popeye.popeyebackend.content.dto.response.ContentResponse;
 import popeye.popeyebackend.content.dto.response.FullContentResponse;
 import popeye.popeyebackend.content.dto.response.PreviewContentResponse;
 import popeye.popeyebackend.content.enums.ContentStatus;
+import popeye.popeyebackend.content.exception.AccessDeniedException;
+import popeye.popeyebackend.content.exception.ContentNotFoundException;
+import popeye.popeyebackend.content.exception.UserNotFoundException;
 import popeye.popeyebackend.content.repository.ContentRepository;
 import popeye.popeyebackend.pay.enums.OrderStatus;
 import popeye.popeyebackend.pay.repository.OrderRepository;
@@ -20,10 +22,12 @@ import popeye.popeyebackend.user.repository.UserRepository;
 @RequiredArgsConstructor
 @Transactional
 public class ContentService {
+
     private final ContentRepository contentRepository;
     private final UserRepository userRepository;
-    private final OrderRepository orderRepository; // 추가
+    private final OrderRepository orderRepository;
 
+    // 콘텐츠 생성
     public Long createContent(Long userId, ContentCreateRequest req) {
         User creator = userRepository.findById(userId).orElseThrow();
 
@@ -32,41 +36,82 @@ public class ContentService {
                 .content(req.getContent())
                 .price(req.getPrice())
                 .discountRate(req.getDiscountRate())
-                .isFree(req.isFree()).build();
+                .isFree(req.isFree())
+                .creator(creator)
+                .build();
 
         return contentRepository.save(content).getId();
     }
 
-    public ContentResponse getContent(Long contentId) {
+    // 콘텐츠 조회 (접근 제어 + 조회수 정책)
+    public ContentResponse getContent(Long contentId, Long userId) {
+
         Content content = contentRepository
                 .findByIdAndContentStatus(contentId, ContentStatus.ACTIVE)
-                .orElseThrow();
+                .orElseThrow(ContentNotFoundException::new);
 
-        content.increaseViewCount();
-        return ContentResponse.from(content);
-    }
+        User viewer = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
 
-    @Transactional(readOnly = true)
-    public Object getContentWithAccessControl(Long contentId, boolean hasPurchased) {
-        Content c = contentRepository.findByIdAndContentStatus(contentId, ContentStatus.ACTIVE)
-                .orElseThrow();
-        c.increaseViewCount();
 
-        if (c.isFree() || hasPurchased) {
-            return FullContentResponse.from(c);
+        boolean isCreator = content.getCreator().getId().equals(userId);
+        boolean isAdmin = viewer.isAdmin();
+
+        // 제작자 or 관리자 → 전체 공개 + 조회수 증가
+        if (isCreator || isAdmin) {
+            content.increaseViewCount();
+            return FullContentResponse.from(content);
         }
-        return PreviewContentResponse.from(c);
+
+        // 무료 콘텐츠 → 전체 공개 + 조회수 증가
+        if (content.isFree()) {
+            content.increaseViewCount();
+            return FullContentResponse.from(content);
+        }
+
+        // 구매 완료 → 전체 공개 + 조회수 증가
+        if (hasPurchased(userId, contentId)) {
+            content.increaseViewCount();
+            return FullContentResponse.from(content);
+        }
+
+        // 그 외 → 미리보기 (조회수 증가 x)
+        return PreviewContentResponse.from(content);
     }
 
+    // 소프트 삭제
     public void deleteContent(Long userId, Long contentId) {
-        Content content = contentRepository.findById(contentId)
-                .orElseThrow();
+        Content content = contentRepository.findById(contentId).orElseThrow();
 
         if (!content.getCreator().getId().equals(userId)) {
-            throw new IllegalStateException("작성자만 삭제할 수 있습니다.");
+            throw new AccessDeniedException("작성자만 삭제할 수 있습니다.");
         }
 
-        content.inactivate(); // 실제 삭제 아님 (비공개 처리)
+        content.inactivate();
     }
 
+    public void hardDeleteContent(Long adminUserId, Long contentId) {
+
+        User admin = userRepository.findById(adminUserId)
+                .orElseThrow(UserNotFoundException::new);
+
+        if (!admin.isAdmin()) {
+            throw new AccessDeniedException("관리자만 하드 삭제할 수 있습니다.");
+        }
+
+        Content content = contentRepository.findById(contentId)
+                .orElseThrow(ContentNotFoundException::new);
+
+        contentRepository.delete(content); // 물리 삭제
+    }
+
+
+    // 구매 여부 조회 (pay 도메인 read-only)
+    private boolean hasPurchased(Long userId, Long contentId) {
+        return orderRepository.existsByUser_IdAndContent_IdAndOrderStatus(
+                userId,
+                contentId,
+                OrderStatus.COMPLETED
+        );
+    }
 }
