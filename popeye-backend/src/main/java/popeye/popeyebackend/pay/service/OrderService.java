@@ -12,7 +12,7 @@ import popeye.popeyebackend.pay.domain.Order;
 import popeye.popeyebackend.pay.enums.CreditType;
 import popeye.popeyebackend.pay.enums.OrderStatus;
 import popeye.popeyebackend.pay.enums.ReasonType;
-import popeye.popeyebackend.pay.exception.ApiException;
+import popeye.popeyebackend.global.exception.ApiException;
 import popeye.popeyebackend.pay.repository.CreditRepository;
 import popeye.popeyebackend.pay.repository.OrderRepository;
 import popeye.popeyebackend.user.domain.User;
