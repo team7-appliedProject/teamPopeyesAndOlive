@@ -12,10 +12,11 @@ import popeye.popeyebackend.pay.domain.Order;
 import popeye.popeyebackend.pay.enums.CreditType;
 import popeye.popeyebackend.pay.enums.OrderStatus;
 import popeye.popeyebackend.pay.enums.ReasonType;
-import popeye.popeyebackend.pay.exception.ApiException;
+import popeye.popeyebackend.global.exception.ApiException;
 import popeye.popeyebackend.pay.repository.CreditRepository;
 import popeye.popeyebackend.pay.repository.OrderRepository;
 import popeye.popeyebackend.user.domain.User;
+import popeye.popeyebackend.user.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -28,10 +29,13 @@ public class OrderService {
     private final CreditRepository creditRepository;
     private final OrderRepository orderRepository;
     private final CreditHistoryService creditHistoryService;
+    private final UserService userService;
 
     @Transactional
-    public Long purchase(User user, Long contentId){
+    public Long purchase(Long userId, Long contentId){
         Content content = contentRepository.findById(contentId).orElseThrow(() -> new ApiException(ErrorCode.INVALID_REQUEST));
+
+        User user = userService.getUser(userId);
 
         // 중복 구매 방지
         if (orderRepository.existsByUser_IdAndContent_Id(user.getId(), contentId)){
@@ -107,7 +111,7 @@ public class OrderService {
         if (usedPaid > 0){
             creditHistoryService.record(
                     user,
-                    CreditType.FREE,
+                    CreditType.PAID,
                     ReasonType.PURCHASE,
                     -usedPaid,
                     orderId,
@@ -129,6 +133,7 @@ public class OrderService {
                     .usedFreeCredit(usedFree)
                     .usedPaidCredit(usedPaid)
                     .orderStatus(OrderStatus.COMPLETED)
+                    .quantity(1)
                     .build();
             orderRepository.save(order);
             return order.getId();

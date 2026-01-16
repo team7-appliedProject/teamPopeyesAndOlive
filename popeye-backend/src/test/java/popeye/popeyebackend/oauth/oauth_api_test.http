@@ -6,7 +6,7 @@ Content-Type: application/json
 "email": "test1@popeye.com",
 "password": "qwer@123",
 "nickname": "뽀빠이테스터",
-"phoneNumber": "01012345678"
+"phoneNumber": "01011112222"
 }
 
 ###2. 로그인 테스트 (토큰 발급)

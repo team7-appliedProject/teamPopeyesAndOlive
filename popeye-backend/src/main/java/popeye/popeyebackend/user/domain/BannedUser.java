@@ -26,7 +26,7 @@ public class BannedUser {
 
     private Integer banDays;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ban_user")
     private User user;
 

@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import popeye.popeyebackend.global.common.ApiResponse;
 import popeye.popeyebackend.global.exception.dto.ErrorResponse;
-import popeye.popeyebackend.pay.exception.ApiException;
+import popeye.popeyebackend.notification.exception.NoNotificationException;
+import popeye.popeyebackend.notification.exception.NotificationAlreadyRead;
 import popeye.popeyebackend.report.exception.AlreadyProcessedException;
 import popeye.popeyebackend.report.exception.AlreadyReportException;
 import popeye.popeyebackend.report.exception.MissedReportTypeException;
@@ -107,6 +108,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(e.getErrorCode().getStatus())
                 .body(ErrorResponse.of(e.getErrorCode().name(),e.getErrorCode().getMessage()));
+    }
+
+    // ----- 알림 오류
+    @ExceptionHandler(NoNotificationException.class)
+    public ResponseEntity<ErrorResponse> handleNoNotificationException(ApiException e) {
+        return ResponseEntity
+                .status(e.getErrorCode().getStatus())
+                .body(ErrorResponse.of(e.getErrorCode().name(), e.getMessage()));
+    }
+
+    @ExceptionHandler(NotificationAlreadyRead.class)
+    public ResponseEntity<ErrorResponse> handleAlreadyReadException(ApiException e) {
+        return ResponseEntity
+                .status(e.getErrorCode().getStatus())
+                .body(ErrorResponse.of(e.getErrorCode().name(), e.getMessage()));
     }
 
     //기타 최상위 예외처리
