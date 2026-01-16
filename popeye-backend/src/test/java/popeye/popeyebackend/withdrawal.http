@@ -1,0 +1,51 @@
+@host = http://localhost:8080
+@creatorId = 1
+
+### [Withdrawal] 1) 출금 가능 잔액 조회 (정상)
+GET {{host}}/api/creators/{{creatorId}}/settlements/available-balance
+Accept: application/json
+
+
+### [Withdrawal] 2) 출금 신청 (정상)
+POST {{host}}/api/creators/{{creatorId}}/withdrawals
+Content-Type: application/json
+Accept: application/json
+
+{
+  "amount": 1000
+}
+
+
+### [Withdrawal] 3) 출금 내역 조회 (정상)
+GET {{host}}/api/creators/{{creatorId}}/withdrawals
+Accept: application/json
+
+
+### [Withdrawal] 4) 출금 신청 실패 - 금액 0 (Validation)
+POST {{host}}/api/creators/{{creatorId}}/withdrawals
+Content-Type: application/json
+Accept: application/json
+
+{
+  "amount": 0
+}
+
+
+### [Withdrawal] 5) 출금 신청 실패 - 음수 금액
+POST {{host}}/api/creators/{{creatorId}}/withdrawals
+Content-Type: application/json
+Accept: application/json
+
+{
+  "amount": -10
+}
+
+
+### [Withdrawal] 6) 출금 신청 실패 - 잔액 부족
+POST {{host}}/api/creators/{{creatorId}}/withdrawals
+Content-Type: application/json
+Accept: application/json
+
+{
+  "amount": 999999999
+}

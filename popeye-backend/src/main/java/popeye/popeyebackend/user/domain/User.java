@@ -68,9 +68,8 @@ public class User {
     @Column(name = "referral_code", unique = true)
     private String referralCode;
 
-
-    @OneToMany(mappedBy = "creator")
-    private List<Settlement> settlements;
+    // @OneToMany(mappedBy = "creator")
+    // private List<Settlement> settlements;
 
     @OneToMany(mappedBy = "user")
     private List<Order> orders;

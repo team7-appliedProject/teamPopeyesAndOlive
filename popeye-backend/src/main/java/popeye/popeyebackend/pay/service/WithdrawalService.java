@@ -11,7 +11,6 @@ import popeye.popeyebackend.pay.domain.Withdrawal;
 import popeye.popeyebackend.pay.dto.withdrawal.WithdrawalRequest;
 import popeye.popeyebackend.pay.dto.withdrawal.WithdrawalResponse;
 import popeye.popeyebackend.pay.enums.WithdrawalStatus;
-import popeye.popeyebackend.pay.repository.SettlementRepository;
 import popeye.popeyebackend.pay.repository.WithdrawalRepository;
 import popeye.popeyebackend.user.domain.Creator;
 import popeye.popeyebackend.user.repository.CreatorRepository;
@@ -22,7 +21,7 @@ import popeye.popeyebackend.user.repository.CreatorRepository;
 public class WithdrawalService {
 
 	private final WithdrawalRepository withdrawalRepository;
-	private final SettlementRepository settlementRepository;
+	private final SettlementService settlementService;
 	private final CreatorRepository creatorRepository;
 
 	/**
@@ -43,34 +42,25 @@ public class WithdrawalService {
 			throw new IllegalArgumentException("출금 금액은 1 이상이어야 합니다.");
 		}
 
-		// Creator 조회
-		Creator creator = creatorRepository.findByIdWithUser(creatorId)
-			.orElseThrow(() -> new IllegalArgumentException("크리에이터를 찾을 수 없습니다: " + creatorId));
-
-		// 인증
-		if (!loginUserId.equals(creator.getUser().getId())) {
-			throw new IllegalArgumentException("크리에이터 본인만 조회할 수 있습니다.");
-		}
+		// Creator 검증
+		Creator creator = validateCreator(loginUserId, creatorId);
 
 		// Withdrawal 엔티티 생성 (status=REQ)
 		Withdrawal withdrawal = Withdrawal.request(creator, request.getAmount());
 		Withdrawal saved = withdrawalRepository.save(withdrawal);
 
-		// 트랜잭션 내에서 즉시 처리
-		processWithdrawalImmediately(saved.getId());
+		// 트랜잭션 내에서 즉시 처리 (처리된 엔티티를 반환받아 재조회 방지)
+		Withdrawal processed = processWithdrawalImmediately(saved.getId());
 
-		// 최신 상태로 다시 조회하여 반환
-		Withdrawal updated = withdrawalRepository.findById(saved.getId())
-			.orElseThrow(() -> new IllegalStateException("출금 신청을 찾을 수 없습니다: " + saved.getId()));
-
+		// processWithdrawalImmediately가 반환한 엔티티를 사용 (동일 트랜잭션 내에서 이미 업데이트됨)
 		return new WithdrawalResponse(
-			updated.getId(),
-			updated.getCreator().getId(),
-			updated.getAmount(),
-			updated.getStatus(),
-			updated.getRequestedAt(),
-			updated.getProcessedAt(),
-			updated.getFailureReason()
+			processed.getId(),
+			processed.getCreator().getId(),
+			processed.getAmount(),
+			processed.getStatus(),
+			processed.getRequestedAt(),
+			processed.getProcessedAt(),
+			processed.getFailureReason()
 		);
 	}
 
@@ -82,9 +72,10 @@ public class WithdrawalService {
 	 * - 잔액 계산과 상태 업데이트가 원자적으로 수행됨
 	 *
 	 * @param withdrawalId 출금 신청 ID
+	 * @return 처리 완료된 Withdrawal 엔티티 (재조회 방지를 위해 반환)
 	 * @throws IllegalStateException 출금 신청을 찾을 수 없거나 이미 처리된 경우
 	 */
-	private void processWithdrawalImmediately(Long withdrawalId) {
+	private Withdrawal processWithdrawalImmediately(Long withdrawalId) {
 		log.info("출금 즉시 처리 시작: withdrawalId={}", withdrawalId);
 
 		// 비관적 락으로 withdrawal 조회 (동시성 방어)
@@ -94,13 +85,12 @@ public class WithdrawalService {
 		// 이미 처리된 경우 스킵
 		if (withdrawal.getStatus() != WithdrawalStatus.REQ) {
 			log.warn("출금 신청이 이미 처리되었습니다: withdrawalId={}, status={}", withdrawalId, withdrawal.getStatus());
-			return;
+			return withdrawal;
 		}
 
 		// 잔액 계산
 		Long creatorId = withdrawal.getCreator().getId();
-		Long userId = withdrawal.getCreator().getUser().getId();
-		long available = calculateAvailableBalanceForProcessing(creatorId, userId);
+		long available = settlementService.calculateAvailableBalance(creatorId);
 
 		// 상태 결정 및 업데이트
 		if (available >= withdrawal.getAmount()) {
@@ -118,37 +108,19 @@ public class WithdrawalService {
 
 		withdrawalRepository.save(withdrawal);
 		log.info("출금 즉시 처리 완료: withdrawalId={}, status={}", withdrawalId, withdrawal.getStatus());
+		
+		// 처리된 엔티티를 반환하여 재조회 방지
+		return withdrawal;
 	}
 
-	/**
-	 * 출금 처리용 잔액 계산
-	 * available = SUM(Settlement 정산금) - SUM(Withdrawal.amount where status = SUC)
-	 *
-	 * Note: Settlement는 User를 creator로 사용하고, Withdrawal는 Creator를 사용합니다.
-	 * 따라서 User의 id와 Creator의 id를 모두 받아야 합니다.
-	 */
-	private long calculateAvailableBalanceForProcessing(Long creatorId, Long userId) {
-		// Settlement는 User를 creator로 사용하므로 User의 id를 전달
-		long settlementSum = settlementRepository.sumTotalAmountByCreator(userId);
-		// Withdrawal는 Creator를 사용하므로 Creator의 id를 전달
-		long withdrawnSum = withdrawalRepository.sumAmountByCreatorIdAndStatus(creatorId, WithdrawalStatus.SUC);
-		return settlementSum - withdrawnSum;
-	}
 
 	/**
 	 * 크리에이터의 출금 내역 조회
 	 */
 	@Transactional(readOnly = true)
 	public List<WithdrawalResponse> getWithdrawals(Long loginUserId, Long creatorId) {
+		validateCreator(loginUserId, creatorId);
 
-		// Creator 조회 (user는 여기서 필요 없지만 일관성을 위해 fetch join 사용)
-		Creator creator = creatorRepository.findByIdWithUser(creatorId)
-			.orElseThrow(() -> new IllegalArgumentException("크리에이터를 찾을 수 없습니다: " + creatorId));
-
-		// 인증
-		if (!loginUserId.equals(creator.getUser().getId())) {
-			throw new IllegalArgumentException("크리에이터 본인만 조회할 수 있습니다.");
-		}
 		return withdrawalRepository.findByCreatorIdOrderByRequestedAtDesc(creatorId).stream()
 			.map(w -> new WithdrawalResponse(
 				w.getId(),
@@ -160,6 +132,19 @@ public class WithdrawalService {
 				w.getFailureReason()
 			))
 			.toList();
+	}
+
+	private Creator validateCreator(Long loginUserId, Long creatorId) {
+		Creator creator = creatorRepository.findByIdWithUser(creatorId)
+			.orElseThrow(() ->
+				new IllegalArgumentException("크리에이터를 찾을 수 없습니다: " + creatorId)
+			);
+
+		if (!creator.getUser().getId().equals(loginUserId)) {
+			throw new IllegalArgumentException("크리에이터 본인만 조회할 수 있습니다.");
+		}
+
+		return creator;
 	}
 }
 
