@@ -1,21 +1,21 @@
 /**
  * 공통 API 유틸리티
- * 
+ *
  * nginx 프록시 설정 (nginx/default.conf):
  * - /api/*       → backend (8080)
  * - /oauth2/*    → backend
  * - /login/oauth2/* → backend
  * - /            → frontend (3000)
- * 
+ *
  * 개발 환경:
  * 1. local-docker-compose.yml로 nginx, db, redis 실행
  * 2. 백엔드: localhost:8080에서 실행
  * 3. 프론트엔드: localhost:3000에서 실행 (npm run dev)
  * 4. 브라우저: http://localhost (nginx 80포트)로 접속
- * 
+ *
  * nginx가 프록시 처리하므로 API_BASE_URL은 빈 문자열
  */
-const API_BASE_URL = '';
+const API_BASE_URL = "";
 
 /**
  * 백엔드 에러 응답 타입
@@ -37,7 +37,7 @@ export class ApiError extends Error {
 
   constructor(status: number, errorResponse: ErrorResponse) {
     super(errorResponse.message);
-    this.name = 'ApiError';
+    this.name = "ApiError";
     this.status = status;
     this.code = errorResponse.code;
     this.errorResponse = errorResponse;
@@ -90,23 +90,23 @@ async function fetchApi<T>(
 
   // 기본 헤더 설정
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...fetchOptions.headers,
   };
 
   const response = await fetch(url, {
     ...fetchOptions,
     headers,
-    credentials: 'include', // 쿠키 포함 (인증용)
+    credentials: "include", // 쿠키 포함 (인증용)
   });
 
   // 에러 응답 처리
   if (!response.ok) {
     let errorResponse: ErrorResponse = {
-      code: 'UNKNOWN_ERROR',
-      message: 'API 요청 실패',
+      code: "UNKNOWN_ERROR",
+      message: "API 요청 실패",
     };
-    
+
     try {
       const errorData = await response.json();
       errorResponse = {
@@ -116,7 +116,7 @@ async function fetchApi<T>(
     } catch {
       // JSON 파싱 실패 시 기본 메시지 사용
     }
-    
+
     throw new ApiError(response.status, errorResponse);
   }
 
@@ -134,52 +134,52 @@ async function fetchApi<T>(
 export const adminApi = {
   /** 일일 통계 조회 */
   getStatistics: (days: number) =>
-    fetchApi<AdminDailyData[]>('/api/admin/statistics', {
+    fetchApi<AdminDailyData[]>("/api/admin/statistics", {
       params: { days },
     }),
 
   /** 악성 유저 목록 조회 */
   getDevilUsers: (page = 0) =>
-    fetchApi<DevilUser[]>('/api/admin/devil-users', {
+    fetchApi<DevilUser[]>("/api/admin/devil-users", {
       params: { page },
     }),
 
   /** 유저 밴 */
   banUser: (data: BanUserRequest) =>
-    fetchApi<void>('/api/admin/devil-users', {
-      method: 'PATCH',
+    fetchApi<void>("/api/admin/devil-users", {
+      method: "PATCH",
       body: JSON.stringify(data),
     }),
 
   /** 유저 밴 해제 */
   unbanUser: (userId: number) =>
     fetchApi<void>(`/api/admin/devil-users/${userId}`, {
-      method: 'PATCH',
+      method: "PATCH",
     }),
 
   /** 게시글 차단 */
   banContent: (data: InactiveContentRequest) =>
-    fetchApi<void>('/api/admin/illegal-contents', {
-      method: 'PATCH',
+    fetchApi<void>("/api/admin/illegal-contents", {
+      method: "PATCH",
       body: JSON.stringify(data),
     }),
 
   /** 게시글 차단 해제 */
   unbanContent: (contentId: number) =>
     fetchApi<void>(`/api/admin/illegal-contents/${contentId}`, {
-      method: 'PATCH',
+      method: "PATCH",
     }),
 
   /** 신고 목록 조회 */
   getReports: (page = 0, size = 10) =>
-    fetchApi<ReportProcess[]>('/api/admin/reports', {
+    fetchApi<ReportProcess[]>("/api/admin/reports", {
       params: { page, size },
     }),
 
   /** 신고 처리 */
   processReport: (reportId: number, data: ReportProcessRequest) =>
     fetchApi<void>(`/api/admin/reports/${reportId}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(data),
     }),
 };
@@ -189,37 +189,44 @@ export const adminApi = {
 // ============================================
 export const userApi = {
   /** 내 프로필 조회 */
-  getMyProfile: () =>
-    fetchApi<ApiResponse<UserProfile>>('/api/users/me'),
+  getMyProfile: () => fetchApi<ApiResponse<UserProfile>>("/api/users/me"),
 
   /** 프로필 수정 */
   updateProfile: (data: UpdateProfileRequest) =>
-    fetchApi<ApiResponse<void>>('/api/users/me', {
-      method: 'PATCH',
+    fetchApi<ApiResponse<void>>("/api/users/me", {
+      method: "PATCH",
       body: JSON.stringify(data),
     }),
 
   /** 크리에이터 권한 신청 */
   promoteToCreator: () =>
-    fetchApi<ApiResponse<void>>('/api/users/me/creator', {
-      method: 'PATCH',
+    fetchApi<ApiResponse<void>>("/api/users/me/creator", {
+      method: "PATCH",
     }),
 
   /** 프로필 사진 변경 */
   updateProfilePhoto: (file: File) => {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
     return fetch(`${API_BASE_URL}/api/users/me/profile_photo`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: formData,
-      credentials: 'include',
-    }).then(async res => {
+      credentials: "include",
+    }).then(async (res) => {
       if (!res.ok) {
-        let errorResponse: ErrorResponse = { code: 'UPLOAD_FAILED', message: '사진 업로드 실패' };
+        let errorResponse: ErrorResponse = {
+          code: "UPLOAD_FAILED",
+          message: "사진 업로드 실패",
+        };
         try {
           const errorData = await res.json();
-          errorResponse = { code: errorData.code || errorResponse.code, message: errorData.message || errorResponse.message };
-        } catch { /* ignore */ }
+          errorResponse = {
+            code: errorData.code || errorResponse.code,
+            message: errorData.message || errorResponse.message,
+          };
+        } catch {
+          /* ignore */
+        }
         throw new ApiError(res.status, errorResponse);
       }
       return res.json() as Promise<ProfilePhotoResponse>;
@@ -228,7 +235,7 @@ export const userApi = {
 
   /** 밴 유저 목록 조회 (관리자 전용) */
   getBannedUsers: (page = 0, size = 10) =>
-    fetchApi<BanUserRes[]>('/api/users/ban-user', {
+    fetchApi<BanUserRes[]>("/api/users/ban-user", {
       params: { page, size },
     }),
 };
@@ -239,20 +246,20 @@ export const userApi = {
 export const contentApi = {
   /** 콘텐츠 생성 */
   create: (data: ContentCreateRequest) =>
-    fetchApi<number>('/api/contents', {
-      method: 'POST',
+    fetchApi<number>("/api/contents", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
   /** 콘텐츠 삭제 */
   delete: (contentId: number) =>
     fetchApi<void>(`/api/contents/${contentId}`, {
-      method: 'DELETE',
+      method: "DELETE",
     }),
 
   /** 밴 컨텐츠 목록 조회 (관리자 전용) */
   getBannedContents: (page = 0, size = 10) =>
-    fetchApi<BannedContentRes[]>('/api/contents/banlist', {
+    fetchApi<BannedContentRes[]>("/api/contents/banlist", {
       params: { page, size },
     }),
 };
@@ -263,8 +270,8 @@ export const contentApi = {
 export const reportApi = {
   /** 신고하기 */
   create: (data: ReportRequest) =>
-    fetchApi<ReportResponse>('/api/report', {
-      method: 'POST',
+    fetchApi<ReportResponse>("/api/report", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 };
@@ -275,22 +282,22 @@ export const reportApi = {
 export const paymentApi = {
   /** 결제 준비 */
   prepare: (data: ChargeRequest) =>
-    fetchApi<PreparePaymentResponse>('/api/payments/prepare', {
-      method: 'POST',
+    fetchApi<PreparePaymentResponse>("/api/payments/prepare", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
   /** 결제 승인 */
   confirm: (data: ConfirmPaymentRequest) =>
-    fetchApi<void>('/api/payments/confirm', {
-      method: 'POST',
+    fetchApi<void>("/api/payments/confirm", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
   /** 환불 */
   refund: (paymentId: number, cancelReason: string) =>
     fetchApi<void>(`/api/payments/${paymentId}/refund`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ cancelReason }),
     }),
 };
@@ -302,7 +309,7 @@ export const orderApi = {
   /** 콘텐츠 구매 */
   purchase: (contentId: number) =>
     fetchApi<PurchaseResponse>(`/api/orders/contents/${contentId}`, {
-      method: 'POST',
+      method: "POST",
     }),
 };
 
@@ -311,14 +318,14 @@ export const orderApi = {
 // ============================================
 export const notificationApi = {
   /** 알림 전체 조회 */
-  getAll: () =>
-    fetchApi<NotificationRes[]>('/api/notification'),
+  getAll: () => fetchApi<NotificationRes[]>("/api/notification"),
 
   /** 알림 읽음 처리 */
   markAsRead: (notiId: number) =>
     fetchApi<NotiReadRes>(`/api/notification/${notiId}`, {
-      method: 'PATCH',
+      method: "PATCH",
     }),
+};
 // Settlement API
 // ============================================
 export const settlementApi = {
@@ -355,7 +362,7 @@ export const withdrawalApi = {
   /** 출금 신청 */
   requestWithdrawal: (creatorId: number, data: WithdrawalRequest) =>
     fetchApi<WithdrawalResponse>(`/api/creators/${creatorId}/withdrawals`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
@@ -403,14 +410,14 @@ export interface InactiveContentRequest {
 export interface ReportProcess {
   reportId: number;
   targetId: number;
-  targetType: 'USER' | 'CONTENT' | 'COMMENT';
+  targetType: "USER" | "CONTENT" | "COMMENT";
   reason: string;
-  state: 'PENDING' | 'ACCEPTED' | 'REJECTED';
+  state: "PENDING" | "ACCEPTED" | "REJECTED";
   createdAt: string;
 }
 
 export interface ReportProcessRequest {
-  state: 'ACCEPTED' | 'REJECTED';
+  state: "ACCEPTED" | "REJECTED";
 }
 
 // User Types
@@ -419,7 +426,7 @@ export interface UserProfile {
   email: string;
   nickname: string;
   profilePhotoUrl: string | null;
-  role: 'USER' | 'CREATOR' | 'ADMIN';
+  role: "USER" | "CREATOR" | "ADMIN";
   freeCredit: number;
   paidCredit: number;
 }
@@ -461,7 +468,7 @@ export interface BannedContentRes {
 // Report Types
 export interface ReportRequest {
   targetId: number;
-  targetType: 'USER' | 'CONTENT' | 'COMMENT';
+  targetType: "USER" | "CONTENT" | "COMMENT";
   reason: string;
 }
 
@@ -473,7 +480,7 @@ export interface ReportResponse {
 // Payment Types
 export interface ChargeRequest {
   creditAmount: number;
-  pgProvider: 'TOSS' | 'KAKAO';
+  pgProvider: "TOSS" | "KAKAO";
 }
 
 export interface PreparePaymentResponse {
@@ -507,6 +514,7 @@ export interface NotificationRes {
 export interface NotiReadRes {
   notiId: number;
   isRead: boolean;
+}
 // Settlement Types
 export interface AvailableBalanceResponse {
   settlementSum: number;
@@ -550,7 +558,7 @@ export interface WithdrawalResponse {
   id: number;
   creatorId: number;
   amount: number;
-  status: 'REQ' | 'SUC' | 'REJ';
+  status: "REQ" | "SUC" | "REJ";
   requestedAt: string;
   processedAt: string | null;
   failureReason: string | null;
