@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import popeye.popeyebackend.global.common.ApiResponse;
 import popeye.popeyebackend.global.exception.dto.ErrorResponse;
 import popeye.popeyebackend.notification.exception.NoNotificationException;
+import popeye.popeyebackend.notification.exception.NotificationAlreadyRead;
 import popeye.popeyebackend.report.exception.AlreadyProcessedException;
 import popeye.popeyebackend.report.exception.AlreadyReportException;
 import popeye.popeyebackend.report.exception.MissedReportTypeException;
@@ -110,14 +111,14 @@ public class GlobalExceptionHandler {
     }
 
     // ----- 알림 오류
-    @ExceptionHandler(ApiException.class)
+    @ExceptionHandler(NoNotificationException.class)
     public ResponseEntity<ErrorResponse> handleNoNotificationException(ApiException e) {
         return ResponseEntity
                 .status(e.getErrorCode().getStatus())
                 .body(ErrorResponse.of(e.getErrorCode().name(), e.getMessage()));
     }
 
-    @ExceptionHandler(ApiException.class)
+    @ExceptionHandler(NotificationAlreadyRead.class)
     public ResponseEntity<ErrorResponse> handleAlreadyReadException(ApiException e) {
         return ResponseEntity
                 .status(e.getErrorCode().getStatus())
