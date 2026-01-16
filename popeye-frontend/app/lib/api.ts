@@ -307,6 +307,21 @@ export const orderApi = {
 };
 
 // ============================================
+// Notification API
+// ============================================
+export const notificationApi = {
+  /** 알림 전체 조회 */
+  getAll: () =>
+    fetchApi<NotificationRes[]>('/api/notification'),
+
+  /** 알림 읽음 처리 */
+  markAsRead: (notiId: number) =>
+    fetchApi<NotiReadRes>(`/api/notification/${notiId}`, {
+      method: 'PATCH',
+    }),
+};
+
+// ============================================
 // Type Definitions
 // ============================================
 
@@ -436,4 +451,17 @@ export interface PurchaseResponse {
   totalCreditUsed: number;
   usedFreeCredit: number;
   usedPaidCredit: number;
+}
+
+// Notification Types
+export interface NotificationRes {
+  id: number;
+  msg: string;
+  date: string;
+  isRead?: boolean; // 프론트에서 로컬 관리
+}
+
+export interface NotiReadRes {
+  notiId: number;
+  isRead: boolean;
 }
