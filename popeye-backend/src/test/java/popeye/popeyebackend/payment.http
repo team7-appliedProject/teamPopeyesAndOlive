@@ -1,0 +1,77 @@
+### 1. 결제 준비 (여기서 생성된 pgOrderId를 복사하세요)
+POST http://localhost:8080/api/payments/prepare
+Content-Type: application/json
+
+{
+  "creditAmount": 1000,
+  "pgProvider": "TOSS"
+}
+
+### 2. 결제 승인 반영 (Confirm)
+POST http://localhost:8080/api/payments/confirm
+Content-Type: application/json
+
+{
+  "pgOrderId": "ORD_00288d6f41cf470790ba25cc639793e3",
+  "paymentKey": "tgen_2026011611595113qT9",
+  "amount": 10000
+}
+
+### 3. 결제 환불 (Refund)
+POST http://localhost:8080/api/payments/14/refund
+Content-Type: application/json
+
+{
+  "cancelReason": "고객 변심"
+}
+
+### 4. 콘텐츠 등록 (Content ID 1번 생성을 위함)
+POST http://localhost:8080/api/contents
+Content-Type: application/json
+
+{
+  "title": "첫 번째 테스트 콘텐츠",
+  "description": "이것은 테스트용 콘텐츠입니다.",
+  "price": 150000,
+  "isFree": false
+}
+
+### 5. 콘텐츠 구매 (Order)
+POST http://localhost:8080/api/orders/contents/5
+Content-Type: application/json
+
+### 6. 무료 크레딧 지급 (Event)
+POST http://localhost:8080/api/events/free-credits?amount=1000
+
+### 7. 중복 구매 시도 (이미 산 콘텐츠를 또 살 때)
+POST http://localhost:8080/api/orders/contents/5
+Content-Type: application/json
+
+### 8. 잔액 부족 테스트 (비싼 콘텐츠 구매 시도)
+POST http://localhost:8080/api/orders/contents/6
+Content-Type: application/json
+
+### 9. 타인의 결제 환불 시도 (보안 테스트)
+# userId를 2L로 바꾸고, 1L의 결제건(ID: 14)을 환불 시도했을 때 막히는지 확인
+POST http://localhost:8080/api/payments/14/refund
+Content-Type: application/json
+
+### 10. 유효하지 않은 주문번호로 승인 시도
+POST http://localhost:8080/api/payments/confirm
+Content-Type: application/json
+
+{
+  "pgOrderId": "NON_EXISTENT_ORDER_ID",
+  "paymentKey": "tgen_2026011611595113qT9",
+  "amount": 10000
+}
+### 11. 금액 불일치 테스트 (보안 중요)
+# prepare 시 10000원 요청했는데, confirm 시 5000원만 보냈을 때 막히는지 확인
+POST http://localhost:8080/api/payments/confirm
+Content-Type: application/json
+
+{
+  "pgOrderId": "ORD_00288d6f41cf470790ba25cc639793e3",
+  "paymentKey": "tgen_2026011611595113qT9",
+  "amount": 5000
+}

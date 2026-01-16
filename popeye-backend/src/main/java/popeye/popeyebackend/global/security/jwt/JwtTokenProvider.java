@@ -40,19 +40,19 @@ public class JwtTokenProvider {
 		Claims claims = Jwts.claims().subject(email).build();
 		Date now = new Date();
 
-		return Jwts.builder()
-			.claims(claims)
-			.claim("role", role)
-			.issuedAt(now)
-			.expiration(new Date(now.getTime() + tokenValidTime))
-			.signWith(key)
-			.compact();
-	}
-
-	public Authentication getAuthentication(String token) {
-		UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUserEmail(token));
-		return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
-	}
+        return Jwts.builder()
+                .claims(claims)
+                .claim("role", role)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + tokenValidTime))
+                .signWith(key)
+                .compact();
+    }
+//principaldetails
+    public Authentication getAuthentication(String token) {
+        UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUserEmail(token));
+        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+    }
 
 	public String getUserEmail(String token) {
 		return Jwts.parser()

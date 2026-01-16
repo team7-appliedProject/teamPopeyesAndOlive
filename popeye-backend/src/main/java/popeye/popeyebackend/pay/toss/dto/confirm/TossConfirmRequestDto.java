@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class TossConfirmRequestDto {
-    private String payments;
+    private String paymentKey;
 
     @JsonProperty("orderId")
     private String pgOrderId;
