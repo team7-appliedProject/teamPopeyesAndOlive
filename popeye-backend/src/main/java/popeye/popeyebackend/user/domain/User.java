@@ -101,8 +101,8 @@ public class User {
     @OneToOne(mappedBy = "user")
     private Creator creator;
 
-    @OneToOne(mappedBy = "user")
-    private BannedUser bannedUser;
+    @OneToMany(mappedBy = "user")
+    private List<BannedUser> bannedUser;
 
     public void changeRole (Role role) {
         this.role = role;
