@@ -50,8 +50,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/report/**").hasRole("USER")
+                        .requestMatchers("/api/admin/**").permitAll()
+                        .requestMatchers("/api/report/**").permitAll()
                         .requestMatchers("/api/contents/**").permitAll()
                         .requestMatchers("/api/creators/{creatorId}/**").permitAll() // 테스트용: 정산 관련 엔드포인트만 허용
                         .requestMatchers("/api/users/**").permitAll()

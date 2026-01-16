@@ -225,6 +225,12 @@ export const userApi = {
       return res.json() as Promise<ProfilePhotoResponse>;
     });
   },
+
+  /** 밴 유저 목록 조회 (관리자 전용) */
+  getBannedUsers: (page = 0, size = 10) =>
+    fetchApi<BanUserRes[]>('/api/users/ban-user', {
+      params: { page, size },
+    }),
 };
 
 // ============================================
@@ -242,6 +248,12 @@ export const contentApi = {
   delete: (contentId: number) =>
     fetchApi<void>(`/api/contents/${contentId}`, {
       method: 'DELETE',
+    }),
+
+  /** 밴 컨텐츠 목록 조회 (관리자 전용) */
+  getBannedContents: (page = 0, size = 10) =>
+    fetchApi<BannedContentRes[]>('/api/contents/banlist', {
+      params: { page, size },
     }),
 };
 
@@ -363,6 +375,14 @@ export interface ProfilePhotoResponse {
   profilePhotoUrl: string;
 }
 
+export interface BanUserRes {
+  id: number;
+  bannedAt: string;
+  unbannedAt: string;
+  banDays: number;
+  reason: string;
+}
+
 // Content Types
 export interface ContentCreateRequest {
   title: string;
@@ -370,6 +390,14 @@ export interface ContentCreateRequest {
   price: number;
   thumbnailUrl?: string;
   mediaUrls?: string[];
+}
+
+export interface BannedContentRes {
+  id: number;
+  reason: string;
+  date: string;
+  title: string;
+  content: string;
 }
 
 // Report Types
