@@ -31,6 +31,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.referralCode = :referralCode AND u.deletedAt IS NULL")
     Optional<User> findByReferralCode(@Param("referralCode") String referralCode);
 
+    // U-05: OAuth2 소셜 로그인 사용자 찾기 (provider와 providerId로 조회)
+    @Query("SELECT u FROM User u WHERE u.provider = :provider AND u.providerId = :providerId AND u.deletedAt IS NULL")
+    Optional<User> findByProviderAndProviderId(@Param("provider") String provider, @Param("providerId") String providerId);
 
 //이게머람
 //  @Modifying: 이 쿼리가 SELECT가 아니라 수정(UPDATE/DELETE)임을 명시
