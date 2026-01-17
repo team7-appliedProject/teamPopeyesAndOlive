@@ -1,5 +1,6 @@
 package popeye.popeyebackend.user.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -36,7 +37,7 @@ public class UserController {
     @PatchMapping("/me")
     public ApiResponse<Void> updateProfile(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody UpdateProfileRequest request) {
+            @Valid @RequestBody UpdateProfileRequest request) {
         userService.updateProfile(userDetails.getUsername(), request);
         return ApiResponse.success("프로필 정보가 수정되었습니다.", null);
     }
@@ -45,8 +46,15 @@ public class UserController {
     @PatchMapping("/me/settlement")
     public ApiResponse<Void> updateSettlementInfo(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody SettlementInfoRequest request) {
+            @Valid @RequestBody SettlementInfoRequest request) {
         userService.updateSettlementInfo(userDetails.getUsername(), request);
         return ApiResponse.success("정산 정보가 업데이트되었습니다.", null);
+    }
+
+    //U-09: 회원 탈퇴 (Soft Delete, 30일 재가입 제한)
+    @DeleteMapping("/me")
+    public ApiResponse<Void> withdrawUser(@AuthenticationPrincipal UserDetails userDetails) {
+        userService.withdrawUser(userDetails.getUsername());
+        return ApiResponse.success("회원 탈퇴가 완료되었습니다. 30일 후 재가입이 가능합니다.", null);
     }
 }
