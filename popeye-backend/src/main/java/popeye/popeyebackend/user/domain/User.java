@@ -62,6 +62,15 @@ public class User {
     @Column(name = "referral_code", unique = true)
     private String referralCode;
 
+    // U-09: 회원 탈퇴 일시 (Soft Delete)
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    // U-01: 연락처 수집 동의 (차단 시 수집 목적)
+    @Column(name = "phone_number_collection_consent", nullable = false)
+    @Builder.Default
+    private Boolean phoneNumberCollectionConsent = false;
+
 
     @OneToMany(mappedBy = "creator")
     private List<Settlement> settlements;
@@ -122,5 +131,20 @@ public class User {
     }
     public void updateRole(Role newRole) {
         this.role = newRole;
+    }
+
+    //U-06: 비밀번호 재설정
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    //U-09: 회원 탈퇴
+    public void deleteUser(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    //U-01: 시금치 추가 (추천인 리워드 지급용)
+    public void addSpinach(int amount) {
+        this.totalSpinach = (this.totalSpinach == null ? 0 : this.totalSpinach) + amount;
     }
 }
