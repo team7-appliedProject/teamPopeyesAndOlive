@@ -71,6 +71,13 @@ public class User {
     @Builder.Default
     private Boolean phoneNumberCollectionConsent = false;
 
+    // U-05: OAuth2 소셜 로그인 제공자 (google, local 등)
+    @Column(name = "provider")
+    private String provider;
+
+    // U-05: OAuth2 소셜 로그인 제공자 ID (Google의 경우 sub 값)
+    @Column(name = "provider_id")
+    private String providerId;
 
     @OneToMany(mappedBy = "creator")
     private List<Settlement> settlements;
@@ -146,5 +153,11 @@ public class User {
     //U-01: 시금치 추가 (추천인 리워드 지급용)
     public void addSpinach(int amount) {
         this.totalSpinach = (this.totalSpinach == null ? 0 : this.totalSpinach) + amount;
+    }
+
+    //U-05: OAuth2 소셜 로그인 정보 업데이트
+    public void updateOAuth2Info(String provider, String providerId) {
+        this.provider = provider;
+        this.providerId = providerId;
     }
 }
