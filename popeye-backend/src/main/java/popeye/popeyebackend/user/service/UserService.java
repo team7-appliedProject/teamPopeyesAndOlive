@@ -206,8 +206,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("no User found"));
 
-        String dirName = "user_profile";
-        String uploadUrl = s3Uploader.upload(file, dirName);
+        String uploadUrl = s3Uploader.updateProfileImage(user, file);
 
         user.changeProfilePhoto(uploadUrl);
         return new ProfilePhotoRes(uploadUrl);
