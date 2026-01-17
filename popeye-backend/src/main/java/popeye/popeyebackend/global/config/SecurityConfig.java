@@ -2,6 +2,8 @@ package popeye.popeyebackend.global.config;
 
 import popeye.popeyebackend.global.security.jwt.JwtAuthenticationFilter;
 import popeye.popeyebackend.global.security.jwt.JwtTokenProvider;
+import popeye.popeyebackend.global.security.oauth2.CustomOAuth2UserService;
+import popeye.popeyebackend.global.security.oauth2.OAuth2SuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +21,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -39,7 +43,15 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/admin/**").permitAll()
                         .requestMatchers("/api/report/**").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll() // U-05: OAuth2 인증 경로 허용
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
+                )
+                // U-05: OAuth2 로그인 설정
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oAuth2SuccessHandler)
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
                 )
                 // UsernamePasswordAuthenticationFilter 이전에 JWT 인증 필터를 실행
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
