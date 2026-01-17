@@ -14,6 +14,7 @@ import popeye.popeyebackend.user.domain.User;
 import java.io.IOException;
 
 //U-05: OAuth2 로그인 성공 시 JWT 토큰 발급 및 리다이렉트 처리
+// 환경 변수 GOOGLE_CLIENT_ID가 설정되어 있고 "disabled"가 아닐 때만 활성화
 @Component
 @RequiredArgsConstructor
 @Slf4j

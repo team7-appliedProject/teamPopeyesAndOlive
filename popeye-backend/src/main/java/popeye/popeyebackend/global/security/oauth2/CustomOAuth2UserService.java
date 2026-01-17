@@ -15,6 +15,7 @@ import popeye.popeyebackend.user.repository.UserRepository;
 import java.util.Map;
 
 //U-05: OAuth2 소셜 로그인 사용자 정보 처리 서비스
+// 환경 변수 GOOGLE_CLIENT_ID가 설정되어 있고 "disabled"가 아닐 때만 활성화
 @Service
 @RequiredArgsConstructor
 @Slf4j
