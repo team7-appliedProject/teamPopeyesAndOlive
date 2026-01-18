@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ContentCard } from '@/components/ContentCard';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { contentApi } from '@/app/lib/api';
 
 export default function Home() {
@@ -13,22 +13,39 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalContents: 0, totalCreators: 0, totalUsers: 0 });
 
+  // 탭 변경 시 해당 API 호출
   useEffect(() => {
     const fetchContents = async () => {
       try {
         setLoading(true);
-        // TODO: 실제 API로 교체 필요
-        const data = await contentApi.getAll(0, 20).catch(() => []);
-        setContents(data);
+        
+        let data = [];
+        
+        switch (activeTab) {
+          case 'free':
+            data = await contentApi.getFree(0, 20).catch(() => []);
+            break;
+          case 'paid':
+            data = await contentApi.getPaid(0, 20).catch(() => []);
+            break;
+          case 'all':
+          default:
+            data = await contentApi.getAll(0, 20).catch(() => []);
+            break;
+        }
+        
+        console.log(`[Home] Fetched ${activeTab} contents:`, data);
+        setContents(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Failed to fetch contents:', err);
+        setContents([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchContents();
-  }, []);
+  }, [activeTab]);
 
   const handleLike = (contentId) => {
     setContents(contents.map(c => {
@@ -47,15 +64,6 @@ export default function Home() {
         : c;
     }));
   };
-
-  // 백엔드 응답이 배열인지 확인하고, 배열이 아니면 빈 배열 반환
-  const contentList = Array.isArray(contents) ? contents : [];
-  
-  const filteredContents = activeTab === 'all' 
-    ? contentList 
-    : activeTab === 'free'
-    ? contentList.filter(c => c.isFree || c.price === 0)
-    : contentList.filter(c => !c.isFree && c.price > 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -98,9 +106,9 @@ export default function Home() {
           <div className="flex items-center justify-center py-20">
             <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : filteredContents.length > 0 ? (
+        ) : contents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredContents.map((content, index) => (
+            {contents.map((content, index) => (
               <ContentCard
                 key={content.contentId || content.id || index}
                 content={content}
@@ -111,7 +119,11 @@ export default function Home() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-            <p className="text-lg">등록된 글이 없습니다.</p>
+            <p className="text-lg">
+              {activeTab === 'free' ? '무료 글이 없습니다.' : 
+               activeTab === 'paid' ? '유료 글이 없습니다.' : 
+               '등록된 글이 없습니다.'}
+            </p>
           </div>
         )}
       </div>

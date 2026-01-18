@@ -13,7 +13,8 @@ export function ContentCard({ content, onLike, onBookmark }) {
   // 백엔드 응답에 맞게 필드 매핑 (contentId -> id)
   const contentId = content.contentId || content.id;
   const creatorName = content.creatorNickname || content.creatorName || '작성자';
-  const isFree = content.isFree ?? (content.price === 0 || content.price === undefined);
+  // 백엔드에서 boolean isFree -> JSON "free"로 직렬화됨
+  const isFree = content.free ?? content.isFree ?? (content.price === 0 || content.price === undefined);
   const price = content.price || 0;
   const originalPrice = content.originalPrice;
   const likes = content.likes || content.likeCount || 0;

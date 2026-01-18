@@ -139,7 +139,7 @@ export default function ContentDetailPage() {
   const discount = content.discountRate || 0;
   
   // 전체 내용을 볼 수 있는지 (무료거나 구매했거나 전체 content가 있는 경우)
-  const canViewFull = content.isFree || isPurchased || !!content.content;
+  const canViewFull = content.free || isPurchased || !!content.content;
   
   // 표시할 본문 내용
   const displayContent = content.content || content.preview || '';
@@ -164,7 +164,7 @@ export default function ContentDetailPage() {
               {/* Title & Badges */}
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
-                  {content.isFree ? (
+                  {content.free ? (
                     <Badge className="bg-[#22c55e] hover:bg-[#22c55e]/90">
                       무료
                     </Badge>

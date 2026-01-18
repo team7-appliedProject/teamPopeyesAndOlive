@@ -301,6 +301,18 @@ export const contentApi = {
       params: { page, size },
     }),
 
+  /** 무료 콘텐츠 조회 */
+  getFree: (page = 0, size = 20) =>
+    fetchApi<ContentListItem[]>("/api/contents/free", {
+      params: { page, size },
+    }),
+
+  /** 유료 콘텐츠 조회 */
+  getPaid: (page = 0, size = 20) =>
+    fetchApi<ContentListItem[]>("/api/contents/paid", {
+      params: { page, size },
+    }),
+
   /** 콘텐츠 상세 조회 */
   getById: (contentId: number) =>
     fetchApi<ContentDetail>(`/api/contents/${contentId}`),
@@ -525,16 +537,19 @@ export interface BanUserRes {
 
 // Content Types
 export interface ContentListItem {
-  id: string;
+  id?: string;
+  contentId?: number;
   title: string;
-  creatorName: string;
-  creatorAvatar: string;
-  thumbnail: string;
-  price: number;
+  creatorName?: string;
+  creatorNickname?: string;
+  creatorAvatar?: string;
+  thumbnail?: string;
+  price?: number;
   originalPrice?: number;
-  isFree: boolean;
-  likes: number;
-  isLiked: boolean;
+  free?: boolean;          // Java boolean isFree -> Jackson "free"
+  isFree?: boolean;        // 호환성 유지
+  likes?: number;
+  isLiked?: boolean;
   isBookmarked: boolean;
 }
 
@@ -544,7 +559,7 @@ export interface ContentDetail {
   content?: string;      // FullContentResponse에서 제공
   preview?: string;      // PreviewContentResponse에서 제공
   price?: number | null; // 무료면 null
-  isFree: boolean;
+  free: boolean;         // Java boolean isFree -> Jackson "free"
   status?: string;
   // 프론트엔드 확장 필드 (선택적)
   creatorName?: string;
