@@ -191,6 +191,9 @@ export const userApi = {
   /** 내 프로필 조회 */
   getMyProfile: () => fetchApi<ApiResponse<UserProfile>>("/api/users/me"),
 
+  /** 내 정보 조회 (마이페이지용) */
+  getMe: () => fetchApi<UserProfile>("/api/users/me"),
+
   /** 프로필 수정 */
   updateProfile: (data: UpdateProfileRequest) =>
     fetchApi<ApiResponse<void>>("/api/users/me", {
@@ -244,6 +247,16 @@ export const userApi = {
 // Content API
 // ============================================
 export const contentApi = {
+  /** 콘텐츠 전체 조회 */
+  getAll: (page = 0, size = 20) =>
+    fetchApi<ContentListItem[]>("/api/contents", {
+      params: { page, size },
+    }),
+
+  /** 콘텐츠 상세 조회 */
+  getById: (contentId: number) =>
+    fetchApi<ContentDetail>(`/api/contents/${contentId}`),
+
   /** 콘텐츠 생성 */
   create: (data: ContentCreateRequest) =>
     fetchApi<number>("/api/contents", {
@@ -324,6 +337,20 @@ export const notificationApi = {
   markAsRead: (notiId: number) =>
     fetchApi<NotiReadRes>(`/api/notification/${notiId}`, {
       method: "PATCH",
+    }),
+};
+
+// ============================================
+// Credit API
+// ============================================
+export const creditApi = {
+  /** 크레딧 잔액 조회 */
+  getBalance: () => fetchApi<CreditBalance>("/api/credits/balance"),
+
+  /** 크레딧 사용 내역 조회 */
+  getHistory: (page = 0, size = 20) =>
+    fetchApi<CreditHistoryItem[]>("/api/credits/history", {
+      params: { page, size },
     }),
 };
 // Settlement API
@@ -449,6 +476,37 @@ export interface BanUserRes {
 }
 
 // Content Types
+export interface ContentListItem {
+  id: string;
+  title: string;
+  creatorName: string;
+  creatorAvatar: string;
+  thumbnail: string;
+  price: number;
+  originalPrice?: number;
+  isFree: boolean;
+  likes: number;
+  isLiked: boolean;
+  isBookmarked: boolean;
+}
+
+export interface ContentDetail {
+  id: string;
+  title: string;
+  body: string;
+  creatorId: number;
+  creatorName: string;
+  creatorAvatar: string;
+  thumbnail: string;
+  price: number;
+  originalPrice?: number;
+  isFree: boolean;
+  likes: number;
+  isLiked: boolean;
+  isBookmarked: boolean;
+  createdAt: string;
+}
+
 export interface ContentCreateRequest {
   title: string;
   body: string;
@@ -562,4 +620,21 @@ export interface WithdrawalResponse {
   requestedAt: string;
   processedAt: string | null;
   failureReason: string | null;
+}
+
+// Credit Types
+export interface CreditBalance {
+  spinach: number;
+  spinachExpiry: string | null;
+  starCandy: number;
+}
+
+export interface CreditHistoryItem {
+  id: string;
+  type: "charge" | "use" | "reward" | "expire" | "refund";
+  amount: number;
+  creditType: "spinach" | "starCandy";
+  description: string;
+  date: string;
+  status: "pending" | "completed";
 }

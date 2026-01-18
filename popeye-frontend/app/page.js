@@ -1,93 +1,34 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ContentCard } from '@/components/ContentCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-// Mock data
-const mockContents = [
-  {
-    id: '1',
-    title: '프로 디자이너가 알려주는 Figma 고급 테크닉 30가지',
-    creatorName: '디자인올리브',
-    creatorAvatar: 'https://images.unsplash.com/photo-1581065178047-8ee15951ede6?w=100&h=100&fit=crop',
-    thumbnail: 'https://images.unsplash.com/photo-1738676524296-364cf18900a8?w=400&h=300&fit=crop',
-    price: 4500,
-    originalPrice: 6000,
-    isFree: false,
-    likes: 1243,
-    isLiked: false,
-    isBookmarked: false,
-  },
-  {
-    id: '2',
-    title: '무료로 배우는 React 기초부터 실전까지',
-    creatorName: '코딩올리브',
-    creatorAvatar: 'https://images.unsplash.com/photo-1581065178047-8ee15951ede6?w=100&h=100&fit=crop',
-    thumbnail: 'https://images.unsplash.com/photo-1603219950587-b4f3f7ee87e7?w=400&h=300&fit=crop',
-    price: 0,
-    isFree: true,
-    likes: 3521,
-    isLiked: true,
-    isBookmarked: false,
-  },
-  {
-    id: '3',
-    title: '디지털 일러스트 마스터 클래스 - 캐릭터 드로잉',
-    creatorName: '아트올리브',
-    creatorAvatar: 'https://images.unsplash.com/photo-1581065178047-8ee15951ede6?w=100&h=100&fit=crop',
-    thumbnail: 'https://images.unsplash.com/photo-1725347740942-c5306e3c970f?w=400&h=300&fit=crop',
-    price: 8900,
-    originalPrice: 12000,
-    isFree: false,
-    likes: 892,
-    isLiked: false,
-    isBookmarked: true,
-  },
-  {
-    id: '4',
-    title: '작업 효율을 200% 높이는 워크스페이스 설정법',
-    creatorName: '프로덕티브올리브',
-    creatorAvatar: 'https://images.unsplash.com/photo-1581065178047-8ee15951ede6?w=100&h=100&fit=crop',
-    thumbnail: 'https://images.unsplash.com/photo-1741466072239-fafcc7052467?w=400&h=300&fit=crop',
-    price: 3500,
-    isFree: false,
-    likes: 2156,
-    isLiked: false,
-    isBookmarked: false,
-  },
-  {
-    id: '5',
-    title: '초보자를 위한 컬러 팔레트 만들기 가이드',
-    creatorName: '컬러올리브',
-    creatorAvatar: 'https://images.unsplash.com/photo-1581065178047-8ee15951ede6?w=100&h=100&fit=crop',
-    thumbnail: 'https://images.unsplash.com/photo-1705254613735-1abb457f8a60?w=400&h=300&fit=crop',
-    price: 0,
-    isFree: true,
-    likes: 4782,
-    isLiked: false,
-    isBookmarked: false,
-  },
-  {
-    id: '6',
-    title: 'UX 디자인 원칙: 사용자 중심 디자인 완벽 가이드',
-    creatorName: 'UX올리브',
-    creatorAvatar: 'https://images.unsplash.com/photo-1581065178047-8ee15951ede6?w=100&h=100&fit=crop',
-    thumbnail: 'https://images.unsplash.com/photo-1738676524296-364cf18900a8?w=400&h=300&fit=crop',
-    price: 5500,
-    originalPrice: 8000,
-    isFree: false,
-    likes: 1678,
-    isLiked: false,
-    isBookmarked: false,
-  },
-];
+import { contentApi } from '@/app/lib/api';
 
 export default function Home() {
   const router = useRouter();
-  const [contents, setContents] = useState(mockContents);
+  const [contents, setContents] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ totalContents: 0, totalCreators: 0, totalUsers: 0 });
+
+  useEffect(() => {
+    const fetchContents = async () => {
+      try {
+        setLoading(true);
+        // TODO: 실제 API로 교체 필요
+        const data = await contentApi.getAll(0, 20).catch(() => []);
+        setContents(data);
+      } catch (err) {
+        console.error('Failed to fetch contents:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContents();
+  }, []);
 
   const handleLike = (contentId) => {
     setContents(contents.map(c => 
@@ -125,15 +66,15 @@ export default function Home() {
           <div className="flex gap-4">
             <div className="rounded-lg bg-white/10 backdrop-blur-sm px-4 py-3">
               <div className="text-sm text-white/80">전체 글</div>
-              <div className="text-2xl font-bold">1,234</div>
+              <div className="text-2xl font-bold">{stats.totalContents.toLocaleString()}</div>
             </div>
             <div className="rounded-lg bg-white/10 backdrop-blur-sm px-4 py-3">
               <div className="text-sm text-white/80">활동 작가</div>
-              <div className="text-2xl font-bold">456</div>
+              <div className="text-2xl font-bold">{stats.totalCreators.toLocaleString()}</div>
             </div>
             <div className="rounded-lg bg-white/10 backdrop-blur-sm px-4 py-3">
               <div className="text-sm text-white/80">뽀빠이들</div>
-              <div className="text-2xl font-bold">12,345</div>
+              <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
             </div>
           </div>
         </div>
@@ -148,18 +89,27 @@ export default function Home() {
         </Tabs>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredContents.map(content => (
-            <ContentCard
-              key={content.id}
-              content={content}
-              onLike={handleLike}
-              onBookmark={handleBookmark}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : filteredContents.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredContents.map(content => (
+              <ContentCard
+                key={content.id}
+                content={content}
+                onLike={handleLike}
+                onBookmark={handleBookmark}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+            <p className="text-lg">등록된 글이 없습니다.</p>
+          </div>
+        )}
       </div>
     </div>
   );
 }
-

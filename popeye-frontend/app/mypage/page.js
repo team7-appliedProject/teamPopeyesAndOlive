@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Copy, ArrowUpRight, ArrowDownRight, XCircle, Calendar } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,77 +17,40 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CreditBadge } from '@/components/CreditBadge';
-
-// Mock data
-const creditHistory = [
-  {
-    id: '1',
-    type: 'charge',
-    amount: 100000,
-    creditType: 'starCandy',
-    description: '별사탕 충전',
-    date: '2026-01-09 14:30',
-  },
-  {
-    id: '2',
-    type: 'use',
-    amount: 4500,
-    creditType: 'starCandy',
-    description: 'Figma 고급 테크닉 30가지 글 구매',
-    date: '2026-01-08 19:22',
-  },
-  {
-    id: '3',
-    type: 'reward',
-    amount: 1000,
-    creditType: 'spinach',
-    description: '회원가입 보상',
-    date: '2026-01-05 10:15',
-  },
-  {
-    id: '4',
-    type: 'expire',
-    amount: 500,
-    creditType: 'spinach',
-    description: '시금치 만료',
-    date: '2026-01-01 00:00',
-  },
-];
-
-const purchasedContents = [
-  {
-    id: '1',
-    title: 'Figma 고급 테크닉 30가지',
-    thumbnail: 'https://images.unsplash.com/photo-1738676524296-364cf18900a8?w=200&h=150&fit=crop',
-    purchaseDate: '2026-01-08',
-    price: 4500,
-  },
-  {
-    id: '2',
-    title: '디지털 일러스트 마스터 클래스',
-    thumbnail: 'https://images.unsplash.com/photo-1725347740942-c5306e3c970f?w=200&h=150&fit=crop',
-    purchaseDate: '2026-01-06',
-    price: 8900,
-  },
-];
-
-const bookmarkedContents = [
-  {
-    id: '3',
-    title: 'UX 디자인 원칙 완벽 가이드',
-    thumbnail: 'https://images.unsplash.com/photo-1738676524296-364cf18900a8?w=200&h=150&fit=crop',
-    price: 5500,
-  },
-];
+import { userApi } from '@/app/lib/api';
 
 export default function MyPage() {
   const router = useRouter();
-  const userInfo = {
-    nickname: '뽀빠이123',
-    email: 'popeye@example.com',
-    referralCode: 'POPEYE123',
-    joinDate: '2026-01-05',
-  };
+  const [userInfo, setUserInfo] = useState(null);
+  const [creditHistory, setCreditHistory] = useState([]);
+  const [purchasedContents, setPurchasedContents] = useState([]);
+  const [bookmarkedContents, setBookmarkedContents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // TODO: 실제 API로 교체
+        const userData = await userApi.getMe().catch(() => null);
+        setUserInfo(userData);
+      } catch (err) {
+        console.error('Failed to fetch user data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -113,8 +77,8 @@ export default function MyPage() {
                   </div>
                   
                   <div className="text-center">
-                    <h3 className="font-semibold text-lg">{userInfo.nickname}</h3>
-                    <p className="text-sm text-muted-foreground">{userInfo.email}</p>
+                    <h3 className="font-semibold text-lg">{userInfo?.nickname || '-'}</h3>
+                    <p className="text-sm text-muted-foreground">{userInfo?.email || '-'}</p>
                   </div>
 
                   <Separator />
@@ -122,25 +86,27 @@ export default function MyPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">가입일</span>
-                      <span>{userInfo.joinDate}</span>
+                      <span>{userInfo?.joinDate || '-'}</span>
                     </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="text-muted-foreground">추천 코드</span>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="h-6 px-2"
-                          onClick={() => navigator.clipboard.writeText(userInfo.referralCode)}
-                        >
-                          <Copy className="h-3 w-3 mr-1" />
-                          복사
-                        </Button>
+                    {userInfo?.referralCode && (
+                      <div>
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="text-muted-foreground">추천 코드</span>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-6 px-2"
+                            onClick={() => navigator.clipboard.writeText(userInfo.referralCode)}
+                          >
+                            <Copy className="h-3 w-3 mr-1" />
+                            복사
+                          </Button>
+                        </div>
+                        <div className="rounded-lg bg-muted p-2 text-center font-mono">
+                          {userInfo.referralCode}
+                        </div>
                       </div>
-                      <div className="rounded-lg bg-muted p-2 text-center font-mono">
-                        {userInfo.referralCode}
-                      </div>
-                    </div>
+                    )}
                   </div>
 
                   <Separator />
@@ -174,58 +140,64 @@ export default function MyPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>일시</TableHead>
-                            <TableHead>구분</TableHead>
-                            <TableHead>내용</TableHead>
-                            <TableHead className="text-right">금액</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {creditHistory.map((item) => (
-                            <TableRow key={item.id}>
-                              <TableCell className="text-sm text-muted-foreground">
-                                {item.date}
-                              </TableCell>
-                              <TableCell>
-                                {item.type === 'charge' && (
-                                  <Badge className="bg-blue-500">충전</Badge>
-                                )}
-                                {item.type === 'use' && (
-                                  <Badge variant="secondary">사용</Badge>
-                                )}
-                                {item.type === 'reward' && (
-                                  <Badge className="bg-[#22c55e]">지급</Badge>
-                                )}
-                                {item.type === 'expire' && (
-                                  <Badge variant="destructive">소멸</Badge>
-                                )}
-                              </TableCell>
-                              <TableCell className="text-sm">
-                                {item.description}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex items-center justify-end gap-2">
-                                  {item.type === 'charge' || item.type === 'reward' ? (
-                                    <ArrowUpRight className="h-4 w-4 text-[#22c55e]" />
-                                  ) : item.type === 'expire' ? (
-                                    <XCircle className="h-4 w-4 text-destructive" />
-                                  ) : (
-                                    <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                  <CreditBadge 
-                                    type={item.creditType} 
-                                    amount={item.amount}
-                                    size="sm"
-                                  />
-                                </div>
-                              </TableCell>
+                      {creditHistory.length > 0 ? (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>일시</TableHead>
+                              <TableHead>구분</TableHead>
+                              <TableHead>내용</TableHead>
+                              <TableHead className="text-right">금액</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                          </TableHeader>
+                          <TableBody>
+                            {creditHistory.map((item) => (
+                              <TableRow key={item.id}>
+                                <TableCell className="text-sm text-muted-foreground">
+                                  {item.date}
+                                </TableCell>
+                                <TableCell>
+                                  {item.type === 'charge' && (
+                                    <Badge className="bg-blue-500">충전</Badge>
+                                  )}
+                                  {item.type === 'use' && (
+                                    <Badge variant="secondary">사용</Badge>
+                                  )}
+                                  {item.type === 'reward' && (
+                                    <Badge className="bg-[#22c55e]">지급</Badge>
+                                  )}
+                                  {item.type === 'expire' && (
+                                    <Badge variant="destructive">소멸</Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-sm">
+                                  {item.description}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex items-center justify-end gap-2">
+                                    {item.type === 'charge' || item.type === 'reward' ? (
+                                      <ArrowUpRight className="h-4 w-4 text-[#22c55e]" />
+                                    ) : item.type === 'expire' ? (
+                                      <XCircle className="h-4 w-4 text-destructive" />
+                                    ) : (
+                                      <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                    <CreditBadge 
+                                      type={item.creditType} 
+                                      amount={item.amount}
+                                      size="sm"
+                                    />
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          크레딧 사용 내역이 없습니다.
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -240,33 +212,39 @@ export default function MyPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {purchasedContents.map((content) => (
-                          <div
-                            key={content.id}
-                            className="flex gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
-                            onClick={() => router.push(`/content/${content.id}`)}
-                          >
-                            <img
-                              src={content.thumbnail}
-                              alt={content.title}
-                              className="w-32 h-24 rounded-lg object-cover"
-                            />
-                            <div className="flex-1">
-                              <h4 className="font-semibold mb-2">{content.title}</h4>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                                <Calendar className="h-4 w-4" />
-                                <span>{content.purchaseDate} 구매</span>
-                              </div>
-                              <CreditBadge 
-                                type="starCandy" 
-                                amount={content.price}
-                                size="sm"
+                      {purchasedContents.length > 0 ? (
+                        <div className="space-y-4">
+                          {purchasedContents.map((content) => (
+                            <div
+                              key={content.id}
+                              className="flex gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+                              onClick={() => router.push(`/content/${content.id}`)}
+                            >
+                              <img
+                                src={content.thumbnail}
+                                alt={content.title}
+                                className="w-32 h-24 rounded-lg object-cover"
                               />
+                              <div className="flex-1">
+                                <h4 className="font-semibold mb-2">{content.title}</h4>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                                  <Calendar className="h-4 w-4" />
+                                  <span>{content.purchaseDate} 구매</span>
+                                </div>
+                                <CreditBadge 
+                                  type="starCandy" 
+                                  amount={content.price}
+                                  size="sm"
+                                />
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          구매한 글이 없습니다.
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -281,29 +259,35 @@ export default function MyPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {bookmarkedContents.map((content) => (
-                          <div
-                            key={content.id}
-                            className="flex gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
-                            onClick={() => router.push(`/content/${content.id}`)}
-                          >
-                            <img
-                              src={content.thumbnail}
-                              alt={content.title}
-                              className="w-32 h-24 rounded-lg object-cover"
-                            />
-                            <div className="flex-1 flex items-center justify-between">
-                              <h4 className="font-semibold">{content.title}</h4>
-                              <CreditBadge 
-                                type="starCandy" 
-                                amount={content.price}
-                                size="sm"
+                      {bookmarkedContents.length > 0 ? (
+                        <div className="space-y-4">
+                          {bookmarkedContents.map((content) => (
+                            <div
+                              key={content.id}
+                              className="flex gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+                              onClick={() => router.push(`/content/${content.id}`)}
+                            >
+                              <img
+                                src={content.thumbnail}
+                                alt={content.title}
+                                className="w-32 h-24 rounded-lg object-cover"
                               />
+                              <div className="flex-1 flex items-center justify-between">
+                                <h4 className="font-semibold">{content.title}</h4>
+                                <CreditBadge 
+                                  type="starCandy" 
+                                  amount={content.price}
+                                  size="sm"
+                                />
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          찜한 글이 없습니다.
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -315,4 +299,3 @@ export default function MyPage() {
     </div>
   );
 }
-

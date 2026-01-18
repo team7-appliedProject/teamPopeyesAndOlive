@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Star, Leaf, AlertCircle, CreditCard, ArrowRight, RefreshCw, XCircle } from 'lucide-react';
@@ -8,44 +9,48 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CreditBadge } from '@/components/CreditBadge';
 import { Separator } from '@/components/ui/separator';
+import { creditApi } from '@/app/lib/api';
 
 export default function CreditsPage() {
   const router = useRouter();
   
-  // Mock data - TODO: 실제 API로 교체
-  const spinachBalance = 1500;
-  const spinachExpiry = '2026-02-09';
-  const starCandyBalance = 8420;
+  const [spinachBalance, setSpinachBalance] = useState(0);
+  const [spinachExpiry, setSpinachExpiry] = useState(null);
+  const [starCandyBalance, setStarCandyBalance] = useState(0);
+  const [recentTransactions, setRecentTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const recentTransactions = [
-    {
-      id: '1',
-      type: 'charge',
-      amount: 100000,
-      creditType: 'starCandy',
-      description: '별사탕 충전',
-      date: '2026-01-09 14:30',
-      status: 'completed',
-    },
-    {
-      id: '2',
-      type: 'use',
-      amount: 4500,
-      creditType: 'starCandy',
-      description: 'Figma 고급 테크닉 30가지 글 구매',
-      date: '2026-01-08 19:22',
-      status: 'completed',
-    },
-    {
-      id: '3',
-      type: 'refund',
-      amount: 8900,
-      creditType: 'starCandy',
-      description: '환불 요청',
-      date: '2026-01-07 10:15',
-      status: 'pending',
-    },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // TODO: 실제 API로 교체
+        const balanceData = await creditApi.getBalance().catch(() => null);
+        if (balanceData) {
+          setSpinachBalance(balanceData.spinach || 0);
+          setSpinachExpiry(balanceData.spinachExpiry || null);
+          setStarCandyBalance(balanceData.starCandy || 0);
+        }
+        
+        const historyData = await creditApi.getHistory(0, 10).catch(() => []);
+        setRecentTransactions(historyData);
+      } catch (err) {
+        console.error('Failed to fetch credit data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,7 +89,7 @@ export default function CreditsPage() {
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <AlertCircle className="h-3 w-3" />
-                      <span>만료일: {spinachExpiry} (1주 유효)</span>
+                      <span>만료일: {spinachExpiry || '-'} (1주 유효)</span>
                     </div>
                   </div>
 
@@ -148,44 +153,50 @@ export default function CreditsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {recentTransactions.map((transaction) => (
-                      <div
-                        key={transaction.id}
-                        className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex items-center gap-4 flex-1">
-                          <div className={`
-                            h-10 w-10 rounded-full flex items-center justify-center
-                            ${transaction.type === 'charge' ? 'bg-blue-500/10 text-blue-500' : ''}
-                            ${transaction.type === 'use' ? 'bg-muted text-muted-foreground' : ''}
-                            ${transaction.type === 'refund' ? 'bg-orange-500/10 text-orange-500' : ''}
-                          `}>
-                            {transaction.type === 'charge' && <CreditCard className="h-5 w-5" />}
-                            {transaction.type === 'use' && <ArrowRight className="h-5 w-5" />}
-                            {transaction.type === 'refund' && <RefreshCw className="h-5 w-5" />}
+                  {recentTransactions.length > 0 ? (
+                    <div className="space-y-4">
+                      {recentTransactions.map((transaction) => (
+                        <div
+                          key={transaction.id}
+                          className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-4 flex-1">
+                            <div className={`
+                              h-10 w-10 rounded-full flex items-center justify-center
+                              ${transaction.type === 'charge' ? 'bg-blue-500/10 text-blue-500' : ''}
+                              ${transaction.type === 'use' ? 'bg-muted text-muted-foreground' : ''}
+                              ${transaction.type === 'refund' ? 'bg-orange-500/10 text-orange-500' : ''}
+                            `}>
+                              {transaction.type === 'charge' && <CreditCard className="h-5 w-5" />}
+                              {transaction.type === 'use' && <ArrowRight className="h-5 w-5" />}
+                              {transaction.type === 'refund' && <RefreshCw className="h-5 w-5" />}
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-medium">{transaction.description}</div>
+                              <div className="text-sm text-muted-foreground">{transaction.date}</div>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <div className="font-medium">{transaction.description}</div>
-                            <div className="text-sm text-muted-foreground">{transaction.date}</div>
+                          <div className="flex items-center gap-3">
+                            <CreditBadge 
+                              type={transaction.creditType} 
+                              amount={transaction.amount}
+                              size="sm"
+                            />
+                            {transaction.status === 'pending' && (
+                              <Badge variant="secondary">대기중</Badge>
+                            )}
+                            {transaction.status === 'completed' && (
+                              <Badge className="bg-[#22c55e]">완료</Badge>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <CreditBadge 
-                            type={transaction.creditType} 
-                            amount={transaction.amount}
-                            size="sm"
-                          />
-                          {transaction.status === 'pending' && (
-                            <Badge variant="secondary">대기중</Badge>
-                          )}
-                          {transaction.status === 'completed' && (
-                            <Badge className="bg-[#22c55e]">완료</Badge>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      거래 내역이 없습니다.
+                    </div>
+                  )}
 
                   <Separator className="my-6" />
 
@@ -209,4 +220,3 @@ export default function CreditsPage() {
     </div>
   );
 }
-
