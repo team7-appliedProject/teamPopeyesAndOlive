@@ -3,6 +3,18 @@ spring:
     url: ${SPRING_DB_URL}
     username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
   jpa:
     hibernate:
@@ -14,6 +26,8 @@ spring:
         #format_sql: true
         # SQL의 주석(어디서 실행된 쿼리인지)을 보여줍니다.
         #use_sql_comments: true
+        # MySQL 방언 명시
+#        dialect: org.hibernate.dialect.MySQLDialect
 
   batch:
     job:
@@ -26,6 +40,26 @@ spring:
       host: ${SPRING_DATA_REDIS_HOST:localhost}
       port: ${SPRING_DATA_REDIS_PORT:6379}
       password: ${SPRING_DATA_REDIS_PASSWORD}
+
+  # U-05: OAuth2 소셜 로그인 설정 (Google만)
+  # 환경 변수 GOOGLE_CLIENT_ID와 GOOGLE_CLIENT_SECRET이 설정되어 있을 때만 활성화
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:disabled}
+            client-secret: ${GOOGLE_CLIENT_SECRET:disabled}
+            scope:
+              - email
+              - profile
+            redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/login/oauth2/code/google}
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://www.googleapis.com/oauth2/v4/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
 
   servlet:
     multipart:
@@ -46,6 +80,8 @@ cloud:
 
 popeye:
   secret-key: "my_super_secret_key_popeye_1234!"
+  oauth2:
+    redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:3000/oauth2/redirect}
   toss:
     secret-key: ${TOSS_SECRET_KEY}
     client-key: ${TOSS_CLIENT_KEY}

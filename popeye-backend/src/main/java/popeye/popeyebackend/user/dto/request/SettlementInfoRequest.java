@@ -3,9 +3,11 @@ package popeye.popeyebackend.user.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 //U-08: 크리에이터 정산 정보 등록 요청
 @Getter
+@Setter
 @NoArgsConstructor
 public class SettlementInfoRequest {
     @NotBlank(message = "예금주명은 필수입니다.")

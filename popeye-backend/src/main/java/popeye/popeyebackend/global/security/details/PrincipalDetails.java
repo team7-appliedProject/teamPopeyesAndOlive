@@ -8,6 +8,7 @@ import popeye.popeyebackend.user.domain.User;
 import java.util.Collection;
 import java.util.Collections;
 
+//UserDetails 인터페이스 구현 클래스 - 사용자 인증 정보를 캡슐화
 public class PrincipalDetails implements UserDetails {
 	private final User user;
 
@@ -15,26 +16,55 @@ public class PrincipalDetails implements UserDetails {
 		this.user = user;
 	}
 
-	public User getUser() {
-		return user;
-	}
+    //User 도메인 객체 반환 (컨트롤러에서 사용)
+    public User getUser() {
+        return user;
+    }
 
-	public Long getUserId() {
-		return user.getId();
-	}
+    //사용자 ID 반환 (컨트롤러에서 사용)
+    public Long getUserId() {
+        return user.getId();
+    }
 
-	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities() {
-		return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
-	}
+    //권한 정보 반환 (Spring Security에서 사용)
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
+    }
 
-	@Override
-	public String getPassword() {
-		return user.getPassword();
-	}
+    //비밀번호 반환 (Spring Security에서 사용)
+    @Override
+    public String getPassword() {
+        return user.getPassword();
+    }
 
-	@Override
-	public String getUsername() {
-		return user.getEmail();
-	}
+    //사용자명 반환 (이메일, Spring Security에서 사용)
+    @Override
+    public String getUsername() {
+        return user.getEmail();
+    }
+
+    //계정 만료 여부 (기본: 만료되지 않음)
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    //계정 잠금 여부 (기본: 잠금되지 않음)
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    //자격증명 만료 여부 (기본: 만료되지 않음)
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    //계정 활성화 여부 (탈퇴하지 않은 사용자만 활성화)
+    @Override
+    public boolean isEnabled() {
+        return user.getDeletedAt() == null;
+    }
 }

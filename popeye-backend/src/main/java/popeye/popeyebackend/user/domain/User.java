@@ -66,7 +66,22 @@ public class User {
     @Column(name = "referral_code", unique = true)
     private String referralCode;
 
+    // U-09: 회원 탈퇴 일시 (Soft Delete)
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
+    // U-01: 연락처 수집 동의 (차단 시 수집 목적)
+    @Column(name = "phone_number_collection_consent", nullable = false)
+    @Builder.Default
+    private Boolean phoneNumberCollectionConsent = false;
+
+    // U-05: OAuth2 소셜 로그인 제공자 (google, local 등)
+    @Column(name = "provider")
+    private String provider;
+
+    // U-05: OAuth2 소셜 로그인 제공자 ID (Google의 경우 sub 값)
+    @Column(name = "provider_id")
+    private String providerId;
 
     @OneToMany(mappedBy = "user")
     private List<Order> orders;
@@ -125,5 +140,26 @@ public class User {
 
     public void changeProfilePhoto(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    //U-06: 비밀번호 재설정
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    //U-09: 회원 탈퇴
+    public void deleteUser(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    //U-01: 시금치 추가 (추천인 리워드 지급용)
+    public void addSpinach(int amount) {
+        this.totalSpinach = (this.totalSpinach == null ? 0 : this.totalSpinach) + amount;
+    }
+
+    //U-05: OAuth2 소셜 로그인 정보 업데이트
+    public void updateOAuth2Info(String provider, String providerId) {
+        this.provider = provider;
+        this.providerId = providerId;
     }
 }
