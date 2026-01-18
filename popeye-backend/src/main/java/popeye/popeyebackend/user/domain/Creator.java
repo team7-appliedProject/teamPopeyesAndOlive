@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.global.common.AesAttributeConverter;
+import popeye.popeyebackend.pay.domain.Settlement;
 
 import java.util.List;
 
@@ -37,6 +38,9 @@ public class Creator {
 
     @OneToMany(mappedBy = "creator")
     private List<Content> contents;
+
+    @OneToMany(mappedBy = "creator")
+    private List<Settlement> settlements;
 
     //정적팩토리 메서드 유저객체->크리에이터 객체
     public static Creator from(User user) {

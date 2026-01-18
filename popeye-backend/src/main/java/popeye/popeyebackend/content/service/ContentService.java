@@ -17,10 +17,7 @@ import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.domain.ContentBan;
 import popeye.popeyebackend.content.domain.ContentMedia;
 import popeye.popeyebackend.content.dto.request.ContentCreateRequest;
-import popeye.popeyebackend.content.dto.response.BannedContentRes;
-import popeye.popeyebackend.content.dto.response.ContentResponse;
-import popeye.popeyebackend.content.dto.response.FullContentResponse;
-import popeye.popeyebackend.content.dto.response.PreviewContentResponse;
+import popeye.popeyebackend.content.dto.response.*;
 import popeye.popeyebackend.content.enums.ContentStatus;
 import popeye.popeyebackend.content.global.s3.S3Uploader;
 import popeye.popeyebackend.content.repository.ContentBanRepository;
@@ -30,6 +27,8 @@ import popeye.popeyebackend.content.exception.AccessDeniedException;
 import popeye.popeyebackend.content.exception.ContentNotFoundException;
 import popeye.popeyebackend.content.exception.UserNotFoundException;
 import popeye.popeyebackend.content.repository.ContentRepository;
+import popeye.popeyebackend.pay.domain.Order;
+import popeye.popeyebackend.pay.enums.OrderStatus;
 import popeye.popeyebackend.pay.repository.OrderRepository;
 import popeye.popeyebackend.user.domain.Creator;
 import popeye.popeyebackend.user.domain.User;
@@ -39,6 +38,7 @@ import popeye.popeyebackend.user.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -215,11 +215,11 @@ public class ContentService {
 
     // 구매여부
     private boolean hasPurchased(Long userId, Long contentId) {
-        return orderRepository.existsByUserIdAndContentIdAndOrderstatus(
-                userId,
-                contentId,
-                OrderStatus.COMPLETED
-        );
+        Order content = orderRepository.findByUserIdAndContentId(userId, contentId)
+                .orElseThrow(ContentNotFoundException::new);
+
+        return content.getOrderStatus().equals(OrderStatus.COMPLETED);
+
     }
 
     // content에서 media url 추출
@@ -259,6 +259,12 @@ public class ContentService {
         return urls;
     }
 
+    public List<ContentListRes> getFreeContentList(boolean isfree, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Content> list = contentRepository.findByIsFree(isfree, pageable);
+        return list.stream().map(ContentListRes::from).toList();
+    }
+
     @Getter
     @AllArgsConstructor
     private static class ExtractedMediaInfo {
@@ -275,5 +281,12 @@ public class ContentService {
         Pageable pageable = PageRequest.of(page, size);
         Page<ContentBan> banned = contentBanRepository.findAllByIsBanned(true, pageable);
         return banned.stream().map(BannedContentRes::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ContentListRes> getContentList(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Content> all = contentRepository.findAll(pageable);
+        return all.stream().map(ContentListRes::from).toList();
     }
 }

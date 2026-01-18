@@ -42,6 +42,8 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 미사용
+                .formLogin(formLogin -> formLogin
+                        .loginProcessingUrl("/api/auth/login"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**","/error").permitAll() // 인증 불필요 경로
                         .requestMatchers("/api/v1/auth/**", "/h2-console/**").permitAll() // 인증 불필요 경로
