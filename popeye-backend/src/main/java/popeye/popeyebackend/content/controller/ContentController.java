@@ -27,6 +27,7 @@ public class ContentController {
 
     private final ContentService contentService;
 
+    @PreAuthorize("hasRole('Creator')")
     @PostMapping
     public ResponseEntity<Long> create(
             @AuthenticationPrincipal PrincipalDetails principalDetails,

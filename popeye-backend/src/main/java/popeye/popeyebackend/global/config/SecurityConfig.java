@@ -68,8 +68,8 @@ public class SecurityConfig {
                             "/swagger-ui/**",
                             "/swagger-ui.html"
                     ).permitAll();
-                    auth.requestMatchers("/api/admin/**").permitAll();
                     auth.requestMatchers("/api/report/**").permitAll();
+                    auth.requestMatchers("/api/admin/**").hasRole("ADMIN");
 
                     // U-05: OAuth2 설정이 있을 때만 OAuth2 경로 허용
                     if (isOAuth2Enabled()) {
@@ -95,21 +95,6 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 )
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/auth/**","/error").permitAll() // 인증 불필요 경로
-//                        .requestMatchers("/api/v1/auth/**", "/h2-console/**").permitAll() // 인증 불필요 경로
-//                        .requestMatchers(
-//                                "/v3/api-docs/**",
-//                                "/swagger-ui/**",
-//                                "/swagger-ui.html"
-//                        ).permitAll()
-//                        .requestMatchers("/api/admin/**").permitAll()
-//                        .requestMatchers("/api/report/**").permitAll()
-//                        .requestMatchers("/api/contents/**").permitAll()
-//                        .requestMatchers("/api/creators/{creatorId}/**").permitAll() // 테스트용: 정산 관련 엔드포인트만 허용
-//                        .requestMatchers("/api/users/**").permitAll()
-//                        .requestMatchers("/api/notifications/**").permitAll()
-//                        .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 // UsernamePasswordAuthenticationFilter 이전에 JWT 인증 필터를 실행
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
