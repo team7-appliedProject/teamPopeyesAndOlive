@@ -20,6 +20,7 @@ export function Header() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [userInfo, setUserInfo] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [readIds, setReadIds] = useState(new Set());
   const [isOpen, setIsOpen] = useState(false);
@@ -37,13 +38,16 @@ export function Header() {
         // ApiResponse 형태: { status: "success", data: { ... } }
         if (response && isSuccess(response) && response.data) {
           setIsLoggedIn(true);
+          setUserInfo(response.data);
         } else {
           setIsLoggedIn(false);
+          setUserInfo(null);
         }
       } catch (err) {
         // 401 또는 에러 시 비로그인 상태
         console.log('[Header] Auth check failed:', err);
         setIsLoggedIn(false);
+        setUserInfo(null);
       } finally {
         setIsLoading(false);
       }
@@ -244,15 +248,25 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Profile Icon - 클릭 시 /mypage 이동 */}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-full"
-                onClick={() => router.push('/mypage')}
-              >
-                <User className="h-5 w-5" />
-              </Button>
+              {/* Profile Icon - 클릭 시 /mypage 이동 (ADMIN은 /admin) */}
+              <div className="flex flex-col items-center">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="rounded-full"
+                  onClick={() => router.push(userInfo?.role === 'ADMIN' ? '/admin' : '/mypage')}
+                >
+                  <User className="h-5 w-5" />
+                </Button>
+                {userInfo?.role === 'ADMIN' && (
+                  <span 
+                    className="text-[10px] font-medium text-[#5b21b6] cursor-pointer hover:underline -mt-1"
+                    onClick={() => router.push('/admin')}
+                  >
+                    관리자
+                  </span>
+                )}
+              </div>
             </>
           ) : (
             // 비로그인 상태: 로그인, 회원가입 버튼

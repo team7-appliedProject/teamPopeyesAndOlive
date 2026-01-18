@@ -140,7 +140,19 @@ async function fetchApi<T>(
     return undefined as T;
   }
 
-  return response.json();
+  // 빈 응답 처리 (200 OK이지만 body가 비어있는 경우)
+  const text = await response.text();
+  if (!text || text.length === 0) {
+    return undefined as T;
+  }
+
+  // JSON 파싱
+  try {
+    return JSON.parse(text);
+  } catch {
+    // JSON이 아닌 경우 텍스트 그대로 반환
+    return text as T;
+  }
 }
 
 // ============================================
@@ -174,6 +186,14 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify({ phoneNumber, code }),
     }),
+};
+
+// ============================================
+// Main API (메인 페이지 통계)
+// ============================================
+export const mainApi = {
+  /** 메인 페이지 통계 조회 */
+  getMain: () => fetchApi<MainStats>("/api/main"),
 };
 
 // ============================================
@@ -462,6 +482,13 @@ export const withdrawalApi = {
 // Type Definitions
 // ============================================
 
+// Main Stats Types
+export interface MainStats {
+  totalContents: number;
+  totalOlive: number;
+  totalPopeye: number;
+}
+
 // Admin Types
 export interface AdminDailyData {
   localDate: string;
@@ -484,9 +511,9 @@ export interface DevilUser {
 }
 
 export interface BanUserRequest {
-  userId: number;
+  banUserId: number;  // 백엔드 BanUserInfoDto와 일치
   reason: string;
-  banDays?: number; // 영구 밴이면 생략
+  banDays?: number | null; // 영구 밴이면 null 또는 생략
 }
 
 export interface InactiveContentRequest {

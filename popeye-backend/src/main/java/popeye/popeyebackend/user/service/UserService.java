@@ -204,9 +204,7 @@ public class UserService {
 
     @Transactional
     public void unBanUser(Long targetId) {
-        User targetUser = userRepository.findById(targetId)
-                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
-        BannedUser user = bannedUserRepository.findByUser(targetUser)
+        BannedUser user = bannedUserRepository.findById(targetId)
                 .orElseThrow(() -> new UserNotFoundException("차단된 사용자 정보를 찾을 수 없습니다."));
         user.setUnbannedAt(LocalDate.now());
         // role을 바꿔주는 역할은 CustomUserDetailsService에서 실시
@@ -280,7 +278,7 @@ public class UserService {
         }
 
         // 3. [U-07] 휴대폰 번호 해싱
-        String hashedPhone = HashUtil.hashPhoneNumber(targetUser.getPhoneNumber());
+        String hashedPhone = devilUser.getHashedPhoneNumber();
 
         // 4. 차단 기록 저장 (BannedUser 엔티티의 Builder는 bannedUser 파라미터 사용)
         BannedUser bannedUser = BannedUser.builder()

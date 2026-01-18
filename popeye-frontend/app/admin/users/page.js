@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Shield, Ban } from 'lucide-react';
+import { Shield, Ban, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,29 +13,48 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { userApi } from '@/app/lib/api';
+import { userApi, adminApi } from '@/app/lib/api';
 
 export default function BannedUsersPage() {
   const [bannedUsers, setBannedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [unbanningId, setUnbanningId] = useState(null);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const data = await userApi.getBannedUsers(0, 20).catch(() => []);
+      setBannedUsers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message || '데이터를 불러오는데 실패했습니다.');
+      console.error('Banned users fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const data = await userApi.getBannedUsers(0, 20).catch(() => []);
-        setBannedUsers(data);
-      } catch (err) {
-        setError(err.message || '데이터를 불러오는데 실패했습니다.');
-        console.error('Banned users fetch error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, []);
+
+  // 밴 해제 처리
+  const handleUnban = async (userId) => {
+    if (!confirm('정말 밴을 해제하시겠습니까?')) return;
+
+    try {
+      setUnbanningId(userId);
+      await adminApi.unbanUser(userId);
+      alert('밴이 해제되었습니다.');
+      // 목록 새로고침
+      fetchData();
+    } catch (err) {
+      console.error('Unban error:', err);
+      alert(err.message || '밴 해제에 실패했습니다.');
+    } finally {
+      setUnbanningId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -125,8 +144,8 @@ export default function BannedUsersPage() {
                 </TableHeader>
                 <TableBody>
                   {bannedUsers.length > 0 ? (
-                    bannedUsers.map((user) => (
-                      <TableRow key={user.id}>
+                    bannedUsers.map((user, index) => (
+                      <TableRow key={`${user.id}-${index}`}>
                         <TableCell className="font-medium">{user.id}</TableCell>
                         <TableCell>{user.bannedAt || '-'}</TableCell>
                         <TableCell>
@@ -149,8 +168,20 @@ export default function BannedUsersPage() {
                         </TableCell>
                         <TableCell className="max-w-[250px] truncate">{user.reason || '-'}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="outline" size="sm">
-                            밴 해제
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleUnban(user.id)}
+                            disabled={unbanningId === user.id}
+                          >
+                            {unbanningId === user.id ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                해제 중...
+                              </>
+                            ) : (
+                              '밴 해제'
+                            )}
                           </Button>
                         </TableCell>
                       </TableRow>

@@ -26,4 +26,6 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
 	Optional<Content> findByIdWithCreator(@Param("contentId") Long contentId);
 
     Page<Content> findByIsFree(boolean isFree, Pageable pageable);
+
+    Long countByContentStatus(ContentStatus status);
 }

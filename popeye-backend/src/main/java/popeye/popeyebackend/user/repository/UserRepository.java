@@ -51,4 +51,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("select coalesce(sum(u.totalSpinach), 0) from User u")
     Long sumTotalSpinachAmount();
+
+    long countAllByRole(Role role);
 }

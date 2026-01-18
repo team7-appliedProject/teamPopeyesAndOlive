@@ -81,14 +81,10 @@ export default function DevilUsersPage() {
       setBanLoading(true);
       
       const banData = {
-        userId: selectedUser.userId,
+        banUserId: selectedUser.userId,  // 백엔드 필드명: banUserId
         reason: banReason.trim(),
+        banDays: isPermanent ? null : (banDays ? parseInt(banDays, 10) : null),
       };
-      
-      // 영구 밴이 아닌 경우에만 banDays 추가
-      if (!isPermanent && banDays) {
-        banData.banDays = parseInt(banDays, 10);
-      }
 
       await adminApi.banUser(banData);
       

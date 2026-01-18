@@ -39,8 +39,8 @@ public class AdminService {
 
     // 유저 차단 해제
     @Transactional
-    public void unbanUser(Long userId) {
-        userService.unBanUser(userId);
+    public void unbanUser(Long banId) {
+        userService.unBanUser(banId);
     }
 
     // 유저 악성 정보

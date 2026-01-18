@@ -374,7 +374,7 @@ export default function AdminPage() {
                       부적절한 글 검토 및 관리
                     </CardDescription>
                   </div>
-                  <Link href="/admin/reports">
+                  <Link href="/admin/reports?tab=contents">
                     <Button variant="outline" size="sm">전체 보기</Button>
                   </Link>
                 </CardHeader>

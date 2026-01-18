@@ -4,14 +4,34 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ContentCard } from '@/components/ContentCard';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { contentApi } from '@/app/lib/api';
+import { contentApi, mainApi } from '@/app/lib/api';
 
 export default function Home() {
   const router = useRouter();
   const [contents, setContents] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ totalContents: 0, totalCreators: 0, totalUsers: 0 });
+  const [stats, setStats] = useState({ totalContents: 0, totalOlive: 0, totalPopeye: 0 });
+
+  // 메인 통계 가져오기
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await mainApi.getMain().catch(() => null);
+        if (data) {
+          setStats({
+            totalContents: data.totalContents || 0,
+            totalOlive: data.totalOlive || 0,
+            totalPopeye: data.totalPopeye || 0,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch main stats:', err);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   // 탭 변경 시 해당 API 호출
   useEffect(() => {
@@ -82,12 +102,12 @@ export default function Home() {
               <div className="text-2xl font-bold">{stats.totalContents.toLocaleString()}</div>
             </div>
             <div className="rounded-lg bg-white/10 backdrop-blur-sm px-4 py-3">
-              <div className="text-sm text-white/80">활동 작가</div>
-              <div className="text-2xl font-bold">{stats.totalCreators.toLocaleString()}</div>
+              <div className="text-sm text-white/80">활동 올리브</div>
+              <div className="text-2xl font-bold">{stats.totalOlive.toLocaleString()}</div>
             </div>
             <div className="rounded-lg bg-white/10 backdrop-blur-sm px-4 py-3">
               <div className="text-sm text-white/80">뽀빠이들</div>
-              <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{stats.totalPopeye.toLocaleString()}</div>
             </div>
           </div>
         </div>

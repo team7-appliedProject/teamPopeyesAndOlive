@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Shield, Users, FileText, AlertTriangle, Loader2, Check, X, Eye, AlertOctagon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +25,9 @@ import {
 import { adminApi, contentApi } from '@/app/lib/api';
 
 export default function ReportsPage() {
+  const searchParams = useSearchParams();
+  const defaultTab = searchParams.get('tab') === 'contents' ? 'contents' : 'users';
+  
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -184,7 +188,7 @@ export default function ReportsPage() {
           </div>
 
           {/* Tabs */}
-          <Tabs defaultValue="users" className="w-full">
+          <Tabs defaultValue={defaultTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />

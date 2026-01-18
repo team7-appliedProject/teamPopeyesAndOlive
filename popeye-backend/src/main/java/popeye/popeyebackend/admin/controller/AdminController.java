@@ -52,11 +52,11 @@ public class AdminController {
     }
 
     @Operation(summary = "유저 밴 해제", description = "차단한 유저를 풀어줍니다.")
-    @PatchMapping("/devil-users/{userId}")
+    @PatchMapping("/devil-users/{banId}")
     public ResponseEntity<Void> unbanUser(
             @Parameter(description = "차단 해제할 유저의 pk값")
-            @PathVariable Long userId) {
-        adminService.unbanUser(userId);
+            @PathVariable Long banId) {
+        adminService.unbanUser(banId);
         return ResponseEntity.ok().build();
     }
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,6 @@ import { Separator } from "@/components/ui/separator";
 import { authApi, isSuccess } from "@/app/lib/api";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,9 +43,8 @@ export default function LoginPage() {
         localStorage.setItem("accessToken", response.data.accessToken);
         localStorage.setItem("tokenType", response.data.tokenType);
 
-        // 메인 페이지로 이동
-        router.push("/");
-        router.refresh(); // 헤더 상태 갱신
+        // 메인 페이지로 이동 (완전 새로고침으로 Header 상태 갱신)
+        window.location.href = "/";
       } else {
         setError(response.message || "로그인에 실패했습니다.");
       }
