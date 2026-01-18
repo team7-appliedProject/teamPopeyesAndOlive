@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import popeye.popeyebackend.user.domain.User;
+// import popeye.popeyebackend.user.domain.User;
 
 import java.time.LocalDateTime;
 
@@ -20,9 +20,9 @@ public class ContentBookmark {
 
     private Integer price;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id") // BIGINT(FK)
-    private User user;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "user_id") // BIGINT(FK)
+//    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "content_id") // BIGINT(FK)
@@ -32,8 +32,8 @@ public class ContentBookmark {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Builder
-    public ContentBookmark(User user, Content content, Integer price) {
-        this.user = user;
+    public ContentBookmark(Content content, Integer price) { // User user
+        //this.user = user;
         this.content = content;
         this.price = price;
     }

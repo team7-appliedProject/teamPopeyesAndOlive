@@ -19,9 +19,9 @@ public class ContentLikeController {
 
     @PostMapping("/{id}/like")
     public ResponseEntity<Void> toggleLike(
-//            @AuthenticationPrincipal PrincipalDetails details,
+          @AuthenticationPrincipal PrincipalDetails details,
             @PathVariable Long id) {
-        contentLikeService.toggleLike(1L, id); // 임시 userId
+        contentLikeService.toggleLike(details.getUserId(), contentId);
         return ResponseEntity.ok().build();
     }
 }

@@ -79,6 +79,20 @@ public class Content {
         this.modifiedAt = LocalDateTime.now();
     }
 
+    // 관리자 밴
+    public void ban() {
+        this.contentStatus = ContentStatus.INACTIVE;
+    }
+
+    // 작성자 소프트 삭제
+    public void softDelete() {
+        this.contentStatus = ContentStatus.SOFTDELETED;
+    }
+
+    public boolean isSoftDeleted() {
+        return this.contentStatus == ContentStatus.SOFTDELETED;
+    }
+
     public boolean isActive() {
         return this.contentStatus.equals(ContentStatus.ACTIVE);
     }

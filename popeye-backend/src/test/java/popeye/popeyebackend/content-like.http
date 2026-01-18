@@ -1,0 +1,14 @@
+@baseUrl = http://localhost:8080/api/contents
+@token = Bearer {{access_token}}
+
+### 좋아요 추가해보기
+POST {{host}}/api/contents/1/like
+Authorization: {{token}}
+
+### 좋아요 취소는 토글
+POST {{host}}/api/contents/1/like
+Authorization: {{token}}
+
+### 다시 좋아요를 누름
+POST {{host}}/api/contents/1/like
+Authorization: {{token}}
