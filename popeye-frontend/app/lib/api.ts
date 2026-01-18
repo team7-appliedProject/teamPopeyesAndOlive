@@ -504,7 +504,7 @@ export interface ReportProcess {
 }
 
 export interface ReportProcessRequest {
-  state: "ACCEPTED" | "REJECTED";
+  state: "TRUE" | "REJECTED" | "FALSE";  // TRUE: 승인, REJECTED: 거절, FALSE: 악성신고(신고자 처벌)
 }
 
 // User Types
@@ -587,13 +587,15 @@ export interface BannedContentRes {
 // Report Types
 export interface ReportRequest {
   targetId: number;
-  targetType: "USER" | "CONTENT" | "COMMENT";
+  type: "CONTENT";  // 백엔드 TargetType enum과 일치
   reason: string;
 }
 
 export interface ReportResponse {
   reportId: number;
-  createdAt: string;
+  reason: string;
+  state: "REQUESTED" | "APPROVED" | "REJECTED";
+  reportAt: string;
 }
 
 // Payment Types

@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Heart, Bookmark, Flag, Lock, ArrowLeft, Loader2 } from 'lucide-react';
+import { Heart, Bookmark, Flag, Lock, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CreditBadge } from '@/components/CreditBadge';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +21,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { contentApi } from '@/app/lib/api';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { contentApi, reportApi } from '@/app/lib/api';
 
 export default function ContentDetailPage() {
   const params = useParams();
@@ -33,6 +43,12 @@ export default function ContentDetailPage() {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
+  
+  // 신고 관련 상태
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reporting, setReporting] = useState(false);
+  const [reportSuccess, setReportSuccess] = useState(false);
 
   // 콘텐츠 조회
   useEffect(() => {
@@ -81,6 +97,48 @@ export default function ContentDetailPage() {
       alert(err.message || '구매에 실패했습니다.');
     } finally {
       setPurchasing(false);
+    }
+  };
+
+  // 신고하기
+  const handleReport = async () => {
+    if (!reportReason.trim()) {
+      alert('신고 사유를 입력해주세요.');
+      return;
+    }
+
+    try {
+      setReporting(true);
+      
+      await reportApi.create({
+        targetId: Number(contentId),
+        type: 'CONTENT',
+        reason: reportReason.trim(),
+      });
+      
+      setReportSuccess(true);
+      setReportReason('');
+      
+      // 2초 후 모달 닫기
+      setTimeout(() => {
+        setReportDialogOpen(false);
+        setReportSuccess(false);
+      }, 2000);
+      
+    } catch (err) {
+      console.error('[ContentDetail] Report error:', err);
+      alert(err.message || '신고 접수에 실패했습니다.');
+    } finally {
+      setReporting(false);
+    }
+  };
+
+  // 신고 모달 닫기
+  const handleReportDialogClose = () => {
+    if (!reporting) {
+      setReportDialogOpen(false);
+      setReportReason('');
+      setReportSuccess(false);
     }
   };
 
@@ -235,29 +293,90 @@ export default function ContentDetailPage() {
                   <Bookmark className={`h-4 w-4 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
                   찜하기
                 </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" className="text-destructive">
-                      <Flag className="h-4 w-4 mr-2" />
-                      신고
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>글 신고</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        이 글을 신고하시겠습니까? 신고가 누적되면 해당 글은 검토됩니다.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>취소</AlertDialogCancel>
-                      <AlertDialogAction className="bg-destructive">
-                        신고하기
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <Button 
+                  variant="ghost" 
+                  className="text-destructive"
+                  onClick={() => setReportDialogOpen(true)}
+                >
+                  <Flag className="h-4 w-4 mr-2" />
+                  신고
+                </Button>
               </div>
+
+              {/* 신고 모달 */}
+              <Dialog open={reportDialogOpen} onOpenChange={handleReportDialogClose}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Flag className="h-5 w-5 text-destructive" />
+                      글 신고
+                    </DialogTitle>
+                    <DialogDescription>
+                      이 글을 신고하시겠습니까? 신고가 누적되면 해당 글은 검토됩니다.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  {reportSuccess ? (
+                    <div className="py-8 text-center">
+                      <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                      <p className="text-lg font-medium">신고가 접수되었습니다</p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        신고 내용을 검토 후 조치하겠습니다.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-4 py-4">
+                        <div className="rounded-lg bg-muted p-3">
+                          <p className="text-sm font-medium">신고 대상</p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {content?.title}
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="report-reason">신고 사유 *</Label>
+                          <Textarea
+                            id="report-reason"
+                            placeholder="신고 사유를 상세히 입력해주세요. (예: 불법 광고, 욕설/비방, 허위 정보 등)"
+                            value={reportReason}
+                            onChange={(e) => setReportReason(e.target.value)}
+                            className="min-h-[120px] resize-none"
+                            disabled={reporting}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            허위 신고 시 불이익이 있을 수 있습니다.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <DialogFooter className="gap-2 sm:gap-0">
+                        <Button 
+                          variant="outline" 
+                          onClick={handleReportDialogClose}
+                          disabled={reporting}
+                        >
+                          취소
+                        </Button>
+                        <Button 
+                          variant="destructive"
+                          onClick={handleReport}
+                          disabled={reporting || !reportReason.trim()}
+                        >
+                          {reporting ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              처리 중...
+                            </>
+                          ) : (
+                            '신고하기'
+                          )}
+                        </Button>
+                      </DialogFooter>
+                    </>
+                  )}
+                </DialogContent>
+              </Dialog>
             </CardContent>
           </Card>
 

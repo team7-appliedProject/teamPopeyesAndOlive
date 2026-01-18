@@ -28,6 +28,7 @@ import { Ban } from 'lucide-react';
 
 export default function AdminPage() {
   const [statistics, setStatistics] = useState([]);
+  const [reports, setReports] = useState([]);
   const [bannedUsers, setBannedUsers] = useState([]);
   const [bannedContents, setBannedContents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +42,10 @@ export default function AdminPage() {
         // 통계 데이터 가져오기
         const statsData = await adminApi.getStatistics(7).catch(() => []);
         setStatistics(statsData);
+        
+        // 신고 목록 가져오기
+        const reportsData = await adminApi.getReports(0, 10).catch(() => []);
+        setReports(reportsData);
         
         // 밴 유저 목록 가져오기
         const bannedUsersData = await userApi.getBannedUsers(0, 10).catch(() => []);
@@ -60,6 +65,27 @@ export default function AdminPage() {
 
     fetchData();
   }, []);
+
+  // 신고 타입별 필터링
+  const userReports = reports.filter(r => r.targetType === 'USER');
+  const contentReports = reports.filter(r => r.targetType === 'CONTENT' || r.targetType === 'COMMENT');
+
+  // 상태 배지 스타일
+  const getStateBadge = (state) => {
+    switch (state) {
+      case 'PENDING':
+      case 'REQUESTED':
+        return <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">대기중</span>;
+      case 'TRUE':
+        return <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">승인됨</span>;
+      case 'REJECTED':
+        return <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">거절됨</span>;
+      case 'FALSE':
+        return <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">악성신고</span>;
+      default:
+        return <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{state}</span>;
+    }
+  };
 
   // 최근 7일 날짜 생성 (데이터가 없을 때 사용)
   const generateLast7Days = () => {
@@ -284,33 +310,51 @@ export default function AdminPage() {
             {/* Reported Users */}
             <TabsContent value="reportedUsers" className="mt-6">
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-destructive" />
-                    신고된 사용자
-                  </CardTitle>
-                  <CardDescription>
-                    신고 누적 유저 관리 및 제재
-                  </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-destructive" />
+                      신고된 사용자
+                    </CardTitle>
+                    <CardDescription>
+                      신고 누적 유저 관리 및 제재
+                    </CardDescription>
+                  </div>
+                  <Link href="/admin/reports">
+                    <Button variant="outline" size="sm">전체 보기</Button>
+                  </Link>
                 </CardHeader>
                 <CardContent>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>닉네임</TableHead>
-                        <TableHead>이메일</TableHead>
-                        <TableHead>신고 횟수</TableHead>
-                        <TableHead>사유</TableHead>
-                        <TableHead>상태</TableHead>
-                        <TableHead className="text-right">작업</TableHead>
+                        <TableHead className="w-[50%]">사유</TableHead>
+                        <TableHead className="w-[20%]">상태</TableHead>
+                        <TableHead className="w-[30%]">신고일</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          신고된 사용자가 없습니다.
-                        </TableCell>
-                      </TableRow>
+                      {userReports.length > 0 ? (
+                        userReports.slice(0, 5).map((report, index) => (
+                          <TableRow key={report.reportId || `user-${index}`}>
+                            <TableCell className="max-w-[300px]">
+                              <p className="truncate" title={report.reason}>
+                                {report.reason || '-'}
+                              </p>
+                            </TableCell>
+                            <TableCell>{getStateBadge(report.state)}</TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {report.createdAt ? new Date(report.createdAt).toLocaleDateString('ko-KR') : '-'}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                            신고된 사용자가 없습니다.
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </CardContent>
@@ -320,33 +364,57 @@ export default function AdminPage() {
             {/* Reported Contents */}
             <TabsContent value="reportedContents" className="mt-6">
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-destructive" />
-                    신고된 글
-                  </CardTitle>
-                  <CardDescription>
-                    부적절한 글 검토 및 관리
-                  </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-destructive" />
+                      신고된 글
+                    </CardTitle>
+                    <CardDescription>
+                      부적절한 글 검토 및 관리
+                    </CardDescription>
+                  </div>
+                  <Link href="/admin/reports">
+                    <Button variant="outline" size="sm">전체 보기</Button>
+                  </Link>
                 </CardHeader>
                 <CardContent>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>제목</TableHead>
-                        <TableHead>올리브</TableHead>
-                        <TableHead>신고 횟수</TableHead>
-                        <TableHead>사유</TableHead>
-                        <TableHead>상태</TableHead>
-                        <TableHead className="text-right">작업</TableHead>
+                        <TableHead className="w-[15%]">타입</TableHead>
+                        <TableHead className="w-[40%]">사유</TableHead>
+                        <TableHead className="w-[20%]">상태</TableHead>
+                        <TableHead className="w-[25%]">신고일</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          신고된 글이 없습니다.
-                        </TableCell>
-                      </TableRow>
+                      {contentReports.length > 0 ? (
+                        contentReports.slice(0, 5).map((report, index) => (
+                          <TableRow key={report.reportId || `content-${index}`}>
+                            <TableCell>
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {report.targetType === 'CONTENT' ? '게시글' : '댓글'}
+                              </span>
+                            </TableCell>
+                            <TableCell className="max-w-[250px]">
+                              <p className="truncate" title={report.reason}>
+                                {report.reason || '-'}
+                              </p>
+                            </TableCell>
+                            <TableCell>{getStateBadge(report.state)}</TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {report.createdAt ? new Date(report.createdAt).toLocaleDateString('ko-KR') : '-'}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                            신고된 글이 없습니다.
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </CardContent>
