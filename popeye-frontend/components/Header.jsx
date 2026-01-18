@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { notificationApi, creditApi, userApi } from '@/app/lib/api';
+import { notificationApi, creditApi, userApi, isSuccess } from '@/app/lib/api';
 
 export function Header() {
   const router = useRouter();
@@ -31,12 +31,18 @@ export function Header() {
     const checkAuth = async () => {
       try {
         setIsLoading(true);
-        const user = await userApi.getMe();
-        if (user) {
+        console.log('[Header] Checking auth...');
+        const response = await userApi.getMe();
+        console.log('[Header] User response:', response);
+        // ApiResponse 형태: { status: "success", data: { ... } }
+        if (response && isSuccess(response) && response.data) {
           setIsLoggedIn(true);
+        } else {
+          setIsLoggedIn(false);
         }
       } catch (err) {
         // 401 또는 에러 시 비로그인 상태
+        console.log('[Header] Auth check failed:', err);
         setIsLoggedIn(false);
       } finally {
         setIsLoading(false);

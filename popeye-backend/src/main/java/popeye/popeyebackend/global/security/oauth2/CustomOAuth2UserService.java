@@ -8,6 +8,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import popeye.popeyebackend.global.security.details.PrincipalDetails;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.enums.Role;
 import popeye.popeyebackend.user.repository.UserRepository;
@@ -52,13 +53,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                             });
                 });
 
-        if (picture != null && !picture.equals(user.getProfileImageUrl())) {
-            user.updateProfile(user.getNickname(), picture);
-        }
+//        if (picture != null && !picture.equals(user.getProfileImageUrl())) {
+//            user.updateProfile(user.getNickname(), picture);
+//        }
 
         userRepository.save(user);
 
-        return new CustomOAuth2User(oAuth2User, user);
+        return new PrincipalDetails(user, oAuth2User.getAttributes());
     }
 
     //OAuth2 신규 사용자 생성

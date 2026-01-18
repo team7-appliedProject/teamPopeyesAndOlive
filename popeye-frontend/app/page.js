@@ -31,26 +31,31 @@ export default function Home() {
   }, []);
 
   const handleLike = (contentId) => {
-    setContents(contents.map(c => 
-      c.id === contentId 
-        ? { ...c, isLiked: !c.isLiked, likes: c.isLiked ? c.likes - 1 : c.likes + 1 }
-        : c
-    ));
+    setContents(contents.map(c => {
+      const id = c.contentId || c.id;
+      return id === contentId 
+        ? { ...c, isLiked: !c.isLiked, likes: (c.likes || 0) + (c.isLiked ? -1 : 1) }
+        : c;
+    }));
   };
 
   const handleBookmark = (contentId) => {
-    setContents(contents.map(c => 
-      c.id === contentId 
+    setContents(contents.map(c => {
+      const id = c.contentId || c.id;
+      return id === contentId 
         ? { ...c, isBookmarked: !c.isBookmarked }
-        : c
-    ));
+        : c;
+    }));
   };
 
+  // 백엔드 응답이 배열인지 확인하고, 배열이 아니면 빈 배열 반환
+  const contentList = Array.isArray(contents) ? contents : [];
+  
   const filteredContents = activeTab === 'all' 
-    ? contents 
+    ? contentList 
     : activeTab === 'free'
-    ? contents.filter(c => c.isFree)
-    : contents.filter(c => !c.isFree);
+    ? contentList.filter(c => c.isFree || c.price === 0)
+    : contentList.filter(c => !c.isFree && c.price > 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,9 +100,9 @@ export default function Home() {
           </div>
         ) : filteredContents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredContents.map(content => (
+            {filteredContents.map((content, index) => (
               <ContentCard
-                key={content.id}
+                key={content.contentId || content.id || index}
                 content={content}
                 onLike={handleLike}
                 onBookmark={handleBookmark}

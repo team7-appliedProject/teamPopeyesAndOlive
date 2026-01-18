@@ -10,12 +10,20 @@ import { CreditBadge } from './CreditBadge';
 export function ContentCard({ content, onLike, onBookmark }) {
   const router = useRouter();
   
-  const discount = content.originalPrice 
-    ? Math.round((1 - content.price / content.originalPrice) * 100)
-    : 0;
+  // 백엔드 응답에 맞게 필드 매핑 (contentId -> id)
+  const contentId = content.contentId || content.id;
+  const creatorName = content.creatorNickname || content.creatorName || '작성자';
+  const isFree = content.isFree ?? (content.price === 0 || content.price === undefined);
+  const price = content.price || 0;
+  const originalPrice = content.originalPrice;
+  const likes = content.likes || content.likeCount || 0;
+  
+  const discount = originalPrice 
+    ? Math.round((1 - price / originalPrice) * 100)
+    : (content.discountRate || 0);
 
   const handleClick = () => {
-    router.push(`/content/${content.id}`);
+    router.push(`/content/${contentId}`);
   };
 
   return (
@@ -23,16 +31,10 @@ export function ContentCard({ content, onLike, onBookmark }) {
       className="group overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
       onClick={handleClick}
     >
-      {/* Thumbnail */}
-      <div className="relative aspect-video overflow-hidden bg-muted">
-        <img 
-          src={content.thumbnail} 
-          alt={content.title}
-          className="h-full w-full object-cover transition-transform group-hover:scale-105"
-        />
-        {/* Free/Paid Badge */}
-        <div className="absolute top-3 left-3">
-          {content.isFree ? (
+      <CardContent className="p-4">
+        {/* Badges */}
+        <div className="flex items-center gap-2 mb-3">
+          {isFree ? (
             <Badge className="bg-[#22c55e] hover:bg-[#22c55e]/90">
               무료
             </Badge>
@@ -41,42 +43,35 @@ export function ContentCard({ content, onLike, onBookmark }) {
               유료
             </Badge>
           )}
-        </div>
-        {/* Discount Badge */}
-        {discount > 0 && (
-          <div className="absolute top-3 right-3">
+          {discount > 0 && (
             <Badge variant="destructive">
               {discount}% 할인
             </Badge>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      <CardContent className="p-4">
         {/* Title */}
-        <h3 className="font-semibold line-clamp-2 mb-2">
+        <h3 className="font-semibold line-clamp-2 mb-3 group-hover:text-[#5b21b6] transition-colors">
           {content.title}
         </h3>
         
         {/* Creator */}
         <div className="flex items-center gap-2 mb-3">
-          <img 
-            src={content.creatorAvatar} 
-            alt={content.creatorName}
-            className="h-6 w-6 rounded-full"
-          />
+          <div className="h-6 w-6 rounded-full bg-gradient-to-br from-[#5b21b6] to-[#7c3aed] flex items-center justify-center text-xs text-white">
+            {creatorName.charAt(0)}
+          </div>
           <span className="text-sm text-muted-foreground">
-            {content.creatorName}
+            {creatorName}
           </span>
         </div>
 
         {/* Price - 무료 콘텐츠는 가격 영역 숨김 */}
-        {!content.isFree && (
+        {!isFree && price > 0 && (
           <div className="flex items-center gap-2">
-            <CreditBadge type="starCandy" amount={content.price} size="sm" />
-            {content.originalPrice && (
+            <CreditBadge type="starCandy" amount={price} size="sm" />
+            {originalPrice && originalPrice > price && (
               <span className="text-xs text-muted-foreground line-through">
-                {content.originalPrice.toLocaleString()}
+                {originalPrice.toLocaleString()}
               </span>
             )}
           </div>
@@ -86,7 +81,7 @@ export function ContentCard({ content, onLike, onBookmark }) {
       <CardFooter className="p-4 pt-0 flex items-center justify-between">
         <div className="flex items-center gap-1 text-sm text-muted-foreground">
           <Heart className="h-4 w-4" />
-          <span>{content.likes.toLocaleString()}</span>
+          <span>{likes.toLocaleString()}</span>
         </div>
         
         <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
@@ -94,7 +89,7 @@ export function ContentCard({ content, onLike, onBookmark }) {
             variant="ghost"
             size="icon"
             className={`h-8 w-8 ${content.isLiked ? 'text-red-500' : ''}`}
-            onClick={() => onLike?.(content.id)}
+            onClick={() => onLike?.(contentId)}
           >
             <Heart className={`h-4 w-4 ${content.isLiked ? 'fill-current' : ''}`} />
           </Button>
@@ -102,7 +97,7 @@ export function ContentCard({ content, onLike, onBookmark }) {
             variant="ghost"
             size="icon"
             className={`h-8 w-8 ${content.isBookmarked ? 'text-[#fbbf24]' : ''}`}
-            onClick={() => onBookmark?.(content.id)}
+            onClick={() => onBookmark?.(contentId)}
           >
             <Bookmark className={`h-4 w-4 ${content.isBookmarked ? 'fill-current' : ''}`} />
           </Button>

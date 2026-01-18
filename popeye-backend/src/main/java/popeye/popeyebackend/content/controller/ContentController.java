@@ -28,13 +28,18 @@ public class ContentController {
     private final ContentService contentService;
 
     @PostMapping
-    public ResponseEntity<Long> create(@RequestBody ContentCreateRequest req) {
-        Long id = contentService.createContent(1L, req); // 임시 userId
+    public ResponseEntity<Long> create(
+            @AuthenticationPrincipal PrincipalDetails principalDetails,
+            @RequestBody ContentCreateRequest req) {
+        Long userId = principalDetails.getUserId();
+        Long id = contentService.createContent(userId, req); // 임시 userId
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
     @GetMapping("/{contentId}")
-    public ResponseEntity<ContentResponse> getContent(@AuthenticationPrincipal PrincipalDetails details, @PathVariable Long contentId) {
+    public ResponseEntity<ContentResponse> getContent(
+            @AuthenticationPrincipal PrincipalDetails details,
+            @PathVariable Long contentId) {
         Long userId = details.getUserId();
         ContentResponse content = contentService.getContent(contentId, userId);
         return ResponseEntity.ok(content);

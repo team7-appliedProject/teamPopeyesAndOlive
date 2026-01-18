@@ -1,15 +1,10 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, TrendingUp, Upload, X, Image as ImageIcon, Wallet, AlertCircle, Loader2 } from 'lucide-react';
+import { Plus, Wallet, AlertCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import {
   Table,
@@ -26,15 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { useApi } from '@/app/lib/hooks';
 import { settlementApi } from '@/app/lib/api';
 
@@ -44,18 +30,6 @@ const CREATOR_ID = 1;
 export default function CreatorPage() {
   const router = useRouter();
   const [isCreator, setIsCreator] = useState(true);
-  const [newContentOpen, setNewContentOpen] = useState(false);
-  
-  // 글 등록 폼 상태
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [content, setContent] = useState('');
-  const [price, setPrice] = useState('');
-  const [discount, setDiscount] = useState('');
-  const [isFree, setIsFree] = useState(false);
-  const [images, setImages] = useState([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef(null);
 
   // 정산 관련 상태
   const [selectedContentId, setSelectedContentId] = useState(null);
@@ -97,77 +71,6 @@ export default function CreatorPage() {
     },
     [selectedContentId, selectedMonth]
   );
-
-  // 이미지 업로드 핸들러
-  const handleImageSelect = (files) => {
-    const fileArray = Array.from(files);
-    const imageFiles = fileArray.filter(file => file.type.startsWith('image/'));
-    
-    const newImages = imageFiles.map(file => ({
-      id: Math.random().toString(36).substr(2, 9),
-      file,
-      preview: URL.createObjectURL(file),
-    }));
-    
-    setImages([...images, ...newImages]);
-  };
-
-  const handleFileInputChange = (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleImageSelect(e.target.files);
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleImageSelect(e.dataTransfer.files);
-    }
-  };
-
-  const handleRemoveImage = (imageId) => {
-    const imageToRemove = images.find(img => img.id === imageId);
-    if (imageToRemove) {
-      URL.revokeObjectURL(imageToRemove.preview);
-    }
-    setImages(images.filter(img => img.id !== imageId));
-  };
-
-  const handleFreeToggle = (checked) => {
-    setIsFree(checked);
-    if (checked) {
-      setPrice('0');
-    }
-  };
-
-  const handleDialogClose = (open) => {
-    setNewContentOpen(open);
-    if (!open) {
-      setTitle('');
-      setDescription('');
-      setContent('');
-      setPrice('');
-      setDiscount('');
-      setIsFree(false);
-      images.forEach(img => URL.revokeObjectURL(img.preview));
-      setImages([]);
-    }
-  };
 
   // 금액 포맷팅
   const formatAmount = (amount) => {
@@ -243,189 +146,13 @@ export default function CreatorPage() {
               <h1 className="text-3xl font-bold mb-2">올리브 대시보드</h1>
               <p className="text-muted-foreground">글 관리 및 정산 확인</p>
             </div>
-            <Dialog open={newContentOpen} onOpenChange={handleDialogClose}>
-              <DialogTrigger asChild>
-                <Button className="bg-[#5b21b6] hover:bg-[#5b21b6]/90">
-                  <Plus className="h-4 w-4 mr-2" />
-                  글 등록
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>새 글 등록</DialogTitle>
-                  <DialogDescription>
-                    판매할 글을 등록하세요
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">제목</Label>
-                    <Input 
-                      id="title" 
-                      placeholder="글 제목을 입력하세요"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">설명</Label>
-                    <Textarea 
-                      id="description" 
-                      placeholder="글 설명을 입력하세요"
-                      rows={5}
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="content">글 내용</Label>
-                    <Textarea 
-                      id="content" 
-                      placeholder="글 본문을 입력하세요"
-                      rows={8}
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                    />
-                  </div>
-
-                  {/* 이미지 업로드 섹션 */}
-                  <div className="space-y-2">
-                    <Label>이미지 업로드</Label>
-                    <div
-                      className={`
-                        border-2 border-dashed rounded-lg p-6 text-center transition-colors
-                        ${isDragging 
-                          ? 'border-[#5b21b6] bg-[#5b21b6]/5' 
-                          : 'border-muted-foreground/25 hover:border-muted-foreground/50'
-                        }
-                      `}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                    >
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        className="hidden"
-                        onChange={handleFileInputChange}
-                      />
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-                          <Upload className="h-6 w-6 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium mb-1">
-                            이미지를 드래그 앤 드롭하거나 클릭하여 선택하세요
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            여러 장 선택 가능 (최소 1장)
-                          </p>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => fileInputRef.current?.click()}
-                        >
-                          <ImageIcon className="h-4 w-4 mr-2" />
-                          이미지 선택
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* 이미지 미리보기 */}
-                    {images.length > 0 && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
-                        {images.map((image) => (
-                          <div
-                            key={image.id}
-                            className="relative group aspect-video rounded-lg overflow-hidden border bg-muted"
-                          >
-                            <img
-                              src={image.preview}
-                              alt="Preview"
-                              className="h-full w-full object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveImage(image.id)}
-                              className="absolute top-2 right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="price">가격 (10원 단위)</Label>
-                      <Input 
-                        id="price" 
-                        type="number" 
-                        placeholder={isFree ? "0" : "4500"}
-                        step="10"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        disabled={isFree}
-                        className={isFree ? "bg-muted cursor-not-allowed" : ""}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="discount">할인율 (%)</Label>
-                      <Input 
-                        id="discount" 
-                        type="number" 
-                        placeholder="0"
-                        min="0"
-                        max="100"
-                        value={discount}
-                        onChange={(e) => setDiscount(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <Label>무료 글</Label>
-                      <p className="text-sm text-muted-foreground">
-                        무료로 제공할 글인가요?
-                      </p>
-                    </div>
-                    <Switch 
-                      checked={isFree}
-                      onCheckedChange={handleFreeToggle}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => handleDialogClose(false)}>
-                    취소
-                  </Button>
-                  <Button 
-                    className="bg-[#5b21b6] hover:bg-[#5b21b6]/90"
-                    onClick={() => {
-                      // TODO: 실제 글 등록 API 호출
-                      console.log({
-                        title,
-                        description,
-                        content,
-                        price: isFree ? 0 : parseInt(price) || 0,
-                        discount: parseInt(discount) || 0,
-                        isFree,
-                        images: images.map(img => ({ name: img.file.name, size: img.file.size })),
-                      });
-                      handleDialogClose(false);
-                    }}
-                  >
-                    등록하기
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button 
+              className="bg-[#5b21b6] hover:bg-[#5b21b6]/90"
+              onClick={() => router.push('/creator/new')}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              글 등록
+            </Button>
           </div>
 
           {/* 정산 가능 잔액 카드 */}

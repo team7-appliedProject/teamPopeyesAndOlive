@@ -28,6 +28,9 @@ export function useApi<T>(
     error: null,
   });
 
+  // 의존성 배열을 JSON 문자열로 변환하여 비교 (배열 참조 변경 문제 방지)
+  const depsKey = JSON.stringify(dependencies);
+
   const execute = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
@@ -42,7 +45,8 @@ export function useApi<T>(
           });
       setState({ data: null, loading: false, error: apiError });
     }
-  }, dependencies);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [depsKey]);
 
   useEffect(() => {
     execute();

@@ -48,6 +48,7 @@ public class Content {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
+    @Builder.Default
     private ContentStatus contentStatus = ContentStatus.INACTIVE;
 
     @ManyToOne(fetch = FetchType.LAZY)

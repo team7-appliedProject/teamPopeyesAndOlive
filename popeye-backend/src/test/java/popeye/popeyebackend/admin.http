@@ -92,15 +92,32 @@ Content-Type: application/json
 }
 ###
 #----------------------------
-### 회원가입
+### 인증번호 받기
+POST {{url}}/api/auth/sms/send
+Content-Type: application/json
+
+{
+  "phoneNumber": "01022222222"
+}
+###
+POST {{url}}/api/auth/sms/verify
+Content-Type: application/json
+
+{
+  "phoneNumber": "01022222222",
+  "code": "766836"
+}
+
+###
 POST {{url}}/api/auth/signup
 Content-Type: application/json
 
 {
-  "email" : "test123456@test.com",
+  "email" : "test1@test.com",
   "password" : "!@#123QWEqwe",
-  "nickname" : "banuser1",
-  "phoneNumber" : "01201201235"
+  "nickname" : "banuser2",
+  "phoneNumber" : "01022222222",
+  "phoneNumberCollectionConsent": true
 }
 
 ### 로그인

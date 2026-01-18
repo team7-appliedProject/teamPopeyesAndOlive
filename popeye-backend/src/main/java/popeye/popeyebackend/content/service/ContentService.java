@@ -219,7 +219,6 @@ public class ContentService {
                 .orElseThrow(ContentNotFoundException::new);
 
         return content.getOrderStatus().equals(OrderStatus.COMPLETED);
-
     }
 
     // content에서 media url 추출

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Copy, ArrowUpRight, ArrowDownRight, XCircle, Calendar } from 'lucide-react';
+import { Copy, ArrowUpRight, ArrowDownRight, XCircle, Calendar, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CreditBadge } from '@/components/CreditBadge';
-import { userApi } from '@/app/lib/api';
+import { userApi, isSuccess } from '@/app/lib/api';
 
 export default function MyPage() {
   const router = useRouter();
@@ -26,14 +26,18 @@ export default function MyPage() {
   const [purchasedContents, setPurchasedContents] = useState([]);
   const [bookmarkedContents, setBookmarkedContents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [promotingToCreator, setPromotingToCreator] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // TODO: 실제 API로 교체
-        const userData = await userApi.getMe().catch(() => null);
-        setUserInfo(userData);
+        const response = await userApi.getMe();
+        console.log('[MyPage] User response:', response);
+        
+        if (isSuccess(response) && response.data) {
+          setUserInfo(response.data);
+        }
       } catch (err) {
         console.error('Failed to fetch user data:', err);
       } finally {
@@ -43,6 +47,38 @@ export default function MyPage() {
 
     fetchData();
   }, []);
+
+  // 크리에이터 전환 요청
+  const handlePromoteToCreator = async () => {
+    // 이미 크리에이터인 경우 크리에이터 페이지로 이동
+    if (userInfo?.role === 'CREATOR' || userInfo?.role === 'ROLE_CREATOR') {
+      router.push('/creator');
+      return;
+    }
+
+    try {
+      setPromotingToCreator(true);
+      const response = await userApi.promoteToCreator();
+      console.log('[MyPage] Promote to creator response:', response);
+      
+      if (isSuccess(response)) {
+        alert('크리에이터로 전환되었습니다!');
+        // 유저 정보 새로고침
+        const userResponse = await userApi.getMe();
+        if (isSuccess(userResponse) && userResponse.data) {
+          setUserInfo(userResponse.data);
+        }
+        router.push('/creator');
+      } else {
+        alert(response.message || '크리에이터 전환에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error('Failed to promote to creator:', err);
+      alert(err.message || '크리에이터 전환에 실패했습니다.');
+    } finally {
+      setPromotingToCreator(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -71,22 +107,37 @@ export default function MyPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-center">
-                    <div className="h-24 w-24 rounded-full bg-gradient-to-br from-[#5b21b6] to-[#7c3aed] flex items-center justify-center text-4xl">
-                      👤
-                    </div>
+                    {userInfo?.profileImageUrl ? (
+                      <img 
+                        src={userInfo.profileImageUrl} 
+                        alt="프로필" 
+                        className="h-24 w-24 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-24 w-24 rounded-full bg-gradient-to-br from-[#5b21b6] to-[#7c3aed] flex items-center justify-center text-4xl">
+                        👤
+                      </div>
+                    )}
                   </div>
                   
                   <div className="text-center">
                     <h3 className="font-semibold text-lg">{userInfo?.nickname || '-'}</h3>
                     <p className="text-sm text-muted-foreground">{userInfo?.email || '-'}</p>
+                    {userInfo?.role && (
+                      <Badge className="mt-2 bg-[#5b21b6]">{userInfo.role}</Badge>
+                    )}
                   </div>
 
                   <Separator />
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">가입일</span>
-                      <span>{userInfo?.joinDate || '-'}</span>
+                      <span className="text-muted-foreground">시금치</span>
+                      <span className="text-[#22c55e] font-medium">{userInfo?.totalSpinach?.toLocaleString() || 0}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">별사탕</span>
+                      <span className="text-[#f59e0b] font-medium">{userInfo?.totalStarcandy?.toLocaleString() || 0}</span>
                     </div>
                     {userInfo?.referralCode && (
                       <div>
@@ -111,12 +162,29 @@ export default function MyPage() {
 
                   <Separator />
 
-                  <Button 
-                    className="w-full bg-[#5b21b6] hover:bg-[#5b21b6]/90"
-                    onClick={() => router.push('/creator')}
-                  >
-                    올리브로 전환하기
-                  </Button>
+                  {userInfo?.role === 'CREATOR' || userInfo?.role === 'ROLE_CREATOR' ? (
+                    <Button 
+                      className="w-full bg-[#22c55e] hover:bg-[#22c55e]/90"
+                      onClick={() => router.push('/creator')}
+                    >
+                      크리에이터 페이지로 이동
+                    </Button>
+                  ) : (
+                    <Button 
+                      className="w-full bg-[#5b21b6] hover:bg-[#5b21b6]/90"
+                      onClick={handlePromoteToCreator}
+                      disabled={promotingToCreator}
+                    >
+                      {promotingToCreator ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          전환 중...
+                        </>
+                      ) : (
+                        '올리브로 전환하기'
+                      )}
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             </div>

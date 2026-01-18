@@ -51,9 +51,14 @@ export class ApiError extends Error {
 
 // 공통 응답 타입
 export interface ApiResponse<T> {
-  success: boolean;
+  status: "success" | "error";
   message: string;
   data: T;
+}
+
+/** ApiResponse가 성공인지 확인하는 헬퍼 함수 */
+export function isSuccess<T>(response: ApiResponse<T>): boolean {
+  return response.status === "success";
 }
 
 // 공통 fetch 옵션
@@ -89,15 +94,25 @@ async function fetchApi<T>(
   }
 
   // 기본 헤더 설정
-  const headers: HeadersInit = {
+  const accessToken =
+    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+
+  // 2. 헤더 조립 (기존 헤더 + Content-Type)
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...fetchOptions.headers,
+    ...(fetchOptions.headers as Record<string, string>),
   };
 
+  // 3. 토큰이 있으면 Authorization 헤더에 'Bearer 토큰' 형식으로 추가
+  if (accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
+  }
+
+  // 4. 요청 보내기
   const response = await fetch(url, {
     ...fetchOptions,
-    headers,
-    credentials: "include", // 쿠키 포함 (인증용)
+    headers, // 👈 3번에서 만든 헤더(토큰 포함)가 들어감
+    credentials: "include", // (참고: 토큰 방식이라 이거 없어도 되지만, 혹시 나중에 쿠키 쓸 수도 있으니 둬도 무방함)
   });
 
   // 에러 응답 처리
@@ -127,6 +142,39 @@ async function fetchApi<T>(
 
   return response.json();
 }
+
+// ============================================
+// Auth API
+// ============================================
+export const authApi = {
+  /** 로그인 */
+  login: (data: LoginRequest) =>
+    fetchApi<ApiResponse<TokenResponse>>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  /** 회원가입 */
+  signup: (data: SignupRequest) =>
+    fetchApi<ApiResponse<number>>("/api/auth/signup", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  /** SMS 인증번호 발송 */
+  sendSms: (phoneNumber: string) =>
+    fetchApi<ApiResponse<void>>("/api/auth/sms/send", {
+      method: "POST",
+      body: JSON.stringify({ phoneNumber }),
+    }),
+
+  /** SMS 인증번호 검증 */
+  verifySms: (phoneNumber: string, code: string) =>
+    fetchApi<ApiResponse<void>>("/api/auth/sms/verify", {
+      method: "POST",
+      body: JSON.stringify({ phoneNumber, code }),
+    }),
+};
 
 // ============================================
 // Admin API
@@ -191,8 +239,8 @@ export const userApi = {
   /** 내 프로필 조회 */
   getMyProfile: () => fetchApi<ApiResponse<UserProfile>>("/api/users/me"),
 
-  /** 내 정보 조회 (마이페이지용) */
-  getMe: () => fetchApi<UserProfile>("/api/users/me"),
+  /** 내 정보 조회 (마이페이지용) - ApiResponse 형태로 반환 */
+  getMe: () => fetchApi<ApiResponse<UserProfile>>("/api/users/me"),
 
   /** 프로필 수정 */
   updateProfile: (data: UpdateProfileRequest) =>
@@ -449,13 +497,13 @@ export interface ReportProcessRequest {
 
 // User Types
 export interface UserProfile {
-  id: number;
   email: string;
   nickname: string;
-  profilePhotoUrl: string | null;
-  role: "USER" | "CREATOR" | "ADMIN";
-  freeCredit: number;
-  paidCredit: number;
+  profileImageUrl: string | null;
+  role: string;
+  referralCode: string | null;
+  totalSpinach: number;
+  totalStarcandy: number;
 }
 
 export interface UpdateProfileRequest {
@@ -491,28 +539,26 @@ export interface ContentListItem {
 }
 
 export interface ContentDetail {
-  id: string;
+  id: number;
   title: string;
-  body: string;
-  creatorId: number;
-  creatorName: string;
-  creatorAvatar: string;
-  thumbnail: string;
-  price: number;
-  originalPrice?: number;
+  content?: string;      // FullContentResponse에서 제공
+  preview?: string;      // PreviewContentResponse에서 제공
+  price?: number | null; // 무료면 null
   isFree: boolean;
-  likes: number;
-  isLiked: boolean;
-  isBookmarked: boolean;
-  createdAt: string;
+  status?: string;
+  // 프론트엔드 확장 필드 (선택적)
+  creatorName?: string;
+  discountRate?: number;
+  viewCount?: number;
+  likeCount?: number;
 }
 
 export interface ContentCreateRequest {
   title: string;
-  body: string;
+  content: string;
   price: number;
-  thumbnailUrl?: string;
-  mediaUrls?: string[];
+  discountRate: number;
+  free: boolean;  // Java의 'isFree' 필드는 JSON에서 'free'로 직렬화됨
 }
 
 export interface BannedContentRes {
@@ -620,6 +666,26 @@ export interface WithdrawalResponse {
   requestedAt: string;
   processedAt: string | null;
   failureReason: string | null;
+}
+
+// Auth Types
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface SignupRequest {
+  email: string;
+  password: string;
+  nickname: string;
+  phoneNumber: string;
+  referralCode?: string;
+  phoneNumberCollectionConsent: boolean;
+}
+
+export interface TokenResponse {
+  accessToken: string;
+  tokenType: string;
 }
 
 // Credit Types

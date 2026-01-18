@@ -1,6 +1,8 @@
 package popeye.popeyebackend.global.config;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -28,7 +30,6 @@ import java.util.List;
  */
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
 
@@ -90,8 +91,10 @@ public class SecurityConfig {
 
         // UsernamePasswordAuthenticationFilter 이전에 JWT 인증 필터를 실행
         http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
-                .formLogin(formLogin -> formLogin
-                        .loginProcessingUrl("/api/auth/login"))
+                .formLogin(AbstractHttpConfigurer::disable)
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                )
 //                .authorizeHttpRequests(auth -> auth
 //                        .requestMatchers("/api/auth/**","/error").permitAll() // 인증 불필요 경로
 //                        .requestMatchers("/api/v1/auth/**", "/h2-console/**").permitAll() // 인증 불필요 경로
