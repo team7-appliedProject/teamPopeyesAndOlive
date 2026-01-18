@@ -1,5 +1,7 @@
 package popeye.popeyebackend.pay.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -10,6 +12,7 @@ import popeye.popeyebackend.pay.enums.WithdrawalStatus;
 
 import jakarta.persistence.LockModeType;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,7 +35,23 @@ public interface WithdrawalRepository extends JpaRepository<Withdrawal, Long> {
 		""")
 	Optional<Withdrawal> findByIdWithCreatorAndUser(@Param("withdrawalId") Long withdrawalId);
 
-	// 크리에이터의 출금 내역 조회
+	// 크리에이터의 출금 내역 조회 (기간 + 페이징)
+	@Query("""
+		select w
+		from Withdrawal w
+		where w.creator.id = :creatorId
+		  and w.requestedAt >= :from
+		  and w.requestedAt < :toExclusive
+		order by w.requestedAt desc
+		""")
+	Page<Withdrawal> findByCreatorIdAndRequestedAtRange(
+		@Param("creatorId") Long creatorId,
+		@Param("from") LocalDateTime from,
+		@Param("toExclusive") LocalDateTime toExclusive,
+		Pageable pageable
+	);
+
+	// 크리에이터의 출금 내역 조회 (레거시 - 사용 중단 예정)
 	List<Withdrawal> findByCreatorIdOrderByRequestedAtDesc(Long creatorId);
 
 	// 크리에이터별 출금 완료 금액 합계

@@ -1,4 +1,4 @@
-package popeye.popeyebackend.pay.repository;
+package popeye.popeyebackend.pay.repository.projection;
 
 /**
  * 정산 집계 결과를 위한 Projection 인터페이스

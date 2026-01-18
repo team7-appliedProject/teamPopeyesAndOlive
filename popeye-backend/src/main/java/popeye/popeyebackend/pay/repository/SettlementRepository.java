@@ -4,6 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import popeye.popeyebackend.pay.domain.Settlement;
+import popeye.popeyebackend.pay.repository.projection.ContentSettlementPeriodProjection;
+import popeye.popeyebackend.pay.repository.projection.ContentSettlementSummaryProjection;
 
 import java.time.LocalDateTime;
 import java.util.List;
