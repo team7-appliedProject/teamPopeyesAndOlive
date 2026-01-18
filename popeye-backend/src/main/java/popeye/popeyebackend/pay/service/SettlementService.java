@@ -16,10 +16,11 @@ import popeye.popeyebackend.pay.dto.settlement.AvailableBalanceResponse;
 import popeye.popeyebackend.pay.dto.settlement.ContentSettlementPeriodItem;
 import popeye.popeyebackend.pay.dto.settlement.ContentSettlementSummaryResponse;
 import popeye.popeyebackend.pay.dto.settlement.DailyContentSettlementResponse;
-import popeye.popeyebackend.pay.repository.ContentSettlementSummaryProjection;
+import popeye.popeyebackend.pay.repository.projection.ContentSettlementSummaryProjection;
 import popeye.popeyebackend.pay.repository.SettlementRepository;
 import popeye.popeyebackend.pay.repository.WithdrawalRepository;
 import popeye.popeyebackend.pay.enums.WithdrawalStatus;
+import popeye.popeyebackend.pay.repository.projection.ContentSettlementPeriodProjection;
 import popeye.popeyebackend.user.domain.Creator;
 import popeye.popeyebackend.user.repository.CreatorRepository;
 

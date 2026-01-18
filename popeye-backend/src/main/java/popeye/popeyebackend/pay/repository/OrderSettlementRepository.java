@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import popeye.popeyebackend.pay.domain.Order;
+import popeye.popeyebackend.pay.repository.projection.SettlementAggregateProjection;
 
 @Repository
 public interface OrderSettlementRepository extends JpaRepository<Order, Long> {
