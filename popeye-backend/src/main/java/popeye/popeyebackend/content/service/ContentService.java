@@ -22,6 +22,7 @@ import popeye.popeyebackend.content.dto.response.ContentResponse;
 import popeye.popeyebackend.content.dto.response.FullContentResponse;
 import popeye.popeyebackend.content.dto.response.PreviewContentResponse;
 import popeye.popeyebackend.content.enums.ContentStatus;
+import popeye.popeyebackend.content.global.s3.S3Uploader;
 import popeye.popeyebackend.content.repository.ContentBanRepository;
 import popeye.popeyebackend.content.enums.MediaType;
 import popeye.popeyebackend.content.repository.ContentMediaRepository;
@@ -51,6 +52,7 @@ public class ContentService {
     private final CreatorRepository creatorRepository;
     private final OrderRepository orderRepository;
     private final ContentMediaRepository contentMediaRepository;
+    private final S3Uploader s3Uploader;
 
     // 생성
     public Long createContent(Long userId, ContentCreateRequest req) {
@@ -181,6 +183,12 @@ public class ContentService {
 
         Content content = contentRepository.findById(contentId)
                 .orElseThrow(ContentNotFoundException::new);
+
+        // 컨텐츠에서 저장했던 파일 삭제
+        List<ContentMedia> contentMedia = content.getContentMedia();
+        for (ContentMedia media : contentMedia) {
+            s3Uploader.deleteFile(media.getMediaUrl());
+        }
 
         contentRepository.delete(content);
     }
