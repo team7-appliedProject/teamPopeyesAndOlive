@@ -1,14 +1,20 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Star, Leaf, AlertCircle, CreditCard, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { CreditBadge } from '@/components/CreditBadge';
-import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState, useEffect } from "react";
+import { Star, Leaf, AlertCircle, CreditCard, Loader2 } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { CreditBadge } from "@/components/CreditBadge";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,38 +25,57 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { paymentApi } from '@/app/lib/api';
-import { ApiError } from '@/app/lib/api';
+} from "@/components/ui/alert-dialog";
+import { paymentApi } from "@/app/lib/api";
+import { ApiError } from "@/app/lib/api";
+import { userApi } from "@/app/lib/api";
 
 const WON_PER_CREDIT = 10;
 
 export default function PaymentChargePage() {
-  const [creditAmount, setCreditAmount] = useState('');
+  const [creditAmount, setCreditAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  
-  // Mock current balance (실제로는 API에서 가져와야 함)
-  const spinachBalance = 1500;
-  const spinachExpiry = '2026-02-09';
-  const starCandyBalance = 8420;
+  const [spinachBalance, setSpinachBalance] = useState(0);
+  const [starCandyBalance, setStarCandyBalance] = useState(0);
 
-  const totalAmount = creditAmount ? parseInt(creditAmount) * WON_PER_CREDIT : 0;
+  const totalAmount = creditAmount
+    ? parseInt(creditAmount) * WON_PER_CREDIT
+    : 0;
   const isValidAmount = creditAmount && parseInt(creditAmount) >= 1;
+
+  // spinach, starcandy 잔액 조회
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        // creditApi.getBalance() 호출
+        const data = await userApi.getMe();
+
+        // 데이터가 잘 왔으면 State 업데이트
+        if (data) {
+          setSpinachBalance(data.data.totalSpinach);
+          setStarCandyBalance(data.data.totalStarcandy);
+        }
+      } catch (err) {
+        console.error("잔액 정보를 불러오는데 실패했습니다:", err);
+      }
+    };
+    fetchBalance();
+  }, []);
 
   // Toss Payments 스크립트 로드
   useEffect(() => {
-    if (typeof window !== 'undefined' && !window.TossPayments) {
-      const script = document.createElement('script');
-      script.src = 'https://js.tosspayments.com/v1/payment';
+    if (typeof window !== "undefined" && !window.TossPayments) {
+      const script = document.createElement("script");
+      script.src = "https://js.tosspayments.com/v1/payment";
       script.async = true;
       document.body.appendChild(script);
     }
   }, []);
 
   const handleCharge = async () => {
-    if (!isValidAmount || isLoading) return;
+    // if (!isValidAmount || isLoading) return;
 
     setIsLoading(true);
     setError(null);
@@ -60,18 +85,18 @@ export default function PaymentChargePage() {
       // 1. 결제 준비 API 호출
       const prepareResponse = await paymentApi.prepare({
         creditAmount: parseInt(creditAmount),
-        pgProvider: 'TOSS',
+        pgProvider: "TOSS",
       });
 
       const { pgOrderId, paymentId } = prepareResponse;
       const amount = totalAmount;
-      const orderName = '크레딧 충전';
+      const orderName = "크레딧 충전";
 
       // 2. Toss 결제창 호출
       const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY;
-      
+
       if (!clientKey) {
-        throw new Error('Toss Client Key가 설정되지 않았습니다.');
+        throw new Error("Toss Client Key가 설정되지 않았습니다.");
       }
 
       // Toss Payments 스크립트가 로드될 때까지 대기
@@ -91,22 +116,24 @@ export default function PaymentChargePage() {
               resolve(window.TossPayments(clientKey));
             } else if (attempts >= maxAttempts) {
               clearInterval(interval);
-              reject(new Error('Toss Payments 스크립트 로드 실패'));
+              reject(new Error("Toss Payments 스크립트 로드 실패"));
             }
           }, 100);
         });
       };
 
       const tossPayments = await waitForTossPayments();
-      
+
       // 결제창 열기 (redirect 방식)
       // Toss Payments는 successUrl로 리다이렉트할 때 paymentKey와 orderId를 쿼리 파라미터로 전달합니다
       // amount는 추가 파라미터로 포함시켜 전달합니다
-      const successUrl = new URL(`${window.location.origin}/payment/charge/success`);
-      successUrl.searchParams.set('orderId', pgOrderId);
-      successUrl.searchParams.set('amount', amount.toString());
-      
-      tossPayments.requestPayment('카드', {
+      const successUrl = new URL(
+        `${window.location.origin}/payment/charge/success`,
+      );
+      successUrl.searchParams.set("orderId", pgOrderId);
+      successUrl.searchParams.set("amount", amount.toString());
+
+      tossPayments.requestPayment("카드", {
         amount: amount,
         orderId: pgOrderId,
         orderName: orderName,
@@ -114,21 +141,22 @@ export default function PaymentChargePage() {
         failUrl: `${window.location.origin}/payment/charge/fail`,
       });
     } catch (err) {
-      console.error('결제 준비 실패:', err);
+      console.error("결제 준비 실패:", err);
       if (err instanceof ApiError) {
-        setError(err.errorResponse.message || '결제 준비에 실패했습니다.');
+        setError(err.errorResponse.message || "결제 준비에 실패했습니다.");
       } else {
-        setError(err.message || '결제 준비에 실패했습니다.');
+        setError(err.message || "결제 준비에 실패했습니다.");
       }
       setIsLoading(false);
     }
   };
 
-
-  const selectedPkg = creditAmount ? {
-    amount: parseInt(creditAmount),
-    price: totalAmount,
-  } : null;
+  const selectedPkg = creditAmount
+    ? {
+        amount: parseInt(creditAmount),
+        price: totalAmount,
+      }
+    : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -158,7 +186,9 @@ export default function PaymentChargePage() {
             <div className="mb-4 p-4 bg-green-500/10 border border-green-500 rounded-lg">
               <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                 <Star className="h-4 w-4" />
-                <span className="text-sm font-medium">결제가 성공적으로 완료되었습니다!</span>
+                <span className="text-sm font-medium">
+                  결제가 성공적으로 완료되었습니다!
+                </span>
               </div>
             </div>
           )}
@@ -179,7 +209,10 @@ export default function PaymentChargePage() {
                         <Leaf className="h-5 w-5 text-[#22c55e]" />
                         <span className="font-semibold">시금치</span>
                       </div>
-                      <Badge variant="outline" className="text-[#22c55e] border-[#22c55e]">
+                      <Badge
+                        variant="outline"
+                        className="text-[#22c55e] border-[#22c55e]"
+                      >
                         무료
                       </Badge>
                     </div>
@@ -188,7 +221,6 @@ export default function PaymentChargePage() {
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <AlertCircle className="h-3 w-3" />
-                      <span>만료일: {spinachExpiry} (1주 유효)</span>
                     </div>
                   </div>
 
@@ -199,7 +231,10 @@ export default function PaymentChargePage() {
                         <Star className="h-5 w-5 text-[#fbbf24] fill-current" />
                         <span className="font-semibold">별사탕</span>
                       </div>
-                      <Badge variant="outline" className="text-[#fbbf24] border-[#fbbf24]">
+                      <Badge
+                        variant="outline"
+                        className="text-[#fbbf24] border-[#fbbf24]"
+                      >
                         유료
                       </Badge>
                     </div>
@@ -250,7 +285,10 @@ export default function PaymentChargePage() {
                         value={creditAmount}
                         onChange={(e) => {
                           const value = e.target.value;
-                          if (value === '' || (parseInt(value) >= 1 && parseInt(value) <= 1000000)) {
+                          if (
+                            value === "" ||
+                            (parseInt(value) >= 1 && parseInt(value) <= 1000000)
+                          ) {
                             setCreditAmount(value);
                             setError(null);
                           }
@@ -261,7 +299,10 @@ export default function PaymentChargePage() {
                       />
                       {creditAmount && (
                         <p className="text-sm text-muted-foreground">
-                          총 결제 금액: <span className="font-semibold">₩{totalAmount.toLocaleString()}</span>
+                          총 결제 금액:{" "}
+                          <span className="font-semibold">
+                            ₩{totalAmount.toLocaleString()}
+                          </span>
                         </p>
                       )}
                       {creditAmount && parseInt(creditAmount) < 1 && (
@@ -278,16 +319,18 @@ export default function PaymentChargePage() {
                       <div className="rounded-lg bg-muted p-4 space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="text-sm">충전 크레딧</span>
-                          <CreditBadge 
-                            type="starCandy" 
-                            amount={selectedPkg.amount} 
+                          <CreditBadge
+                            type="starCandy"
+                            amount={selectedPkg.amount}
                             showLabel
                           />
                         </div>
                         <Separator />
                         <div className="flex justify-between items-center font-semibold">
                           <span>결제 금액</span>
-                          <span className="text-lg">₩{selectedPkg.price.toLocaleString()}</span>
+                          <span className="text-lg">
+                            ₩{selectedPkg.price.toLocaleString()}
+                          </span>
                         </div>
                       </div>
                     )}
@@ -296,15 +339,17 @@ export default function PaymentChargePage() {
                     <div className="space-y-4">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <CreditCard className="h-4 w-4" />
-                        <span>결제 수단: 토스페이먼츠 (카드, 계좌이체, 간편결제)</span>
+                        <span>
+                          결제 수단: 토스페이먼츠 (카드, 계좌이체, 간편결제)
+                        </span>
                       </div>
 
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button 
-                            size="lg" 
+                          <Button
+                            size="lg"
                             className="w-full bg-[#5b21b6] hover:bg-[#5b21b6]/90"
-                            disabled={!isValidAmount || isLoading}
+                            // disabled={!isValidAmount || isLoading}
                           >
                             {isLoading ? (
                               <>
@@ -312,7 +357,7 @@ export default function PaymentChargePage() {
                                 결제 진행 중...
                               </>
                             ) : (
-                              '충전하기'
+                              "충전하기"
                             )}
                           </Button>
                         </AlertDialogTrigger>
@@ -325,17 +370,21 @@ export default function PaymentChargePage() {
                                   <p>선택한 크레딧을 충전하시겠습니까?</p>
                                   <div className="rounded-lg bg-muted p-4 space-y-2">
                                     <div className="flex justify-between items-center">
-                                      <span className="text-sm">충전 크레딧</span>
-                                      <CreditBadge 
-                                        type="starCandy" 
-                                        amount={selectedPkg.amount} 
+                                      <span className="text-sm">
+                                        충전 크레딧
+                                      </span>
+                                      <CreditBadge
+                                        type="starCandy"
+                                        amount={selectedPkg.amount}
                                         showLabel
                                       />
                                     </div>
                                     <Separator />
                                     <div className="flex justify-between items-center font-semibold">
                                       <span>결제 금액</span>
-                                      <span className="text-lg">₩{selectedPkg.price.toLocaleString()}</span>
+                                      <span className="text-lg">
+                                        ₩{selectedPkg.price.toLocaleString()}
+                                      </span>
                                     </div>
                                   </div>
                                   <p className="text-xs text-muted-foreground">
@@ -346,8 +395,10 @@ export default function PaymentChargePage() {
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel disabled={isLoading}>취소</AlertDialogCancel>
-                            <AlertDialogAction 
+                            <AlertDialogCancel disabled={isLoading}>
+                              취소
+                            </AlertDialogCancel>
+                            <AlertDialogAction
                               onClick={handleCharge}
                               className="bg-[#5b21b6] hover:bg-[#5b21b6]/90"
                               disabled={isLoading}
@@ -358,7 +409,7 @@ export default function PaymentChargePage() {
                                   진행 중...
                                 </>
                               ) : (
-                                '결제하기'
+                                "결제하기"
                               )}
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -375,4 +426,3 @@ export default function PaymentChargePage() {
     </div>
   );
 }
-

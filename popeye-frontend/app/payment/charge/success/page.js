@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { CheckCircle2, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { paymentApi } from '@/app/lib/api';
-import { ApiError } from '@/app/lib/api';
+import { useEffect, useState, useRef } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { CheckCircle2, Loader2 } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { paymentApi } from "@/app/lib/api";
+import { ApiError } from "@/app/lib/api";
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
@@ -27,12 +33,14 @@ export default function PaymentSuccessPage() {
       hasProcessedRef.current = true;
 
       // Toss Payments는 successUrl에 paymentKey와 orderId를 쿼리 파라미터로 전달
-      const paymentKey = searchParams.get('paymentKey');
-      const orderId = searchParams.get('orderId');
-      const amount = searchParams.get('amount');
+      const paymentKey = searchParams.get("paymentKey");
+      const orderId = searchParams.get("orderId");
+      const amount = searchParams.get("amount");
 
       if (!paymentKey || !orderId || !amount) {
-        setError('결제 정보가 올바르지 않습니다. paymentKey, orderId, amount가 필요합니다.');
+        setError(
+          "결제 정보가 올바르지 않습니다. paymentKey, orderId, amount가 필요합니다.",
+        );
         setIsProcessing(false);
         hasProcessedRef.current = false; // 에러 시 재시도 가능하도록
         return;
@@ -51,22 +59,22 @@ export default function PaymentSuccessPage() {
 
         // 3초 후 메인 페이지로 리다이렉트
         setTimeout(() => {
-          router.push('/payment/charge');
+          window.location.href = "/payment/charge";
         }, 3000);
       } catch (err) {
-        console.error('결제 승인 실패:', err);
+        console.error("결제 승인 실패:", err);
         hasProcessedRef.current = false; // 에러 시 재시도 가능하도록
         if (err instanceof ApiError) {
-          setError(err.errorResponse.message || '결제 승인에 실패했습니다.');
+          setError(err.errorResponse.message || "결제 승인에 실패했습니다.");
         } else {
-          setError(err.message || '결제 승인에 실패했습니다.');
+          setError(err.message || "결제 승인에 실패했습니다.");
         }
         setIsProcessing(false);
       }
     };
 
     processPayment();
-  }, [searchParams, router]);
+  }, [searchParams]);
 
   if (isProcessing) {
     return (
@@ -94,8 +102,8 @@ export default function PaymentSuccessPage() {
             <CardDescription>{error}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
-              onClick={() => router.push('/payment/charge')}
+            <Button
+              onClick={() => router.push("/payment/charge")}
               className="w-full bg-[#5b21b6] hover:bg-[#5b21b6]/90"
             >
               다시 시도
@@ -115,15 +123,17 @@ export default function PaymentSuccessPage() {
               <CheckCircle2 className="h-6 w-6" />
               결제 완료
             </CardTitle>
-            <CardDescription>크레딧 충전이 성공적으로 완료되었습니다.</CardDescription>
+            <CardDescription>
+              크레딧 충전이 성공적으로 완료되었습니다.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
                 잠시 후 충전 페이지로 이동합니다...
               </p>
-              <Button 
-                onClick={() => router.push('/payment/charge')}
+              <Button
+                onClick={() => (window.location.href = "/payment/charge")}
                 className="w-full bg-[#5b21b6] hover:bg-[#5b21b6]/90"
               >
                 바로 이동
@@ -137,4 +147,3 @@ export default function PaymentSuccessPage() {
 
   return null;
 }
-

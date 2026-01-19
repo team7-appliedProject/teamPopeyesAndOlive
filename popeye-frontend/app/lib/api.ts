@@ -57,8 +57,13 @@ export interface ApiResponse<T> {
 }
 
 /** ApiResponse가 성공인지 확인하는 헬퍼 함수 */
-export function isSuccess<T>(response: ApiResponse<T>): boolean {
-  return response.status === "success";
+export function isSuccess<T>(response: any): boolean {
+    if (!response) return false;
+    // 1. 표준 ApiResponse 형식인 경우
+    if (response.status === "success") return true;
+    // 2. 데이터만 온 경우에도 성공으로 인정 (호환성)
+    if (response.data || (response.id && !response.error)) return true;
+    return false;
 }
 
 // 공통 fetch 옵션
@@ -74,7 +79,7 @@ interface FetchOptions extends RequestInit {
  */
 async function fetchApi<T>(
   endpoint: string,
-  options: FetchOptions = {}
+  options: FetchOptions = {},
 ): Promise<T> {
   const { params, ...fetchOptions } = options;
 
@@ -566,6 +571,7 @@ export interface ReportProcessRequest {
 
 // User Types
 export interface UserProfile {
+  id: number;
   email: string;
   nickname: string;
   profileImageUrl: string | null;
@@ -779,3 +785,9 @@ export interface CreditHistoryItem {
   date: string;
   status: "pending" | "completed";
 }
+
+// ============================================
+// Legacy & Compatibility (맨 아래 추가 필수!)
+// ============================================
+export const charge = paymentApi.prepare;
+

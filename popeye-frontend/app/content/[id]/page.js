@@ -29,7 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { contentApi, reportApi } from '@/app/lib/api';
+import { contentApi, reportApi, orderApi, ApiError } from '@/app/lib/api';
 
 export default function ContentDetailPage() {
   const params = useParams();
@@ -96,18 +96,50 @@ export default function ContentDetailPage() {
   const handlePurchase = async () => {
     try {
       setPurchasing(true);
-      // TODO: 실제 구매 API 호출
-      // await purchaseApi.purchase(contentId);
       
-      // 구매 후 콘텐츠 다시 조회
+      // 구매 API 호출
+      const purchaseResponse = await orderApi.purchase(Number(contentId));
+      
+      console.log('[ContentDetail] Purchase success:', purchaseResponse);
+      
+      // 구매 후 콘텐츠 다시 조회하여 전체 내용 가져오기
       const data = await contentApi.getById(Number(contentId));
       setContent(data);
       setIsPurchased(true);
       
-      alert('구매가 완료되었습니다!');
+      // 구매 성공 메시지 (사용된 크레딧 정보 포함)
+      const creditInfo = [];
+      if (purchaseResponse.usedFreeCredit > 0) {
+        creditInfo.push(`시금치 ${purchaseResponse.usedFreeCredit}개`);
+      }
+      if (purchaseResponse.usedPaidCredit > 0) {
+        creditInfo.push(`별사탕 ${purchaseResponse.usedPaidCredit}개`);
+      }
+      
+      const message = creditInfo.length > 0
+        ? `구매가 완료되었습니다!\n사용된 크레딧: ${creditInfo.join(', ')}`
+        : '구매가 완료되었습니다!';
+      
+      alert(message);
     } catch (err) {
       console.error('[ContentDetail] Purchase error:', err);
-      alert(err.message || '구매에 실패했습니다.');
+      
+      let errorMessage = '구매에 실패했습니다.';
+      
+      if (err instanceof ApiError) {
+        // API 에러 처리
+        if (err.code === 'NOT_ENOUGH_CREDIT') {
+          errorMessage = '크레딧이 부족합니다. 크레딧을 충전한 후 다시 시도해주세요.';
+        } else if (err.code === 'INVALID_REQUEST') {
+          errorMessage = '이미 구매한 콘텐츠이거나 구매할 수 없는 콘텐츠입니다.';
+        } else {
+          errorMessage = err.errorResponse.message || errorMessage;
+        }
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      
+      alert(errorMessage);
     } finally {
       setPurchasing(false);
     }
