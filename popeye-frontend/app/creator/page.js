@@ -35,6 +35,7 @@ import { settlementApi, userApi } from "@/app/lib/api";
 export default function CreatorPage() {
   const router = useRouter();
   const [isCreator, setIsCreator] = useState(true);
+  const [creatorId, setCreatorId] = useState(null);
 
   // 정산 관련 상태
   const [selectedContentId, setSelectedContentId] = useState(null);
@@ -52,7 +53,11 @@ export default function CreatorPage() {
 
         // 2. 내 정보에서 'creator' 객체의 ID 꺼내기
         // (구조가 profileResponse.data.creator.id 라고 가정)
-        const CREATOR_ID = myInfo.creatorId;
+        console.log(myInfo.creatorId);
+
+        if (myInfo && myInfo.creatorId) {
+          setCreatorId(myInfo.creatorId);
+        }
       } catch (err) {
         console.error("데이터 로딩 실패:", err);
       }
@@ -67,7 +72,10 @@ export default function CreatorPage() {
     loading: balanceLoading,
     error: balanceError,
     refetch: refetchBalance,
-  } = useApi(() => settlementApi.getAvailableBalance(CREATOR_ID));
+  } = useApi(() => {
+    if (!creatorId) return Promise.resolve(null); // 👈 핵심: ID 없으면 중단!
+    return settlementApi.getAvailableBalance(creatorId);
+  }, [creatorId]);
 
   // 컨텐츠별 정산 요약 조회
   const {
@@ -75,7 +83,10 @@ export default function CreatorPage() {
     loading: summariesLoading,
     error: summariesError,
     refetch: refetchSummaries,
-  } = useApi(() => settlementApi.getContentSettlementSummaries(CREATOR_ID));
+  } = useApi(() => {
+    if (!creatorId) return Promise.resolve(null); // 👈 핵심: ID 없으면 중단!
+    return settlementApi.getContentSettlementSummaries(creatorId);
+  }, [creatorId]);
 
   // 선택된 컨텐츠의 월별 상세 정산 조회
   const {
@@ -86,7 +97,7 @@ export default function CreatorPage() {
   } = useApi(() => {
     if (!selectedContentId) return Promise.resolve(null);
     return settlementApi.getMonthlyContentSettlement(
-      CREATOR_ID,
+      creatorId,
       Number(selectedContentId),
       selectedMonth,
     );
@@ -173,6 +184,34 @@ export default function CreatorPage() {
               <Plus className="h-4 w-4 mr-2" />글 등록
             </Button>
           </div>
+
+          {creatorId ? (
+            <>
+              {/* 정산 가능 잔액 카드 */}
+              <Card className="mb-8">
+                {/* ... (원래 있던 잔액 카드 내용) ... */}
+              </Card>
+
+              {/* 컨텐츠별 정산 요약 */}
+              <Card className="mb-8">
+                {/* ... (원래 있던 요약 카드 내용) ... */}
+              </Card>
+
+              {/* 월별 상세 정산 */}
+              <Card className="mb-8">
+                {/* ... (원래 있던 상세 정산 카드 내용) ... */}
+              </Card>
+            </>
+          ) : (
+            /* ▼▼▼ [추가 2] creatorId가 아직 없을 때 보여줄 로딩 화면 ▼▼▼ */
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-[#5b21b6] mb-4" />
+              <p className="text-muted-foreground">
+                내 정보를 불러오는 중입니다...
+              </p>
+            </div>
+          )}
+          {/* ▲▲▲ [끝] 확인 종료 ▲▲▲ */}
 
           {/* 정산 가능 잔액 카드 */}
           <Card className="mb-8">
