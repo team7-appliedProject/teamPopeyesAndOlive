@@ -260,7 +260,7 @@ public class ContentService {
 
     public List<ContentListRes> getFreeContentList(boolean isfree, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Content> list = contentRepository.findByIsFree(isfree, pageable);
+        Page<Content> list = contentRepository.findByContentStatusAndIsFree(ContentStatus.ACTIVE, isfree, pageable);
         return list.stream().map(ContentListRes::from).toList();
     }
 
@@ -285,7 +285,7 @@ public class ContentService {
     @Transactional(readOnly = true)
     public List<ContentListRes> getContentList(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Content> all = contentRepository.findAll(pageable);
+        Page<Content> all = contentRepository.findAllByContentStatus(ContentStatus.ACTIVE, pageable);
         return all.stream().map(ContentListRes::from).toList();
     }
 }
