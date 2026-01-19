@@ -39,7 +39,7 @@ public class ContentController {
 
     @GetMapping("/{contentId}")
     public ResponseEntity<ContentResponse> getContent(
-            @AuthenticationPrincipal(required = false) PrincipalDetails details,
+            @AuthenticationPrincipal PrincipalDetails details,
             @PathVariable Long contentId) {
         Long userId = details != null ? details.getUserId() : null;
         ContentResponse content = contentService.getContent(contentId, userId);
