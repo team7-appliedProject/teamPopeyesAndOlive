@@ -1,6 +1,5 @@
 package popeye.popeyebackend.pay.service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
@@ -16,10 +15,11 @@ import popeye.popeyebackend.pay.dto.settlement.AvailableBalanceResponse;
 import popeye.popeyebackend.pay.dto.settlement.ContentSettlementPeriodItem;
 import popeye.popeyebackend.pay.dto.settlement.ContentSettlementSummaryResponse;
 import popeye.popeyebackend.pay.dto.settlement.DailyContentSettlementResponse;
-import popeye.popeyebackend.pay.repository.ContentSettlementSummaryProjection;
+import popeye.popeyebackend.pay.repository.projection.ContentSettlementSummaryProjection;
 import popeye.popeyebackend.pay.repository.SettlementRepository;
 import popeye.popeyebackend.pay.repository.WithdrawalRepository;
 import popeye.popeyebackend.pay.enums.WithdrawalStatus;
+import popeye.popeyebackend.pay.repository.projection.ContentSettlementPeriodProjection;
 import popeye.popeyebackend.user.domain.Creator;
 import popeye.popeyebackend.user.repository.CreatorRepository;
 
@@ -37,42 +37,16 @@ public class SettlementService {
 	private final CreatorRepository creatorRepository;
 	private final ContentRepository contentRepository;
 
-	/**
-	 * 크리에이터의 인출 가능 잔액 계산 (내부/다른 서비스에서 사용)
-	 * available = SUM(Settlement 정산금) - SUM(Withdrawal.amount where status = SUC)
-	 * 
-	 * @param creatorId 크리에이터 ID
-	 * @return 인출 가능 잔액
-	 */
-	public long calculateAvailableBalance(Long creatorId) {
-		BalanceCalculation balance = calculateBalance(creatorId);
-		return balance.available();
-	}
-
-	/**
-	 * 크리에이터의 인출 가능 잔액 조회 (API용)
-	 * 검증 후 상세 정보(settlementSum, withdrawnSum, available)와 함께 반환
-	 */
 	public AvailableBalanceResponse getAvailableBalance(Long loginUserId, Long creatorId) {
 		validateCreator(loginUserId, creatorId);
-		BalanceCalculation balance = calculateBalance(creatorId);
-		return new AvailableBalanceResponse(balance.settlementSum(), balance.withdrawnSum(), balance.available());
+		return calculateAvailableBalanceDetail(creatorId);
 	}
 
-	/**
-	 * 잔액 계산 로직 (중복 제거용 내부 메서드)
-	 */
-	private BalanceCalculation calculateBalance(Long creatorId) {
+	public AvailableBalanceResponse calculateAvailableBalanceDetail(Long creatorId) {
 		long settlementSum = settlementRepository.sumTotalAmountByCreator(creatorId);
 		long withdrawnSum = withdrawalRepository.sumAmountByCreatorIdAndStatus(creatorId, WithdrawalStatus.SUC);
 		long available = settlementSum - withdrawnSum;
-		return new BalanceCalculation(settlementSum, withdrawnSum, available);
-	}
-
-	/**
-	 * 잔액 계산 결과를 담는 record
-	 */
-	private record BalanceCalculation(long settlementSum, long withdrawnSum, long available) {
+		return new AvailableBalanceResponse(settlementSum, withdrawnSum, available);
 	}
 
 	/**
@@ -101,11 +75,15 @@ public class SettlementService {
 	}
 
 	/**
-	 * 컨텐츠의 일별 정산 내역 조회
+	 * 컨텐츠의 일별 정산 내역 조회 (월 단위)
 	 */
-	public DailyContentSettlementResponse getMonthlyContentSettlement(Long loginUserId, Long creatorId, Long contentId,
-		String month) {
-		DateRange range = parseMonthToDateRange(month);
+	public DailyContentSettlementResponse getMonthlyContentSettlement(
+		Long loginUserId,
+		Long creatorId,
+		Long contentId,
+		String month
+	) {
+		YearMonth ym = parseMonth(month);
 
 		// creatorId 검증
 		validateCreator(loginUserId, creatorId);
@@ -114,27 +92,28 @@ public class SettlementService {
 		Content content = contentRepository.findByIdWithCreator(contentId)
 			.orElseThrow(() -> new IllegalArgumentException("콘텐츠를 찾을 수 없습니다: " + contentId));
 
-		Creator contentCreator = content.getCreator();
-		if (!creatorId.equals(contentCreator.getId())) {
+		if (!creatorId.equals(content.getCreator().getId())) {
 			throw new IllegalArgumentException("본인 소유의 콘텐츠만 조회할 수 있습니다.");
 		}
 
-		// 기간별 DateTime 변환
-		LocalDateTime fromDateTime = range.from().atStartOfDay();
-		LocalDateTime toDateTime = range.to().plusDays(1).atStartOfDay(); // to 포함을 위해 +1일
+		// 월 범위 계산
+		LocalDateTime fromDateTime = ym.atDay(1).atStartOfDay();
+		LocalDateTime toDateTimeExclusive = ym.plusMonths(1).atDay(1).atStartOfDay();
 
-		// 일별(DAY) DB 집계 쿼리 실행
-		List<popeye.popeyebackend.pay.repository.ContentSettlementPeriodProjection> projections =
-			settlementRepository.findContentSettlementPeriodsByDay(contentId, fromDateTime, toDateTime);
+		// 일별(DAY) DB 집계
+		List<ContentSettlementPeriodProjection> projections =
+			settlementRepository.findContentSettlementPeriodsByDay(
+				contentId,
+				fromDateTime,
+				toDateTimeExclusive
+			);
 
-		// Projection → Response DTO 매핑
 		List<ContentSettlementPeriodItem> items = projections.stream()
 			.map(proj -> {
-				LocalDateTime periodStart = proj.getPeriodStart();
-				LocalDateTime periodEnd = periodStart.plusDays(1); // 일 단위이므로 +1일
+				LocalDateTime start = proj.getPeriodStart();
 				return new ContentSettlementPeriodItem(
-					periodStart,
-					periodEnd,
+					start,
+					start.plusDays(1),
 					proj.getOrderCount(),
 					proj.getTotalRevenue(),
 					proj.getTotalPlatformFee(),
@@ -144,10 +123,15 @@ public class SettlementService {
 			})
 			.toList();
 
-		return new DailyContentSettlementResponse(contentId, range.from(), range.to(), items);
+		return new DailyContentSettlementResponse(
+			contentId,
+			ym.atDay(1),
+			ym.atEndOfMonth(),
+			items
+		);
 	}
 
-	public void validateCreator(Long loginUserId, Long creatorId) {
+	private void validateCreator(Long loginUserId, Long creatorId) {
 		Creator creator = creatorRepository.findByIdWithUser(creatorId)
 			.orElseThrow(() ->
 				new IllegalArgumentException("크리에이터를 찾을 수 없습니다: " + creatorId)
@@ -158,20 +142,13 @@ public class SettlementService {
 		}
 	}
 
-	private DateRange parseMonthToDateRange(String month) {
+	private YearMonth parseMonth(String month) {
 		try {
-			YearMonth ym = YearMonth.parse(month);
-			return new DateRange(
-				ym.atDay(1),
-				ym.atEndOfMonth()
-			);
+			return YearMonth.parse(month);
 		} catch (DateTimeParseException e) {
 			throw new IllegalArgumentException(
 				"잘못된 월 형식입니다. YYYY-MM 형식으로 입력해주세요. (예: 2026-01)", e
 			);
 		}
 	}
-
-	public record DateRange(LocalDate from, LocalDate to) {}
-
 }

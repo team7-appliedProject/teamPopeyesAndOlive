@@ -10,7 +10,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.stereotype.Component;
 
 import popeye.popeyebackend.pay.repository.OrderSettlementRepository;
-import popeye.popeyebackend.pay.repository.SettlementAggregateProjection;
+import popeye.popeyebackend.pay.repository.projection.SettlementAggregateProjection;
 
 /**
  * 정산 배치 Reader

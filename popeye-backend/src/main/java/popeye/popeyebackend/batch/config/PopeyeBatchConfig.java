@@ -15,7 +15,7 @@ import popeye.popeyebackend.batch.settlement.processor.SettlementBatchProcessor;
 import popeye.popeyebackend.batch.settlement.reader.SettlementBatchReader;
 import popeye.popeyebackend.batch.settlement.writer.SettlementBatchWriter;
 import popeye.popeyebackend.batch.statistics.DailyStatsTasklet;
-import popeye.popeyebackend.pay.repository.SettlementAggregateProjection;
+import popeye.popeyebackend.pay.repository.projection.SettlementAggregateProjection;
 
 /**
  * 정산 배치 Job/Step 정의

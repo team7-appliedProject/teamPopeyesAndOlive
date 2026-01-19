@@ -1,4 +1,4 @@
-package popeye.popeyebackend.pay.repository;
+package popeye.popeyebackend.pay.repository.projection;
 
 import java.time.LocalDateTime;
 
