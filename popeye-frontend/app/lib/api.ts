@@ -124,10 +124,24 @@ async function fetchApi<T>(
 
     try {
       const errorData = await response.json();
-      errorResponse = {
-        code: errorData.code || errorResponse.code,
-        message: errorData.message || errorResponse.message,
-      };
+      
+      // 백엔드에서 두 가지 형식의 에러 응답을 반환할 수 있음:
+      // 1. ApiResponse.error(message) 형식: { status: "error", message: "...", data: null }
+      // 2. ErrorResponse 형식: { code: "...", message: "..." }
+      
+      if (errorData.status === "error") {
+        // ApiResponse.error 형식
+        errorResponse = {
+          code: "API_ERROR",
+          message: errorData.message || "API 요청 실패",
+        };
+      } else {
+        // ErrorResponse 형식
+        errorResponse = {
+          code: errorData.code || errorResponse.code,
+          message: errorData.message || errorResponse.message,
+        };
+      }
     } catch {
       // JSON 파싱 실패 시 기본 메시지 사용
     }
@@ -279,6 +293,13 @@ export const userApi = {
   promoteToCreator: () =>
     fetchApi<ApiResponse<void>>("/api/users/me/creator", {
       method: "PATCH",
+    }),
+
+  /** 크리에이터 정산 정보 업데이트 */
+  updateSettlementInfo: (data: SettlementInfoRequest) =>
+    fetchApi<ApiResponse<void>>("/api/users/me/settlement", {
+      method: "PATCH",
+      body: JSON.stringify(data),
     }),
 
   /** 프로필 사진 변경 */
@@ -566,6 +587,12 @@ export interface UserProfile {
 export interface UpdateProfileRequest {
   nickname?: string;
   bio?: string;
+}
+
+export interface SettlementInfoRequest {
+  realName: string;
+  bank_name: string;
+  account: string;
 }
 
 export interface ProfilePhotoResponse {

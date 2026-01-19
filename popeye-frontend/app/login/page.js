@@ -50,10 +50,10 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.error("[Login] Error:", err);
-      setError(
-        err.message ||
-          "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요."
-      );
+      // ApiError 클래스인 경우 errorResponse.message 사용
+      const errorMessage = err.errorResponse?.message || err.message || 
+        "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -157,7 +157,15 @@ export default function LoginPage() {
               </div>
           
           <div className="mt-6">
-              <Button variant="outline" className="w-full h-11 border-2">
+              <Button 
+                variant="outline" 
+                className="w-full h-11 border-2"
+                onClick={() => {
+                  // Google OAuth2 로그인 시작
+                  window.location.href = '/oauth2/authorization/google';
+                }}
+                disabled={loading}
+              >
                 <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
