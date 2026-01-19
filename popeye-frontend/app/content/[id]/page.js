@@ -67,8 +67,21 @@ export default function ContentDetailPage() {
         if (data.content) {
           setIsPurchased(true);
         }
+        
+        // 좋아요/북마크 상태 설정
+        if (data.isLiked !== undefined) {
+          setIsLiked(data.isLiked);
+        }
+        if (data.isBookmarked !== undefined) {
+          setIsBookmarked(data.isBookmarked);
+        }
       } catch (err) {
         console.error('[ContentDetail] Error:', err);
+        // 401 또는 403 에러인 경우 로그인 페이지로 리다이렉트
+        if (err.status === 401 || err.status === 403) {
+          router.push('/login');
+          return;
+        }
         setError(err.message || '콘텐츠를 불러오는데 실패했습니다.');
       } finally {
         setLoading(false);
@@ -78,7 +91,7 @@ export default function ContentDetailPage() {
     if (contentId) {
       fetchContent();
     }
-  }, [contentId]);
+  }, [contentId, router]);
 
   const handlePurchase = async () => {
     try {
@@ -280,7 +293,24 @@ export default function ContentDetailPage() {
                 <div className="flex items-center gap-3">
                   <Button
                     variant={isLiked ? "default" : "outline"}
-                    onClick={() => setIsLiked(!isLiked)}
+                    onClick={async () => {
+                      try {
+                        await contentApi.toggleLike(Number(contentId));
+                        setIsLiked(!isLiked);
+                        // 콘텐츠 다시 조회하여 최신 상태 반영
+                        const data = await contentApi.getById(Number(contentId));
+                        if (data.likeCount !== undefined) {
+                          setContent({ ...content, likeCount: data.likeCount });
+                        }
+                      } catch (err) {
+                        console.error('[ContentDetail] Like error:', err);
+                        if (err.status === 401 || err.status === 403) {
+                          router.push('/login');
+                        } else {
+                          alert('좋아요 처리에 실패했습니다.');
+                        }
+                      }
+                    }}
                     className={isLiked ? "text-red-500" : ""}
                   >
                     <Heart className={`h-4 w-4 mr-2 ${isLiked ? 'fill-current' : ''}`} />
@@ -288,7 +318,19 @@ export default function ContentDetailPage() {
                   </Button>
                   <Button
                     variant={isBookmarked ? "default" : "outline"}
-                    onClick={() => setIsBookmarked(!isBookmarked)}
+                    onClick={async () => {
+                      try {
+                        await contentApi.toggleBookmark(Number(contentId));
+                        setIsBookmarked(!isBookmarked);
+                      } catch (err) {
+                        console.error('[ContentDetail] Bookmark error:', err);
+                        if (err.status === 401 || err.status === 403) {
+                          router.push('/login');
+                        } else {
+                          alert('북마크 처리에 실패했습니다.');
+                        }
+                      }
+                    }}
                   >
                     <Bookmark className={`h-4 w-4 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
                     찜하기
