@@ -267,7 +267,7 @@ public class UserService {
 
         Optional<BannedUser> banUser = bannedUserRepository.findByUser(targetUser);
 
-        if (banUser.isPresent()) {
+        if (banUser.isPresent() && banUser.get().getBannedAt().isBefore(LocalDate.now())) {
             BannedUser user = banUser.get();
             user.updateBan(banDays, reason);
             return;

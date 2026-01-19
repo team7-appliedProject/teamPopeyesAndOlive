@@ -49,7 +49,7 @@ public class Content {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     @Builder.Default
-    private ContentStatus contentStatus = ContentStatus.INACTIVE;
+    private ContentStatus contentStatus = ContentStatus.ACTIVE;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id")
