@@ -27,6 +27,8 @@ import popeye.popeyebackend.content.exception.AccessDeniedException;
 import popeye.popeyebackend.content.exception.ContentNotFoundException;
 import popeye.popeyebackend.content.exception.UserNotFoundException;
 import popeye.popeyebackend.content.repository.ContentRepository;
+import popeye.popeyebackend.content.repository.ContentLikeRepository;
+import popeye.popeyebackend.content.repository.ContentBookmarkRepository;
 import popeye.popeyebackend.pay.domain.Order;
 import popeye.popeyebackend.pay.enums.OrderStatus;
 import popeye.popeyebackend.pay.repository.OrderRepository;
@@ -53,6 +55,8 @@ public class ContentService {
     private final OrderRepository orderRepository;
     private final ContentMediaRepository contentMediaRepository;
     private final S3Uploader s3Uploader;
+    private final ContentLikeRepository contentLikeRepository;
+    private final ContentBookmarkRepository contentBookmarkRepository;
 
     // 생성
     public Long createContent(Long userId, ContentCreateRequest req) {
@@ -141,22 +145,36 @@ public class ContentService {
                 .reason(reason).build();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public ContentResponse getContent(Long contentId, Long userId) {
 
         Content content = contentRepository
                 .findByIdAndContentStatus(contentId, ContentStatus.ACTIVE)
                 .orElseThrow(ContentNotFoundException::new);
 
-        User viewer = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
-        if (canViewFullContent(content, viewer)) {
-            content.increaseViewCount();
-            return FullContentResponse.from(content);
+        User viewer = null;
+        if (userId != null) {
+            viewer = userRepository.findById(userId)
+                    .orElse(null);
         }
 
-        return PreviewContentResponse.from(content);
+        // 조회수 증가 (로그인 여부와 관계없이)
+        content.increaseViewCount();
+        contentRepository.save(content);
+
+        // 사용자별 좋아요/북마크 상태 확인
+        boolean isLiked = false;
+        boolean isBookmarked = false;
+        if (viewer != null) {
+            isLiked = contentLikeRepository.existsByUserAndContent(viewer, content);
+            isBookmarked = contentBookmarkRepository.existsByUserAndContent(viewer, content);
+        }
+
+        if (viewer != null && canViewFullContent(content, viewer)) {
+            return FullContentResponse.from(content, isLiked, isBookmarked);
+        }
+
+        return PreviewContentResponse.from(content, isLiked, isBookmarked);
     }
 
     // 콘텐츠 삭제
@@ -197,7 +215,7 @@ public class ContentService {
     private boolean canViewFullContent(Content content, User viewer) {
 
         boolean isCreator = content.getCreator().getId().equals(viewer.getId());
-        boolean isAdmin = viewer.getRole().equals("ADMIN"); // 임시 (viewer.isAdmin())
+        boolean isAdmin = viewer.getRole().name().equals("ADMIN");
 
         if (isCreator || isAdmin) {
             return true;
@@ -215,10 +233,12 @@ public class ContentService {
 
     // 구매여부
     private boolean hasPurchased(Long userId, Long contentId) {
-        Order content = orderRepository.findByUserIdAndContentId(userId, contentId)
-                .orElseThrow(ContentNotFoundException::new);
-
-        return content.getOrderStatus().equals(OrderStatus.COMPLETED);
+        Optional<Order> orderOpt = orderRepository.findByUserIdAndContentId(userId, contentId);
+        if (orderOpt.isEmpty()) {
+            return false;
+        }
+        Order order = orderOpt.get();
+        return order.getOrderStatus().equals(OrderStatus.COMPLETED);
     }
 
     // content에서 media url 추출

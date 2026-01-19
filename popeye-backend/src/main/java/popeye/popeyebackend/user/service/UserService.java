@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import popeye.popeyebackend.content.global.s3.S3Uploader;
 import popeye.popeyebackend.global.security.jwt.JwtTokenProvider;
+import popeye.popeyebackend.pay.service.FreeCreditPolicyService;
 import popeye.popeyebackend.user.domain.BannedUser;
 import popeye.popeyebackend.user.domain.Creator;
 import popeye.popeyebackend.user.domain.DevilUser;
@@ -63,6 +64,7 @@ public class UserService {
     private final ReferralCodeService referralCodeService;
     private static final String PASSWORD_RESET_PREFIX = "password:reset:";
     private static final long PASSWORD_RESET_TTL = 30 * 60L; // 30분
+    private final FreeCreditPolicyService freeCreditPolicyService;
 
     //U-01: 회원가입, U-02: 본인 인증 검증 추가
     @Transactional
@@ -125,6 +127,8 @@ public class UserService {
                 .phoneNumberCollectionConsent(request.getPhoneNumberCollectionConsent())
                 .build();
 
+        freeCreditPolicyService.grantFreeCredit(user, 1000);
+
         // U-04: 고유 추천 코드 자동 생성 (나노아이디 사용, 중복 체크 포함)
         referralCodeService.generateUniqueReferralCode(user);
 
@@ -133,11 +137,11 @@ public class UserService {
         // U-01: 추천인 코드 입력 시 리워드 지급 (SYS-02: 쌍방에게 크레딧 지급)
         if (referrer != null) {
             // 추천인에게 리워드 지급
-            referrer.addSpinach(500); // 추천인에게 500 시금치 지급
+            freeCreditPolicyService.grantFreeCredit(referrer, 500);// 추천인에게 500 시금치 지급
             userRepository.save(referrer);
 
             // 신규 가입자에게 추가 리워드 지급
-            savedUser.addSpinach(500); // 신규 가입자에게 추가 500 시금치 지급
+            freeCreditPolicyService.grantFreeCredit(user, 500); // 신규 가입자에게 추가 500 시금치 지급
             userRepository.save(savedUser);
 
             log.info("추천인 코드 사용: 추천인 {}에게 500 시금치, 신규 가입자 {}에게 500 시금치 지급",
@@ -178,6 +182,7 @@ public class UserService {
         }
 
         return UserProfileResponse.builder()
+                .creatorId(user.getCreator().getId())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
                 .profileImageUrl(user.getProfileImageUrl())

@@ -41,7 +41,7 @@ public class ContentController {
     public ResponseEntity<ContentResponse> getContent(
             @AuthenticationPrincipal PrincipalDetails details,
             @PathVariable Long contentId) {
-        Long userId = details.getUserId();
+        Long userId = details != null ? details.getUserId() : null;
         ContentResponse content = contentService.getContent(contentId, userId);
         return ResponseEntity.ok(content);
     } //제작자랑 어드민은 자기꺼보게

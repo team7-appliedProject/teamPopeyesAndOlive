@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { XCircle, Search, Clock, CheckCircle, X, AlertCircle } from 'lucide-react';
+import { XCircle, Search, Clock, CheckCircle, X, AlertCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,45 +18,61 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-
-// TODO: 실제 API로 교체
-const cancelRequests = [
-  {
-    id: 'REF-2026-001',
-    date: '2026-01-09 14:30',
-    originalDate: '2026-01-08 19:22',
-    description: 'Figma 고급 테크닉 30가지 글 구매 취소',
-    amount: 4500,
-    creditType: 'starCandy',
-    status: 'pending',
-    reason: '콘텐츠 품질이 기대에 못 미침',
-  },
-  {
-    id: 'REF-2026-002',
-    date: '2026-01-07 10:15',
-    originalDate: '2026-01-06 15:30',
-    description: '디지털 일러스트 마스터 클래스 글 구매 취소',
-    amount: 8900,
-    creditType: 'starCandy',
-    status: 'completed',
-    reason: '중복 구매',
-  },
-  {
-    id: 'REF-2026-003',
-    date: '2026-01-05 16:20',
-    originalDate: '2026-01-04 11:00',
-    description: 'UX 디자인 원칙 완벽 가이드 글 구매 취소',
-    amount: 5500,
-    creditType: 'starCandy',
-    status: 'rejected',
-    reason: '실수로 구매함',
-    rejectReason: '구매 후 7일 경과로 취소 불가',
-  },
-];
+import { paymentApi, creditApi, ApiError } from '@/app/lib/api';
 
 export default function CancelPage() {
   const router = useRouter();
   const [searchId, setSearchId] = useState('');
+  const [cancelRequests, setCancelRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // 결제 취소 내역 가져오기
+  useEffect(() => {
+    const fetchCancelRequests = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // 결제 내역 가져오기
+        const paymentsData = await paymentApi.getMyPayments(0, 50);
+        
+        // 크레딧 내역 가져오기 (환불 사유를 위해)
+        const historyData = await creditApi.getHistory(0, 100);
+        
+        // CANCELED 타입만 필터링하고 환불 내역과 매칭
+        const canceledPayments = (paymentsData?.content || [])
+          .filter(payment => payment.paymentType === 'CANCELED')
+          .map(payment => {
+            // 환불 내역에서 해당 paymentId 찾기
+            const refundHistory = (historyData?.content || []).find(
+              h => h.paymentId === payment.paymentId && h.reasonType === 'REFUND'
+            );
+            
+            return {
+              id: `REF-${payment.paymentId}`,
+              paymentId: payment.paymentId,
+              date: payment.canceledAt || payment.approvedAt || payment.createdAt,
+              originalDate: payment.approvedAt || payment.createdAt,
+              description: `크레딧 충전 취소`,
+              amount: payment.creditAmount,
+              creditType: 'starCandy',
+              status: 'completed', // CANCELED는 이미 완료된 상태
+              reason: refundHistory ? '환불 요청' : '결제 취소',
+            };
+          });
+        
+        setCancelRequests(canceledPayments);
+      } catch (err) {
+        console.error('Failed to fetch cancel requests:', err);
+        setError('결제 취소 내역을 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCancelRequests();
+  }, []);
 
   const filteredRequests = searchId
     ? cancelRequests.filter(req => req.id.toLowerCase().includes(searchId.toLowerCase()))
@@ -88,6 +104,17 @@ export default function CancelPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-[#5b21b6]" />
+          <p className="text-muted-foreground">결제 취소 내역을 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -102,6 +129,15 @@ export default function CancelPage() {
               환불 요청 내역 및 처리 상태를 확인하세요
             </p>
           </div>
+
+          {error && (
+            <div className="mb-4 p-4 bg-destructive/10 border border-destructive rounded-lg">
+              <div className="flex items-center gap-2 text-destructive">
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">{error}</span>
+              </div>
+            </div>
+          )}
 
           {/* Search */}
           <Card className="mb-6">
@@ -235,18 +271,6 @@ export default function CancelPage() {
                         )}
 
                         <div className="flex gap-2 mt-4">
-                          {request.status === 'pending' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                // TODO: 환불 취소 API 호출
-                                alert(`환불 요청 취소 (TODO: 실제 API 연동 필요)\n환불 번호: ${request.id}`);
-                              }}
-                            >
-                              요청 취소
-                            </Button>
-                          )}
                           <Button
                             variant="ghost"
                             size="sm"

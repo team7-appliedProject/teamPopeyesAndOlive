@@ -1,70 +1,81 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Checkbox } from '@/components/ui/checkbox';
-import { authApi, isSuccess } from '@/app/lib/api';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { authApi, isSuccess } from "@/app/lib/api";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirm, setPasswordConfirm] = useState('');
-  const [nickname, setNickname] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
-  const [referralCode, setReferralCode] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [phoneConsent, setPhoneConsent] = useState(false);
-  
+
   const [loading, setLoading] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
-  const [error, setError] = useState('');
-  const [phoneError, setPhoneError] = useState('');
+  const [error, setError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
 
   // 인증번호 발송
   const handleSendCode = async () => {
     if (!phoneNumber) {
-      setPhoneError('휴대폰 번호를 입력해주세요.');
+      setPhoneError("휴대폰 번호를 입력해주세요.");
       return;
     }
 
     // 전화번호 형식 검증 (숫자만)
-    const cleanPhone = phoneNumber.replace(/-/g, '');
+    const cleanPhone = phoneNumber.replace(/-/g, "");
     if (!/^01[0-9]{8,9}$/.test(cleanPhone)) {
-      setPhoneError('올바른 휴대폰 번호를 입력해주세요.');
+      setPhoneError("올바른 휴대폰 번호를 입력해주세요.");
       return;
     }
 
     try {
       setSendingCode(true);
-      setPhoneError('');
-      
+      setPhoneError("");
+
       const response = await authApi.sendSms(cleanPhone);
-      
+
       // 발송 버튼 누르면 인증번호 입력란 표시
       setCodeSent(true);
       setIsPhoneVerified(false);
-      
+
       if (isSuccess(response)) {
-        alert('인증번호가 발송되었습니다. (3분 유효)');
+        alert("인증번호가 발송되었습니다. (3분 유효)");
       } else {
-        setPhoneError(response.message || '인증번호 발송에 실패했습니다.');
+        setPhoneError(response.message || "인증번호 발송에 실패했습니다.");
       }
     } catch (err) {
-      console.error('Send SMS error:', err);
+      console.error("Send SMS error:", err);
       // 에러가 나도 인증번호 입력란은 표시
       setCodeSent(true);
-      setPhoneError(err.message || '인증번호 발송에 실패했습니다.');
+      // ApiError 클래스인 경우 errorResponse.message 사용
+      const errorMessage =
+        err.errorResponse?.message ||
+        err.message ||
+        "인증번호 발송에 실패했습니다.";
+      setPhoneError(errorMessage);
     } finally {
       setSendingCode(false);
     }
@@ -73,31 +84,34 @@ export default function SignupPage() {
   // 인증번호 확인
   const handleVerifyCode = async () => {
     if (!verificationCode) {
-      setPhoneError('인증번호를 입력해주세요.');
+      setPhoneError("인증번호를 입력해주세요.");
       return;
     }
 
-    const cleanPhone = phoneNumber.replace(/-/g, '');
+    const cleanPhone = phoneNumber.replace(/-/g, "");
 
     try {
       setVerifyingCode(true);
-      setPhoneError('');
-      
+      setPhoneError("");
+
       const response = await authApi.verifySms(cleanPhone, verificationCode);
-      
-      console.log('[Verify SMS] Response:', response);
-      
+
+      console.log("[Verify SMS] Response:", response);
+
       // API 응답이 성공이면 인증 완료 처리
       if (isSuccess(response)) {
         setIsPhoneVerified(true);
-        setPhoneError('');
-        console.log('[Verify SMS] Phone verified successfully');
+        setPhoneError("");
+        console.log("[Verify SMS] Phone verified successfully");
       } else {
-        setPhoneError(response.message || '인증번호가 일치하지 않습니다.');
+        setPhoneError(response.message || "인증번호가 일치하지 않습니다.");
       }
     } catch (err) {
-      console.error('Verify SMS error:', err);
-      setPhoneError(err.message || '인증에 실패했습니다.');
+      console.error("Verify SMS error:", err);
+      // ApiError 클래스인 경우 errorResponse.message 사용
+      const errorMessage =
+        err.errorResponse?.message || err.message || "인증에 실패했습니다.";
+      setPhoneError(errorMessage);
     } finally {
       setVerifyingCode(false);
     }
@@ -106,41 +120,43 @@ export default function SignupPage() {
   // 회원가입
   const handleSignup = async (e) => {
     e.preventDefault();
-    
+
     // 유효성 검사
     if (!email || !password || !passwordConfirm || !nickname || !phoneNumber) {
-      setError('모든 필수 항목을 입력해주세요.');
+      setError("모든 필수 항목을 입력해주세요.");
       return;
     }
 
     if (password !== passwordConfirm) {
-      setError('비밀번호가 일치하지 않습니다.');
+      setError("비밀번호가 일치하지 않습니다.");
       return;
     }
 
     // 비밀번호 정규식 검증 (8~16자, 영문 대소문자, 숫자, 특수문자)
     const passwordRegex = /^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*\W)(?=\S+$).{8,16}$/;
     if (!passwordRegex.test(password)) {
-      setError('비밀번호는 8~16자의 영문 대소문자, 숫자, 특수문자를 포함해야 합니다.');
+      setError(
+        "비밀번호는 8~16자의 영문 대소문자, 숫자, 특수문자를 포함해야 합니다.",
+      );
       return;
     }
 
     if (!isPhoneVerified) {
-      setError('휴대폰 인증을 완료해주세요.');
+      setError("휴대폰 인증을 완료해주세요.");
       return;
     }
 
     if (!phoneConsent) {
-      setError('연락처 수집에 동의해주세요.');
+      setError("연락처 수집에 동의해주세요.");
       return;
     }
 
-    const cleanPhone = phoneNumber.replace(/-/g, '');
+    const cleanPhone = phoneNumber.replace(/-/g, "");
 
     try {
       setLoading(true);
-      setError('');
-      
+      setError("");
+
       const response = await authApi.signup({
         email,
         password,
@@ -149,18 +165,21 @@ export default function SignupPage() {
         referralCode: referralCode || undefined,
         phoneNumberCollectionConsent: phoneConsent,
       });
-      
-      console.log('[Signup] Response:', response);
-      
+
+      console.log("[Signup] Response:", response);
+
       if (isSuccess(response)) {
-        alert('회원가입이 완료되었습니다!');
-        router.push('/login');
+        alert("회원가입이 완료되었습니다!");
+        router.push("/login");
       } else {
-        setError(response.message || '회원가입에 실패했습니다.');
+        setError(response.message || "회원가입에 실패했습니다.");
       }
     } catch (err) {
-      console.error('[Signup] Error:', err);
-      setError(err.message || '회원가입에 실패했습니다.');
+      console.error("[Signup] Error:", err);
+      // ApiError 클래스인 경우 errorResponse.message 사용
+      const errorMessage =
+        err.errorResponse?.message || err.message || "회원가입에 실패했습니다.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -171,8 +190,8 @@ export default function SignupPage() {
       <Card className="w-full max-w-md relative">
         <CardHeader className="text-center">
           {/* 뒤로가기 버튼 */}
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => router.back()}
             className="absolute left-4 top-4 rounded-full"
@@ -186,11 +205,9 @@ export default function SignupPage() {
             </div>
           </div>
           <CardTitle className="text-2xl">회원가입</CardTitle>
-          <CardDescription>
-            StarP의 멤버가 되어보세요
-          </CardDescription>
+          <CardDescription>StarP의 멤버가 되어보세요</CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-4">
             {/* 에러 메시지 */}
@@ -202,10 +219,12 @@ export default function SignupPage() {
 
             {/* 이메일 입력 */}
             <div className="space-y-2">
-              <Label htmlFor="email">이메일 <span className="text-red-500">*</span></Label>
-              <Input 
-                id="email" 
-                type="email" 
+              <Label htmlFor="email">
+                이메일 <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="email"
+                type="email"
                 placeholder="email@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -216,9 +235,11 @@ export default function SignupPage() {
 
             {/* 비밀번호 입력 */}
             <div className="space-y-2">
-              <Label htmlFor="password">비밀번호 <span className="text-red-500">*</span></Label>
-              <Input 
-                id="password" 
+              <Label htmlFor="password">
+                비밀번호 <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="password"
                 type="password"
                 placeholder="8~16자 영문, 숫자, 특수문자 포함"
                 value={password}
@@ -230,9 +251,11 @@ export default function SignupPage() {
 
             {/* 비밀번호 확인 */}
             <div className="space-y-2">
-              <Label htmlFor="passwordConfirm">비밀번호 확인 <span className="text-red-500">*</span></Label>
-              <Input 
-                id="passwordConfirm" 
+              <Label htmlFor="passwordConfirm">
+                비밀번호 확인 <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="passwordConfirm"
                 type="password"
                 placeholder="비밀번호를 다시 입력하세요"
                 value={passwordConfirm}
@@ -244,9 +267,11 @@ export default function SignupPage() {
 
             {/* 닉네임 입력 */}
             <div className="space-y-2">
-              <Label htmlFor="nickname">닉네임 <span className="text-red-500">*</span></Label>
-              <Input 
-                id="nickname" 
+              <Label htmlFor="nickname">
+                닉네임 <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="nickname"
                 type="text"
                 placeholder="사용할 닉네임을 입력하세요"
                 value={nickname}
@@ -258,10 +283,12 @@ export default function SignupPage() {
 
             {/* 휴대폰 번호 인증 */}
             <div className="space-y-2">
-              <Label htmlFor="phone">휴대폰 번호 <span className="text-red-500">*</span></Label>
+              <Label htmlFor="phone">
+                휴대폰 번호 <span className="text-red-500">*</span>
+              </Label>
               <div className="flex gap-2">
-                <Input 
-                  id="phone" 
+                <Input
+                  id="phone"
                   type="tel"
                   placeholder="01012345678"
                   value={phoneNumber}
@@ -283,9 +310,9 @@ export default function SignupPage() {
                   {sendingCode ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : codeSent ? (
-                    '재발송'
+                    "재발송"
                   ) : (
-                    '인증번호 발송'
+                    "인증번호 발송"
                   )}
                 </Button>
               </div>
@@ -293,7 +320,7 @@ export default function SignupPage() {
               {/* 인증번호 입력 */}
               {codeSent && !isPhoneVerified && (
                 <div className="flex gap-2 mt-2">
-                  <Input 
+                  <Input
                     type="text"
                     placeholder="인증번호 6자리"
                     value={verificationCode}
@@ -311,7 +338,7 @@ export default function SignupPage() {
                     {verifyingCode ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      '확인'
+                      "확인"
                     )}
                   </Button>
                 </div>
@@ -333,9 +360,12 @@ export default function SignupPage() {
 
             {/* 추천인 코드 (선택) */}
             <div className="space-y-2">
-              <Label htmlFor="referral">추천인 코드 <span className="text-muted-foreground text-xs">(선택)</span></Label>
-              <Input 
-                id="referral" 
+              <Label htmlFor="referral">
+                추천인 코드{" "}
+                <span className="text-muted-foreground text-xs">(선택)</span>
+              </Label>
+              <Input
+                id="referral"
                 type="text"
                 placeholder="추천인 코드가 있다면 입력하세요"
                 value={referralCode}
@@ -347,19 +377,22 @@ export default function SignupPage() {
 
             {/* 연락처 수집 동의 */}
             <div className="flex items-start space-x-2">
-              <Checkbox 
-                id="phoneConsent" 
+              <Checkbox
+                id="phoneConsent"
                 checked={phoneConsent}
                 onCheckedChange={setPhoneConsent}
                 disabled={loading}
               />
-              <label 
-                htmlFor="phoneConsent" 
+              <label
+                htmlFor="phoneConsent"
                 className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
               >
-                연락처 수집에 동의합니다. <span className="text-red-500">*</span>
+                연락처 수집에 동의합니다.{" "}
+                <span className="text-red-500">*</span>
                 <br />
-                <span className="text-xs">(서비스 이용 중 문제 발생 시 연락 목적으로만 사용됩니다)</span>
+                <span className="text-xs">
+                  (서비스 이용 중 문제 발생 시 연락 목적으로만 사용됩니다)
+                </span>
               </label>
             </div>
 
@@ -374,9 +407,9 @@ export default function SignupPage() {
             </div>
 
             {/* 회원가입 버튼 */}
-            <Button 
+            <Button
               type="submit"
-              className="w-full h-11 bg-[#5b21b6] hover:bg-[#5b21b6]/90 text-base font-medium" 
+              className="w-full h-11 bg-[#5b21b6] hover:bg-[#5b21b6]/90 text-base font-medium"
               disabled={loading}
             >
               {loading ? (
@@ -385,19 +418,24 @@ export default function SignupPage() {
                   가입 중...
                 </>
               ) : (
-                '회원가입'
+                "회원가입"
               )}
             </Button>
           </form>
 
           {/* 로그인 링크 */}
           <div className="flex items-center justify-center gap-2 text-sm pt-4">
-            <span className="text-muted-foreground">이미 계정이 있으신가요?</span>
-            <Link href="/login" className="font-medium text-[#5b21b6] hover:underline">
+            <span className="text-muted-foreground">
+              이미 계정이 있으신가요?
+            </span>
+            <Link
+              href="/login"
+              className="font-medium text-[#5b21b6] hover:underline"
+            >
               로그인 하기
             </Link>
           </div>
-          
+
           {/* 소셜 로그인 */}
           <div className="pt-4">
             <div className="relative">
@@ -406,14 +444,35 @@ export default function SignupPage() {
                 또는
               </span>
             </div>
-            
+
             <div className="mt-6">
-              <Button variant="outline" className="w-full h-11 border-2">
+              <Button
+                variant="outline"
+                className="w-full h-11 border-2"
+                onClick={() => {
+                  //window.location.href = "/oauth2/authorization/google";
+                  window.location.href =
+                    "http://localhost:8080/oauth2/authorization/google";
+                }}
+                disabled={loading}
+              >
                 <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  />
                 </svg>
                 Google로 가입하기
               </Button>

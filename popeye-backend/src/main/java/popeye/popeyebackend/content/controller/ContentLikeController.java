@@ -16,7 +16,7 @@ import popeye.popeyebackend.global.security.details.PrincipalDetails;
 @RequestMapping("/api/contents")
 @RequiredArgsConstructor
 public class ContentLikeController {
-    ContentLikeService contentLikeService;
+    private final ContentLikeService contentLikeService;
 
     @PostMapping("/{contentId}/like")
     public ResponseEntity<Void> toggleLike(

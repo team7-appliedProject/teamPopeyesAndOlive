@@ -2,6 +2,7 @@ package popeye.popeyebackend.user.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,6 +23,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
+@Slf4j
 public class UserController {
 
     private final UserService userService;
@@ -38,6 +40,7 @@ public class UserController {
     @GetMapping("/me")
     public ApiResponse<UserProfileResponse> getMyProfile(@AuthenticationPrincipal PrincipalDetails userDetails) {
         UserProfileResponse response = userService.getMyProfile(userDetails.getUsername());
+        log.info("크리에이터 아이디 : " + response.getCreatorId());
         return ApiResponse.success("내 프로필 정보를 성공적으로 조회했습니다.", response);
     }
 
