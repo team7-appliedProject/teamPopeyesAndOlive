@@ -29,9 +29,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { CreditBadge } from '@/components/CreditBadge';
-import { userApi,creditApi, isSuccess } from '@/app/lib/api';
+} from "@/components/ui/table";
+import { CreditBadge } from "@/components/CreditBadge";
+import { userApi, creditApi, isSuccess } from "@/app/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -39,16 +39,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 export default function MyPage() {
   const router = useRouter();
@@ -60,9 +60,9 @@ export default function MyPage() {
   const [promotingToCreator, setPromotingToCreator] = useState(false);
   const [showSettlementDialog, setShowSettlementDialog] = useState(false);
   const [settlementInfo, setSettlementInfo] = useState({
-    realName: '',
-    bank_name: '',
-    account: ''
+    realName: "",
+    bank_name: "",
+    account: "",
   });
 
   useEffect(() => {
@@ -78,8 +78,7 @@ export default function MyPage() {
 
         // 크레딧 사용 내역 가져오기
         try {
-          const historyData = await 
-          .getHistory(0, 20);
+          const historyData = await creditApi.getHistory(0, 20);
           setCreditHistory(historyData?.content || []);
         } catch (err) {
           console.error("Failed to fetch credit history:", err);
@@ -110,31 +109,36 @@ export default function MyPage() {
   // 정산 정보 입력 후 크리에이터 전환 및 정산 정보 저장
   const handleSettlementSubmit = async () => {
     // 유효성 검사
-    if (!settlementInfo.realName || !settlementInfo.bank_name || !settlementInfo.account) {
-      alert('모든 정산 정보를 입력해주세요.');
+    if (
+      !settlementInfo.realName ||
+      !settlementInfo.bank_name ||
+      !settlementInfo.account
+    ) {
+      alert("모든 정산 정보를 입력해주세요.");
       return;
     }
 
     try {
       setPromotingToCreator(true);
-      
+
       // 1. 크리에이터 전환
       const promoteResponse = await userApi.promoteToCreator();
-      console.log('[MyPage] Promote to creator response:', promoteResponse);
-      
+      console.log("[MyPage] Promote to creator response:", promoteResponse);
+
       if (!isSuccess(promoteResponse)) {
-        alert(promoteResponse.message || '크리에이터 전환에 실패했습니다.');
+        alert(promoteResponse.message || "크리에이터 전환에 실패했습니다.");
         return;
       }
 
       // 2. 정산 정보 저장
-      const settlementResponse = await userApi.updateSettlementInfo(settlementInfo);
-      console.log('[MyPage] Settlement info response:', settlementResponse);
-      
+      const settlementResponse =
+        await userApi.updateSettlementInfo(settlementInfo);
+      console.log("[MyPage] Settlement info response:", settlementResponse);
+
       if (isSuccess(settlementResponse)) {
-        alert('크리에이터로 전환되었고 정산 정보가 등록되었습니다!');
+        alert("크리에이터로 전환되었고 정산 정보가 등록되었습니다!");
         setShowSettlementDialog(false);
-        
+
         // 유저 정보 새로고침
         const userResponse = await userApi.getMe();
         if (isSuccess(userResponse) && userResponse.data) {
@@ -142,11 +146,14 @@ export default function MyPage() {
         }
         router.push("/creator");
       } else {
-        alert(settlementResponse.message || '정산 정보 저장에 실패했습니다.');
+        alert(settlementResponse.message || "정산 정보 저장에 실패했습니다.");
       }
     } catch (err) {
-      console.error('Failed to promote to creator:', err);
-      const errorMessage = err.errorResponse?.message || err.message || '크리에이터 전환에 실패했습니다.';
+      console.error("Failed to promote to creator:", err);
+      const errorMessage =
+        err.errorResponse?.message ||
+        err.message ||
+        "크리에이터 전환에 실패했습니다.";
       alert(errorMessage);
     } finally {
       setPromotingToCreator(false);
@@ -342,26 +349,42 @@ export default function MyPage() {
                               // 타입 변환
                               const getTypeLabel = (reasonType) => {
                                 switch (reasonType) {
-                                  case 'CHARGE': return 'charge';
-                                  case 'PURCHASE': return 'use';
-                                  case 'REFUND': return 'refund';
-                                  case 'EXPIRE': return 'expire';
-                                  default: return 'use';
+                                  case "CHARGE":
+                                    return "charge";
+                                  case "PURCHASE":
+                                    return "use";
+                                  case "REFUND":
+                                    return "refund";
+                                  case "EXPIRE":
+                                    return "expire";
+                                  default:
+                                    return "use";
                                 }
                               };
 
-                              const getDescription = (reasonType, creditType) => {
+                              const getDescription = (
+                                reasonType,
+                                creditType,
+                              ) => {
                                 switch (reasonType) {
-                                  case 'CHARGE': return '크레딧 충전';
-                                  case 'PURCHASE': return '콘텐츠 구매';
-                                  case 'REFUND': return '환불';
-                                  case 'EXPIRE': return '크레딧 소멸';
-                                  default: return '크레딧 사용';
+                                  case "CHARGE":
+                                    return "크레딧 충전";
+                                  case "PURCHASE":
+                                    return "콘텐츠 구매";
+                                  case "REFUND":
+                                    return "환불";
+                                  case "EXPIRE":
+                                    return "크레딧 소멸";
+                                  default:
+                                    return "크레딧 사용";
                                 }
                               };
 
                               const type = getTypeLabel(item.reasonType);
-                              const description = getDescription(item.reasonType, item.creditType);
+                              const description = getDescription(
+                                item.reasonType,
+                                item.creditType,
+                              );
 
                               return (
                                 <TableRow key={item.creditHistoryId}>
@@ -399,7 +422,11 @@ export default function MyPage() {
                                         <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
                                       )}
                                       <CreditBadge
-                                        type={item.creditType === "PAID" ? "starCandy" : "spinach"}
+                                        type={
+                                          item.creditType === "PAID"
+                                            ? "starCandy"
+                                            : "spinach"
+                                        }
                                         amount={Math.abs(item.delta)}
                                         size="sm"
                                       />
@@ -523,31 +550,45 @@ export default function MyPage() {
       </div>
 
       {/* 정산 정보 입력 다이얼로그 */}
-      <Dialog open={showSettlementDialog} onOpenChange={setShowSettlementDialog}>
+      <Dialog
+        open={showSettlementDialog}
+        onOpenChange={setShowSettlementDialog}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>올리브 전환 및 정산 정보 입력</DialogTitle>
             <DialogDescription>
-              올리브로 전환하기 위해 정산 정보를 입력해주세요.
-              계좌번호는 안전하게 암호화되어 저장됩니다.
+              올리브로 전환하기 위해 정산 정보를 입력해주세요. 계좌번호는
+              안전하게 암호화되어 저장됩니다.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="realName">예금주명 <span className="text-red-500">*</span></Label>
+              <Label htmlFor="realName">
+                예금주명 <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="realName"
                 placeholder="홍길동"
                 value={settlementInfo.realName}
-                onChange={(e) => setSettlementInfo({ ...settlementInfo, realName: e.target.value })}
+                onChange={(e) =>
+                  setSettlementInfo({
+                    ...settlementInfo,
+                    realName: e.target.value,
+                  })
+                }
                 disabled={promotingToCreator}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="bank_name">은행명 <span className="text-red-500">*</span></Label>
+              <Label htmlFor="bank_name">
+                은행명 <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={settlementInfo.bank_name}
-                onValueChange={(value) => setSettlementInfo({ ...settlementInfo, bank_name: value })}
+                onValueChange={(value) =>
+                  setSettlementInfo({ ...settlementInfo, bank_name: value })
+                }
                 disabled={promotingToCreator}
               >
                 <SelectTrigger>
@@ -568,12 +609,19 @@ export default function MyPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="account">계좌번호 <span className="text-red-500">*</span></Label>
+              <Label htmlFor="account">
+                계좌번호 <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="account"
                 placeholder="110-123-456789"
                 value={settlementInfo.account}
-                onChange={(e) => setSettlementInfo({ ...settlementInfo, account: e.target.value })}
+                onChange={(e) =>
+                  setSettlementInfo({
+                    ...settlementInfo,
+                    account: e.target.value,
+                  })
+                }
                 disabled={promotingToCreator}
               />
               <p className="text-xs text-muted-foreground">
@@ -586,7 +634,7 @@ export default function MyPage() {
               variant="outline"
               onClick={() => {
                 setShowSettlementDialog(false);
-                setSettlementInfo({ realName: '', bank_name: '', account: '' });
+                setSettlementInfo({ realName: "", bank_name: "", account: "" });
               }}
               disabled={promotingToCreator}
             >
@@ -603,7 +651,7 @@ export default function MyPage() {
                   처리 중...
                 </>
               ) : (
-                '전환하기'
+                "전환하기"
               )}
             </Button>
           </DialogFooter>
