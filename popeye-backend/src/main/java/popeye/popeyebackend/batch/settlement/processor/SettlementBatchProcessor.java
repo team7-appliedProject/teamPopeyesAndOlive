@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import popeye.popeyebackend.batch.settlement.dto.SettlementItemDto;
-import popeye.popeyebackend.pay.repository.SettlementAggregateProjection;
+import popeye.popeyebackend.pay.repository.projection.SettlementAggregateProjection;
 
 /**
  * 정산 배치 Processor
