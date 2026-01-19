@@ -28,4 +28,6 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
     Page<Content> findByIsFree(boolean isFree, Pageable pageable);
 
     Long countByContentStatus(ContentStatus status);
+
+    Page<Content> findByContentStatusAndIsFree(ContentStatus contentStatus, boolean isFree, Pageable pageable);
 }

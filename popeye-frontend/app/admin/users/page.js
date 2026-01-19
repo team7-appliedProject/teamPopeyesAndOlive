@@ -56,6 +56,16 @@ export default function BannedUsersPage() {
     }
   };
 
+  // 밴 해제 여부 확인 (unbannedAt이 오늘 또는 그 이전이면 해제된 것)
+  const isUnbanned = (unbannedAt) => {
+    if (!unbannedAt) return false; // 영구 밴은 해제 안됨
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const unbannedDate = new Date(unbannedAt);
+    unbannedDate.setHours(0, 0, 0, 0);
+    return unbannedDate <= today;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -168,21 +178,32 @@ export default function BannedUsersPage() {
                         </TableCell>
                         <TableCell className="max-w-[250px] truncate">{user.reason || '-'}</TableCell>
                         <TableCell className="text-right">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleUnban(user.id)}
-                            disabled={unbanningId === user.id}
-                          >
-                            {unbanningId === user.id ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                해제 중...
-                              </>
-                            ) : (
-                              '밴 해제'
-                            )}
-                          </Button>
+                          {isUnbanned(user.unbannedAt) ? (
+                            <Button 
+                              variant="secondary" 
+                              size="sm"
+                              disabled
+                              className="cursor-not-allowed opacity-60"
+                            >
+                              밴 해제 완료
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleUnban(user.id)}
+                              disabled={unbanningId === user.id}
+                            >
+                              {unbanningId === user.id ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                  해제 중...
+                                </>
+                              ) : (
+                                '밴 해제'
+                              )}
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))

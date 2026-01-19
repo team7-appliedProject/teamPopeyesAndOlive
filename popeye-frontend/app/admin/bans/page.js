@@ -24,11 +24,13 @@ export default function BannedContentsPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await contentApi.getBannedContents(0, 20).catch(() => []);
-        setBannedContents(data);
+        const data = await contentApi.getBannedContents(0, 20);
+        console.log('Banned contents API response:', data);
+        setBannedContents(Array.isArray(data) ? data : []);
       } catch (err) {
         setError(err.message || '데이터를 불러오는데 실패했습니다.');
         console.error('Banned contents fetch error:', err);
+        setBannedContents([]);
       } finally {
         setLoading(false);
       }

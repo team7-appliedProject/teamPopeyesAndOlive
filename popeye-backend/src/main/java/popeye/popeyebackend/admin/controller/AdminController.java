@@ -91,8 +91,9 @@ public class AdminController {
     @PatchMapping("/reports/{reportId}")
     public ResponseEntity<Void> reportProcess(
             @PathVariable Long reportId,
-            @RequestBody ReportProcessDto reportProcessDto) {
-        adminService.reportProcess(reportId, reportProcessDto);
+            @RequestBody ReportProcessDto reportProcessDto,
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
+        adminService.reportProcess(reportId, reportProcessDto, principalDetails.getUserId());
         return ResponseEntity.ok().build();
     }
 }
