@@ -17,7 +17,9 @@ export function ContentCard({ content, onLike, onBookmark }) {
   const isFree = content.free ?? content.isFree ?? (content.price === 0 || content.price === undefined);
   const price = content.price || 0;
   const originalPrice = content.originalPrice;
-  const likes = content.likes || content.likeCount || 0;
+  const likes = content.likeCount || content.likes || 0;
+  const isLiked = content.liked !== undefined ? content.liked : content.isLiked;
+  const isBookmarked = content.bookmarked !== undefined ? content.bookmarked : content.isBookmarked;
   
   const discount = originalPrice 
     ? Math.round((1 - price / originalPrice) * 100)
@@ -89,18 +91,18 @@ export function ContentCard({ content, onLike, onBookmark }) {
           <Button
             variant="ghost"
             size="icon"
-            className={`h-8 w-8 ${content.isLiked ? 'text-red-500' : ''}`}
+            className={`h-8 w-8 ${isLiked ? 'text-red-500' : ''}`}
             onClick={() => onLike?.(contentId)}
           >
-            <Heart className={`h-4 w-4 ${content.isLiked ? 'fill-current' : ''}`} />
+            <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className={`h-8 w-8 ${content.isBookmarked ? 'text-[#fbbf24]' : ''}`}
+            className={`h-8 w-8 ${isBookmarked ? 'text-[#fbbf24]' : ''}`}
             onClick={() => onBookmark?.(contentId)}
           >
-            <Bookmark className={`h-4 w-4 ${content.isBookmarked ? 'fill-current' : ''}`} />
+            <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
           </Button>
         </div>
       </CardFooter>

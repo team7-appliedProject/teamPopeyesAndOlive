@@ -295,13 +295,10 @@ export default function ContentDetailPage() {
                     variant={isLiked ? "default" : "outline"}
                     onClick={async () => {
                       try {
-                        await contentApi.toggleLike(Number(contentId));
-                        setIsLiked(!isLiked);
-                        // 콘텐츠 다시 조회하여 최신 상태 반영
-                        const data = await contentApi.getById(Number(contentId));
-                        if (data.likeCount !== undefined) {
-                          setContent({ ...content, likeCount: data.likeCount });
-                        }
+                        const response = await contentApi.toggleLike(Number(contentId));
+                        // 서버 응답으로 상태 업데이트
+                        setIsLiked(response.liked);
+                        setContent({ ...content, isLiked: response.liked, likeCount: response.likeCount });
                       } catch (err) {
                         console.error('[ContentDetail] Like error:', err);
                         if (err.status === 401 || err.status === 403) {
@@ -320,8 +317,10 @@ export default function ContentDetailPage() {
                     variant={isBookmarked ? "default" : "outline"}
                     onClick={async () => {
                       try {
-                        await contentApi.toggleBookmark(Number(contentId));
-                        setIsBookmarked(!isBookmarked);
+                        const response = await contentApi.toggleBookmark(Number(contentId));
+                        // 서버 응답으로 상태 업데이트
+                        setIsBookmarked(response.bookmarked);
+                        setContent({ ...content, isBookmarked: response.bookmarked });
                       } catch (err) {
                         console.error('[ContentDetail] Bookmark error:', err);
                         if (err.status === 401 || err.status === 403) {

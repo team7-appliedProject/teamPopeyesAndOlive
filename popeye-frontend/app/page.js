@@ -67,22 +67,56 @@ export default function Home() {
     fetchContents();
   }, [activeTab]);
 
-  const handleLike = (contentId) => {
-    setContents(contents.map(c => {
-      const id = c.contentId || c.id;
-      return id === contentId 
-        ? { ...c, isLiked: !c.isLiked, likes: (c.likes || 0) + (c.isLiked ? -1 : 1) }
-        : c;
-    }));
+  const handleLike = async (contentId) => {
+    try {
+      const response = await contentApi.toggleLike(contentId);
+      // 서버 응답으로 상태 업데이트
+      setContents(contents.map(c => {
+        const id = c.contentId || c.id;
+        if (id === contentId) {
+          return { 
+            ...c, 
+            isLiked: response.liked,
+            liked: response.liked,
+            likeCount: response.likeCount,
+            likes: response.likeCount
+          };
+        }
+        return c;
+      }));
+    } catch (err) {
+      console.error('[Home] Like error:', err);
+      if (err.status === 401 || err.status === 403) {
+        router.push('/login');
+      } else {
+        alert('좋아요 처리에 실패했습니다.');
+      }
+    }
   };
 
-  const handleBookmark = (contentId) => {
-    setContents(contents.map(c => {
-      const id = c.contentId || c.id;
-      return id === contentId 
-        ? { ...c, isBookmarked: !c.isBookmarked }
-        : c;
-    }));
+  const handleBookmark = async (contentId) => {
+    try {
+      const response = await contentApi.toggleBookmark(contentId);
+      // 서버 응답으로 상태 업데이트
+      setContents(contents.map(c => {
+        const id = c.contentId || c.id;
+        if (id === contentId) {
+          return { 
+            ...c, 
+            isBookmarked: response.bookmarked,
+            bookmarked: response.bookmarked
+          };
+        }
+        return c;
+      }));
+    } catch (err) {
+      console.error('[Home] Bookmark error:', err);
+      if (err.status === 401 || err.status === 403) {
+        router.push('/login');
+      } else {
+        alert('북마크 처리에 실패했습니다.');
+      }
+    }
   };
 
   return (

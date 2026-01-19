@@ -25,6 +25,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final popeye.popeyebackend.user.service.UserBookmarkService userBookmarkService;
 
     //크리에이터 권한 신청 및 승격
     @PatchMapping("/me/creator")
@@ -83,5 +84,23 @@ public class UserController {
     public ApiResponse<Void> withdrawUser(@AuthenticationPrincipal PrincipalDetails userDetails) {
         userService.withdrawUser(userDetails.getUsername());
         return ApiResponse.success("회원 탈퇴가 완료되었습니다. 30일 후 재가입이 가능합니다.", null);
+    }
+
+    // 북마크한 컨텐츠 목록 조회
+    @GetMapping("/me/bookmarks")
+    public ResponseEntity<List<popeye.popeyebackend.content.dto.response.ContentListRes>> getBookmarkedContents(
+            @AuthenticationPrincipal PrincipalDetails details) {
+        List<popeye.popeyebackend.content.dto.response.ContentListRes> contents = 
+                userBookmarkService.getBookmarkedContents(details.getUserId());
+        return ResponseEntity.ok(contents);
+    }
+
+    // 구매한 컨텐츠 목록 조회
+    @GetMapping("/me/purchases")
+    public ResponseEntity<List<popeye.popeyebackend.content.dto.response.ContentListRes>> getPurchasedContents(
+            @AuthenticationPrincipal PrincipalDetails details) {
+        List<popeye.popeyebackend.content.dto.response.ContentListRes> contents = 
+                userBookmarkService.getPurchasedContents(details.getUserId());
+        return ResponseEntity.ok(contents);
     }
 }

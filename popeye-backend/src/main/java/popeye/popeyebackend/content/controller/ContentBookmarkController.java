@@ -16,11 +16,12 @@ public class ContentBookmarkController {
 
     // 북마크 토글 (추가/삭제)
     @PostMapping("/contents/{contentId}")
-    public ResponseEntity<Void> toggleBookmark(
+    public ResponseEntity<popeye.popeyebackend.content.dto.response.ToggleBookmarkResponse> toggleBookmark(
             @AuthenticationPrincipal PrincipalDetails details,
             @PathVariable("contentId") Long id
     ) {
-        bookmarkService.bookmark(details.getUserId(), id);
-        return ResponseEntity.ok().build();
+        popeye.popeyebackend.content.dto.response.ToggleBookmarkResponse response = 
+                bookmarkService.bookmark(details.getUserId(), id);
+        return ResponseEntity.ok(response);
     }
 }

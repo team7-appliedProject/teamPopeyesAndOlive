@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.domain.ContentBookmark;
+import popeye.popeyebackend.content.dto.response.ToggleBookmarkResponse;
 import popeye.popeyebackend.content.exception.ContentError;
 import popeye.popeyebackend.content.repository.ContentBookmarkRepository;
 import popeye.popeyebackend.content.repository.ContentRepository;
@@ -20,7 +21,7 @@ public class ContentBookmarkService {
     private final ContentRepository contentRepository;
     private final UserRepository userRepository;
 
-    public void bookmark(Long userId, Long contentId) {
+    public ToggleBookmarkResponse bookmark(Long userId, Long contentId) {
         User user = userRepository.findById(userId)
                 .orElseThrow();
         Content content = contentRepository.findById(contentId)
@@ -36,6 +37,11 @@ public class ContentBookmarkService {
                     .price(content.getPrice()).build();
             bookmarkRepository.save(contentBookmark);
         }
+        
+        // DB에서 최신 상태 조회
+        boolean finalBookmarked = bookmarkRepository.existsByUserAndContent(user, content);
+        
+        return new ToggleBookmarkResponse(finalBookmarked);
     }
 
     public void unbookmark(Long userId, Long contentId) {

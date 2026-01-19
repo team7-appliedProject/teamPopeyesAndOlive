@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CreditBadge } from '@/components/CreditBadge';
-import { userApi, isSuccess } from '@/app/lib/api';
+import { userApi, userBookmarkApi, isSuccess } from '@/app/lib/api';
 
 export default function MyPage() {
   const router = useRouter();
@@ -37,6 +37,22 @@ export default function MyPage() {
         
         if (isSuccess(response) && response.data) {
           setUserInfo(response.data);
+        }
+        
+        // 북마크 목록 조회
+        try {
+          const bookmarks = await userBookmarkApi.getBookmarks();
+          setBookmarkedContents(bookmarks);
+        } catch (err) {
+          console.error('Failed to fetch bookmarks:', err);
+        }
+        
+        // 구매 목록 조회
+        try {
+          const purchases = await userBookmarkApi.getPurchases();
+          setPurchasedContents(purchases);
+        } catch (err) {
+          console.error('Failed to fetch purchases:', err);
         }
       } catch (err) {
         console.error('Failed to fetch user data:', err);

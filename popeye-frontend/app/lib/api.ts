@@ -364,15 +364,28 @@ export const contentApi = {
 
   /** 좋아요 토글 */
   toggleLike: (contentId: number) =>
-    fetchApi<void>(`/api/contents/${contentId}/like`, {
+    fetchApi<{ liked: boolean; likeCount: number }>(`/api/contents/${contentId}/like`, {
       method: "POST",
     }),
 
   /** 북마크 토글 */
   toggleBookmark: (contentId: number) =>
-    fetchApi<void>(`/api/bookmark/contents/${contentId}`, {
+    fetchApi<{ bookmarked: boolean }>(`/api/bookmark/contents/${contentId}`, {
       method: "POST",
     }),
+};
+
+// ============================================
+// User Bookmarks & Purchases API
+// ============================================
+export const userBookmarkApi = {
+  /** 북마크한 컨텐츠 목록 조회 */
+  getBookmarks: () =>
+    fetchApi<ContentListItem[]>("/api/users/me/bookmarks"),
+
+  /** 구매한 컨텐츠 목록 조회 */
+  getPurchases: () =>
+    fetchApi<ContentListItem[]>("/api/users/me/purchases"),
 };
 
 // ============================================
@@ -606,8 +619,14 @@ export interface ContentListItem {
   free?: boolean;          // Java boolean isFree -> Jackson "free"
   isFree?: boolean;        // 호환성 유지
   likes?: number;
+  likeCount?: number;
   isLiked?: boolean;
-  isBookmarked: boolean;
+  liked?: boolean;
+  isBookmarked?: boolean;
+  bookmarked?: boolean;
+  purchased?: boolean;
+  viewCount?: number;
+  discountRate?: number;
 }
 
 export interface ContentDetail {
