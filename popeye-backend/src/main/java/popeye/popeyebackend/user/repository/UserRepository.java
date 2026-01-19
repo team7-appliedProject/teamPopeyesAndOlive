@@ -31,6 +31,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.referralCode = :referralCode AND u.deletedAt IS NULL")
     Optional<User> findByReferralCode(@Param("referralCode") String referralCode);
 
+    // U-01: 추천인 코드 중복 체크 (탈퇴 사용자 제외)
+    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM User u WHERE u.referralCode = :referralCode AND u.deletedAt IS NULL")
+    boolean existsByReferralCode(@Param("referralCode") String referralCode);
+
     // U-05: OAuth2 소셜 로그인 사용자 찾기 (provider와 providerId로 조회)
     @Query("SELECT u FROM User u WHERE u.provider = :provider AND u.providerId = :providerId AND u.deletedAt IS NULL")
     Optional<User> findByProviderAndProviderId(@Param("provider") String provider, @Param("providerId") String providerId);

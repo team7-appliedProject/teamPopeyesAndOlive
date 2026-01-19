@@ -14,7 +14,7 @@ import popeye.popeyebackend.user.enums.Role;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
+import popeye.popeyebackend.global.util.NanoIdUtil;
 
 @Entity
 @Table(name = "users")
@@ -127,12 +127,20 @@ public class User {
         }
     }
 
-    //U-04 추천코드 생성
+    //U-04 추천코드 생성 (나노아이디 사용)
+    // 주의: 이 메서드는 중복 체크를 하지 않습니다. 
+    // 중복 체크는 UserService에서 처리해야 합니다.
     public void generateReferralCode() {
         if (this.referralCode == null) {
-            // UUID의 앞 8자리를 대문자로 추출하여 고유 코드 생성
-            this.referralCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            // 나노아이디를 사용하여 8자리 고유 코드 생성
+            // 헷갈리기 쉬운 문자(0, O, 1, I, L) 제외
+            this.referralCode = NanoIdUtil.generateReferralCode();
         }
+    }
+
+    //U-04: 레퍼럴 코드 직접 설정 (중복 체크 후 사용)
+    public void setReferralCode(String referralCode) {
+        this.referralCode = referralCode;
     }
     public void updateRole(Role newRole) {
         this.role = newRole;
