@@ -74,7 +74,7 @@ interface FetchOptions extends RequestInit {
  */
 async function fetchApi<T>(
   endpoint: string,
-  options: FetchOptions = {}
+  options: FetchOptions = {},
 ): Promise<T> {
   const { params, ...fetchOptions } = options;
 
@@ -124,11 +124,11 @@ async function fetchApi<T>(
 
     try {
       const errorData = await response.json();
-      
+
       // 백엔드에서 두 가지 형식의 에러 응답을 반환할 수 있음:
       // 1. ApiResponse.error(message) 형식: { status: "error", message: "...", data: null }
       // 2. ErrorResponse 형식: { code: "...", message: "..." }
-      
+
       if (errorData.status === "error") {
         // ApiResponse.error 형식
         errorResponse = {
@@ -306,9 +306,13 @@ export const userApi = {
   updateProfilePhoto: (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
+    const token = localStorage.getItem("accessToken"); // 토큰 수동 추출
     return fetch(`${API_BASE_URL}/api/users/me/profile_photo`, {
       method: "PATCH",
       body: formData,
+      headers: {
+        Authorization: `Bearer ${token}`, // 토큰 헤더 추가 필수!
+      },
       credentials: "include",
     }).then(async (res) => {
       if (!res.ok) {
@@ -466,26 +470,26 @@ export const settlementApi = {
   /** 정산 가능 잔액 조회 */
   getAvailableBalance: (creatorId: number) =>
     fetchApi<AvailableBalanceResponse>(
-      `/api/creators/${creatorId}/settlements/available-balance`
+      `/api/creators/${creatorId}/settlements/available-balance`,
     ),
 
   /** 컨텐츠별 누적 정산 요약 조회 */
   getContentSettlementSummaries: (creatorId: number) =>
     fetchApi<ContentSettlementSummaryResponse[]>(
-      `/api/creators/${creatorId}/settlements/by-content`
+      `/api/creators/${creatorId}/settlements/by-content`,
     ),
 
   /** 컨텐츠 월 단위 상세 정산(일별 리스트) 조회 */
   getMonthlyContentSettlement: (
     creatorId: number,
     contentId: number,
-    month: string
+    month: string,
   ) =>
     fetchApi<DailyContentSettlementResponse>(
       `/api/creators/${creatorId}/settlements/contents/${contentId}`,
       {
         params: { month },
-      }
+      },
     ),
 };
 
@@ -511,8 +515,8 @@ export const withdrawalApi = {
 export const eventApi = {
   /** 무료 크레딧 지급 */
   grantFreeCredits: (amount: number) =>
-    fetchApi<number>('/api/events/free-credits', {
-      method: 'POST',
+    fetchApi<number>("/api/events/free-credits", {
+      method: "POST",
       params: { amount },
     }),
 };
@@ -550,7 +554,7 @@ export interface DevilUser {
 }
 
 export interface BanUserRequest {
-  banUserId: number;  // 백엔드 BanUserInfoDto와 일치
+  banUserId: number; // 백엔드 BanUserInfoDto와 일치
   reason: string;
   banDays?: number | null; // 영구 밴이면 null 또는 생략
 }
@@ -570,7 +574,7 @@ export interface ReportProcess {
 }
 
 export interface ReportProcessRequest {
-  state: "TRUE" | "REJECTED" | "FALSE";  // TRUE: 승인, REJECTED: 거절, FALSE: 악성신고(신고자 처벌)
+  state: "TRUE" | "REJECTED" | "FALSE"; // TRUE: 승인, REJECTED: 거절, FALSE: 악성신고(신고자 처벌)
 }
 
 // User Types
@@ -618,8 +622,8 @@ export interface ContentListItem {
   thumbnail?: string;
   price?: number;
   originalPrice?: number;
-  free?: boolean;          // Java boolean isFree -> Jackson "free"
-  isFree?: boolean;        // 호환성 유지
+  free?: boolean; // Java boolean isFree -> Jackson "free"
+  isFree?: boolean; // 호환성 유지
   likes?: number;
   isLiked?: boolean;
   isBookmarked: boolean;
@@ -628,10 +632,10 @@ export interface ContentListItem {
 export interface ContentDetail {
   id: number;
   title: string;
-  content?: string;      // FullContentResponse에서 제공
-  preview?: string;      // PreviewContentResponse에서 제공
+  content?: string; // FullContentResponse에서 제공
+  preview?: string; // PreviewContentResponse에서 제공
   price?: number | null; // 무료면 null
-  free: boolean;         // Java boolean isFree -> Jackson "free"
+  free: boolean; // Java boolean isFree -> Jackson "free"
   status?: string;
   // 프론트엔드 확장 필드 (선택적)
   creatorName?: string;
@@ -645,7 +649,7 @@ export interface ContentCreateRequest {
   content: string;
   price: number;
   discountRate: number;
-  free: boolean;  // Java의 'isFree' 필드는 JSON에서 'free'로 직렬화됨
+  free: boolean; // Java의 'isFree' 필드는 JSON에서 'free'로 직렬화됨
 }
 
 export interface BannedContentRes {
@@ -659,7 +663,7 @@ export interface BannedContentRes {
 // Report Types
 export interface ReportRequest {
   targetId: number;
-  type: "CONTENT";  // 백엔드 TargetType enum과 일치
+  type: "CONTENT"; // 백엔드 TargetType enum과 일치
   reason: string;
 }
 
@@ -673,7 +677,7 @@ export interface ReportResponse {
 // Payment Types
 export interface ChargeRequest {
   creditAmount: number;
-  pgProvider: 'TOSS';
+  pgProvider: "TOSS";
 }
 
 export interface PreparePaymentResponse {
