@@ -56,7 +56,7 @@ export default function MyPage() {
         // 크레딧 사용 내역 가져오기
         try {
           const historyData = await creditApi.getHistory(0, 20);
-          setCreditHistory(historyData || []);
+          setCreditHistory(historyData?.content || []);
         } catch (err) {
           console.error("Failed to fetch credit history:", err);
           setCreditHistory([]);
@@ -289,10 +289,34 @@ export default function MyPage() {
                                 });
                               };
 
+                              // 타입 변환
+                              const getTypeLabel = (reasonType) => {
+                                switch (reasonType) {
+                                  case 'CHARGE': return 'charge';
+                                  case 'PURCHASE': return 'use';
+                                  case 'REFUND': return 'refund';
+                                  case 'EXPIRE': return 'expire';
+                                  default: return 'use';
+                                }
+                              };
+
+                              const getDescription = (reasonType, creditType) => {
+                                switch (reasonType) {
+                                  case 'CHARGE': return '크레딧 충전';
+                                  case 'PURCHASE': return '콘텐츠 구매';
+                                  case 'REFUND': return '환불';
+                                  case 'EXPIRE': return '크레딧 소멸';
+                                  default: return '크레딧 사용';
+                                }
+                              };
+
+                              const type = getTypeLabel(item.reasonType);
+                              const description = getDescription(item.reasonType, item.creditType);
+
                               return (
-                                <TableRow key={item.id}>
+                                <TableRow key={item.creditHistoryId}>
                                   <TableCell className="text-sm text-muted-foreground">
-                                    {formatDate(item.date)}
+                                    {formatDate(item.changedAt)}
                                   </TableCell>
                                   <TableCell>
                                     {item.type === "charge" && (
