@@ -319,44 +319,38 @@ export default function MyPage() {
                                     {formatDate(item.changedAt)}
                                   </TableCell>
                                   <TableCell>
-                                    {item.type === "charge" && (
+                                    {type === "charge" && (
                                       <Badge className="bg-blue-500">
                                         충전
                                       </Badge>
                                     )}
-                                    {item.type === "use" && (
+                                    {type === "use" && (
                                       <Badge variant="secondary">사용</Badge>
                                     )}
-                                    {item.type === "reward" && (
-                                      <Badge className="bg-[#22c55e]">
-                                        지급
-                                      </Badge>
-                                    )}
-                                    {item.type === "expire" && (
+                                    {type === "expire" && (
                                       <Badge variant="destructive">소멸</Badge>
                                     )}
-                                    {item.type === "refund" && (
+                                    {type === "refund" && (
                                       <Badge className="bg-orange-500">
                                         환불
                                       </Badge>
                                     )}
                                   </TableCell>
                                   <TableCell className="text-sm">
-                                    {item.description || "-"}
+                                    {description}
                                   </TableCell>
                                   <TableCell className="text-right">
                                     <div className="flex items-center justify-end gap-2">
-                                      {item.type === "charge" ||
-                                      item.type === "reward" ? (
+                                      {type === "charge" ? (
                                         <ArrowUpRight className="h-4 w-4 text-[#22c55e]" />
-                                      ) : item.type === "expire" ? (
+                                      ) : type === "expire" ? (
                                         <XCircle className="h-4 w-4 text-destructive" />
                                       ) : (
                                         <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
                                       )}
                                       <CreditBadge
-                                        type={item.creditType}
-                                        amount={Math.abs(item.amount)}
+                                        type={item.creditType === "PAID" ? "starCandy" : "spinach"}
+                                        amount={Math.abs(item.delta)}
                                         size="sm"
                                       />
                                     </div>

@@ -109,8 +109,34 @@ export default function RefundPage() {
       }
 
       await paymentApi.refund(selectedTx.paymentId, reason);
+      
+      // 환불 성공 후 목록 다시 불러오기
+      const historyData = await creditApi.getHistory(0, 50);
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      const refundable = (historyData?.content || [])
+        .filter((item) => {
+          if (item.reasonType !== "CHARGE" || !item.paymentId) return false;
+          const itemDate = new Date(item.changedAt);
+          return itemDate >= sevenDaysAgo;
+        })
+        .map((item) => ({
+          id: String(item.creditHistoryId),
+          paymentId: item.paymentId,
+          date: item.changedAt,
+          description: "크레딧 충전",
+          amount: Math.abs(item.delta),
+          creditType: item.creditType === "PAID" ? "starCandy" : "spinach",
+          status: "refundable",
+        }));
+      
+      setRefundableTransactions(refundable);
+      setSelectedTransaction("");
+      setRefundReason("");
+      setCustomReason("");
+      
       alert("환불 완료되었습니다.");
-      router.push("/mypage");
     } catch (err) {
       console.error("Refund failed:", err);
       if (err instanceof ApiError) {
