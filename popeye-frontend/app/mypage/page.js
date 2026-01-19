@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Copy, ArrowUpRight, ArrowDownRight, XCircle, Calendar, Loader2 } from 'lucide-react';
+import { Copy, ArrowUpRight, ArrowDownRight, XCircle, Calendar, Loader2, CreditCard } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CreditBadge } from '@/components/CreditBadge';
-import { userApi, isSuccess } from '@/app/lib/api';
+import { userApi, creditApi, isSuccess } from '@/app/lib/api';
 
 export default function MyPage() {
   const router = useRouter();
@@ -37,6 +37,15 @@ export default function MyPage() {
         
         if (isSuccess(response) && response.data) {
           setUserInfo(response.data);
+        }
+
+        // 크레딧 사용 내역 가져오기
+        try {
+          const historyData = await creditApi.getHistory(0, 20);
+          setCreditHistory(historyData || []);
+        } catch (err) {
+          console.error('Failed to fetch credit history:', err);
+          setCreditHistory([]);
         }
       } catch (err) {
         console.error('Failed to fetch user data:', err);
@@ -162,29 +171,38 @@ export default function MyPage() {
 
                   <Separator />
 
-                  {userInfo?.role === 'CREATOR' || userInfo?.role === 'ROLE_CREATOR' ? (
-                    <Button 
-                      className="w-full bg-[#22c55e] hover:bg-[#22c55e]/90"
-                      onClick={() => router.push('/creator')}
-                    >
-                      크리에이터 페이지로 이동
-                    </Button>
-                  ) : (
+                  <div className="space-y-2">
                     <Button 
                       className="w-full bg-[#5b21b6] hover:bg-[#5b21b6]/90"
-                      onClick={handlePromoteToCreator}
-                      disabled={promotingToCreator}
+                      onClick={() => router.push('/payment/charge')}
                     >
-                      {promotingToCreator ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          전환 중...
-                        </>
-                      ) : (
-                        '올리브로 전환하기'
-                      )}
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      크레딧 충전
                     </Button>
-                  )}
+                    {userInfo?.role === 'CREATOR' || userInfo?.role === 'ROLE_CREATOR' ? (
+                      <Button 
+                        className="w-full bg-[#22c55e] hover:bg-[#22c55e]/90"
+                        onClick={() => router.push('/creator')}
+                      >
+                        크리에이터 페이지로 이동
+                      </Button>
+                    ) : (
+                      <Button 
+                        className="w-full bg-[#5b21b6] hover:bg-[#5b21b6]/90"
+                        onClick={handlePromoteToCreator}
+                        disabled={promotingToCreator}
+                      >
+                        {promotingToCreator ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            전환 중...
+                          </>
+                        ) : (
+                          '올리브로 전환하기'
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -219,46 +237,64 @@ export default function MyPage() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {creditHistory.map((item) => (
-                              <TableRow key={item.id}>
-                                <TableCell className="text-sm text-muted-foreground">
-                                  {item.date}
-                                </TableCell>
-                                <TableCell>
-                                  {item.type === 'charge' && (
-                                    <Badge className="bg-blue-500">충전</Badge>
-                                  )}
-                                  {item.type === 'use' && (
-                                    <Badge variant="secondary">사용</Badge>
-                                  )}
-                                  {item.type === 'reward' && (
-                                    <Badge className="bg-[#22c55e]">지급</Badge>
-                                  )}
-                                  {item.type === 'expire' && (
-                                    <Badge variant="destructive">소멸</Badge>
-                                  )}
-                                </TableCell>
-                                <TableCell className="text-sm">
-                                  {item.description}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <div className="flex items-center justify-end gap-2">
-                                    {item.type === 'charge' || item.type === 'reward' ? (
-                                      <ArrowUpRight className="h-4 w-4 text-[#22c55e]" />
-                                    ) : item.type === 'expire' ? (
-                                      <XCircle className="h-4 w-4 text-destructive" />
-                                    ) : (
-                                      <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
+                            {creditHistory.map((item) => {
+                              // 날짜 포맷팅
+                              const formatDate = (dateString) => {
+                                if (!dateString) return '-';
+                                const date = new Date(dateString);
+                                return date.toLocaleString('ko-KR', {
+                                  year: 'numeric',
+                                  month: '2-digit',
+                                  day: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                });
+                              };
+
+                              return (
+                                <TableRow key={item.id}>
+                                  <TableCell className="text-sm text-muted-foreground">
+                                    {formatDate(item.date)}
+                                  </TableCell>
+                                  <TableCell>
+                                    {item.type === 'charge' && (
+                                      <Badge className="bg-blue-500">충전</Badge>
                                     )}
-                                    <CreditBadge 
-                                      type={item.creditType} 
-                                      amount={item.amount}
-                                      size="sm"
-                                    />
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))}
+                                    {item.type === 'use' && (
+                                      <Badge variant="secondary">사용</Badge>
+                                    )}
+                                    {item.type === 'reward' && (
+                                      <Badge className="bg-[#22c55e]">지급</Badge>
+                                    )}
+                                    {item.type === 'expire' && (
+                                      <Badge variant="destructive">소멸</Badge>
+                                    )}
+                                    {item.type === 'refund' && (
+                                      <Badge className="bg-orange-500">환불</Badge>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="text-sm">
+                                    {item.description || '-'}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                      {item.type === 'charge' || item.type === 'reward' ? (
+                                        <ArrowUpRight className="h-4 w-4 text-[#22c55e]" />
+                                      ) : item.type === 'expire' ? (
+                                        <XCircle className="h-4 w-4 text-destructive" />
+                                      ) : (
+                                        <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
+                                      )}
+                                      <CreditBadge 
+                                        type={item.creditType} 
+                                        amount={Math.abs(item.amount)}
+                                        size="sm"
+                                      />
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
                           </TableBody>
                         </Table>
                       ) : (
