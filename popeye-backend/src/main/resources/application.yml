@@ -19,7 +19,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+#    show-sql: true
     #properties:
       #hibernate:
         # SQL을 보기 좋게 정렬합니다.

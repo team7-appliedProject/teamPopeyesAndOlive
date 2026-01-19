@@ -28,13 +28,12 @@ public class PaymentController {
      */
     @PostMapping("/prepare")
     public ResponseEntity<PreparePaymentResponseDto> prepare(
-            // @AuthenticationPrincipal PrincipalDetails principalDetails, // 추후 사용 예정
+             @AuthenticationPrincipal PrincipalDetails principalDetails, // 추후 사용 예정
             @Valid @RequestBody ChargeRequestDto chargeRequestDto
             ){
 
         // 임시: 인증 시스템 완성 전까지 임시 userId 사용
-        Long userId = 1L; // TODO: 인증 시스템 완성 후 principalDetails.getUserId()로 변경
-        // Long userId = principalDetails.getUserId();
+        Long userId = principalDetails.getUserId(); // TODO: 인증 시스템 완성 후 principalDetails.getUserId()로 변경
 
         PreparePaymentResponseDto responseDto = paymentService.prepareCharge(
                 userId,
