@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, User, Bell, Check, LogIn, UserPlus } from 'lucide-react';
+import { Search, User, Bell, Check, LogIn, UserPlus, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { CreditBadge } from './CreditBadge';
@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { notificationApi, creditApi, userApi, isSuccess } from '@/app/lib/api';
+import { notificationApi, creditApi, userApi, authApi, isSuccess } from '@/app/lib/api';
 
 export function Header() {
   const router = useRouter();
@@ -122,6 +122,35 @@ export function Header() {
     if (diffHours < 24) return `${diffHours}시간 전`;
     if (diffDays < 7) return `${diffDays}일 전`;
     return date.toLocaleDateString();
+  };
+
+  // 로그아웃 처리
+  // 클라이언트 토큰 삭제로 처리
+  const handleLogout = async () => {
+    try {
+      // 서버에 로그아웃 요청 (실패해도 로그아웃은 진행)
+      await authApi.logout().catch(() => {
+        // API 호출 실패해도 무시하고 로그아웃 진행
+      });
+    } catch (err) {
+      // 에러 무시하고 로그아웃 진행
+      console.log('[Header] Logout API call failed, but continuing logout:', err);
+    } finally {
+      // 저장된 JWT 토큰 삭제
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("tokenType");
+      
+      // 인증 상태 초기화
+      setIsLoggedIn(false);
+      setUserInfo(null);
+      setNotifications([]);
+      setReadIds(new Set());
+      setSpinachBalance(0);
+      setStarCandyBalance(0);
+      
+      // 로그인 페이지로 이동
+      router.push("/login");
+    }
   };
 
   return (
@@ -248,25 +277,45 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Profile Icon - 클릭 시 /mypage 이동 (ADMIN은 /admin) */}
-              <div className="flex flex-col items-center">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="rounded-full"
-                  onClick={() => router.push(userInfo?.role === 'ADMIN' ? '/admin' : '/mypage')}
-                >
-                  <User className="h-5 w-5" />
-                </Button>
-                {userInfo?.role === 'ADMIN' && (
-                  <span 
-                    className="text-[10px] font-medium text-[#5b21b6] cursor-pointer hover:underline -mt-1"
-                    onClick={() => router.push('/admin')}
+              {/* Profile Icon - 드롭다운 메뉴 */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full"
                   >
-                    관리자
-                  </span>
-                )}
-              </div>
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {userInfo?.role === 'ADMIN' ? (
+                    <DropdownMenuItem 
+                      onClick={() => router.push('/admin')}
+                      className="cursor-pointer"
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      관리자 페이지
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem 
+                      onClick={() => router.push('/mypage')}
+                      className="cursor-pointer"
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      마이페이지
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    로그아웃
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             // 비로그인 상태: 로그인, 회원가입 버튼

@@ -186,6 +186,12 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify({ phoneNumber, code }),
     }),
+
+  /** 로그아웃 */
+  logout: () =>
+    fetchApi<ApiResponse<void>>("/api/auth/logout", {
+      method: "POST",
+    }),
 };
 
 // ============================================

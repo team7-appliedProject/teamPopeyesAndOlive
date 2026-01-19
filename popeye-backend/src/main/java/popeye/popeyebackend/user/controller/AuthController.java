@@ -38,6 +38,11 @@ public class AuthController {
         return ApiResponse.success("로그인에 성공하였습니다.", response);
     }
 
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout() {
+        return ApiResponse.success("로그아웃이 완료되었습니다.", null);
+    }
+
     //U-02: 인증번호 발송 요청
     @PostMapping("/sms/send")
     public ApiResponse<Void> sendSms(@Valid @RequestBody SmsSendRequest request) {
