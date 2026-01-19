@@ -26,15 +26,16 @@ public class ContentBookmarkService {
         Content content = contentRepository.findById(contentId)
                 .orElseThrow(() -> new ContentError("컨텐츠를 찾을 수 없습니다."));
 
+        // 토글 방식: 이미 북마크되어 있으면 삭제, 없으면 추가
         if (bookmarkRepository.existsByUserAndContent(user, content)) {
-            throw new IllegalStateException("이미 북마크됨");
+            bookmarkRepository.deleteByUserAndContent(user, content);
+        } else {
+            ContentBookmark contentBookmark = ContentBookmark.builder()
+                    .user(user)
+                    .content(content)
+                    .price(content.getPrice()).build();
+            bookmarkRepository.save(contentBookmark);
         }
-        ContentBookmark contentBookmark = ContentBookmark.builder()
-                .user(user)
-                .content(content)
-                .price(content.getPrice()).build();
-
-        bookmarkRepository.save(contentBookmark);
     }
 
     public void unbookmark(Long userId, Long contentId) {

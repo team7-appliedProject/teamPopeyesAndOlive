@@ -361,6 +361,18 @@ export const contentApi = {
     fetchApi<BannedContentRes[]>("/api/contents/banlist", {
       params: { page, size },
     }),
+
+  /** 좋아요 토글 */
+  toggleLike: (contentId: number) =>
+    fetchApi<void>(`/api/contents/${contentId}/like`, {
+      method: "POST",
+    }),
+
+  /** 북마크 토글 */
+  toggleBookmark: (contentId: number) =>
+    fetchApi<void>(`/api/bookmark/contents/${contentId}`, {
+      method: "POST",
+    }),
 };
 
 // ============================================
@@ -611,6 +623,8 @@ export interface ContentDetail {
   discountRate?: number;
   viewCount?: number;
   likeCount?: number;
+  isLiked?: boolean;
+  isBookmarked?: boolean;
 }
 
 export interface ContentCreateRequest {
