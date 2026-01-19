@@ -175,6 +175,7 @@ public class PaymentService {
                 .payment(payment)
                 .creditType(CreditType.PAID)
                 .amount(payment.getCreditAmount())
+                .paidAt(LocalDateTime.now())
                 .expiredAt(null)
                 .build();
         creditRepository.save(credit);

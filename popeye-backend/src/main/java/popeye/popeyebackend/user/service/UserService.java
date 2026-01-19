@@ -137,11 +137,11 @@ public class UserService {
         // U-01: 추천인 코드 입력 시 리워드 지급 (SYS-02: 쌍방에게 크레딧 지급)
         if (referrer != null) {
             // 추천인에게 리워드 지급
-            referrer.addSpinach(500); // 추천인에게 500 시금치 지급
+            freeCreditPolicyService.grantFreeCredit(referrer, 500);// 추천인에게 500 시금치 지급
             userRepository.save(referrer);
 
             // 신규 가입자에게 추가 리워드 지급
-            savedUser.addSpinach(500); // 신규 가입자에게 추가 500 시금치 지급
+            freeCreditPolicyService.grantFreeCredit(user, 500); // 신규 가입자에게 추가 500 시금치 지급
             userRepository.save(savedUser);
 
             log.info("추천인 코드 사용: 추천인 {}에게 500 시금치, 신규 가입자 {}에게 500 시금치 지급",

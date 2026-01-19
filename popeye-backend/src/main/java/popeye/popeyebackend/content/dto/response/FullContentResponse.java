@@ -2,6 +2,7 @@ package popeye.popeyebackend.content.dto.response;
 
 import lombok.Getter;
 import popeye.popeyebackend.content.domain.Content;
+import popeye.popeyebackend.content.enums.ContentStatus;
 
 @Getter
 public class FullContentResponse extends ContentResponse{
@@ -16,6 +17,7 @@ public class FullContentResponse extends ContentResponse{
     private Boolean isLiked;
     private Boolean isBookmarked;
     private Integer discountRate;
+    private ContentStatus contentStatus;
 
     public static FullContentResponse from(Content c, boolean isLiked, boolean isBookmarked) {
         FullContentResponse r = new FullContentResponse();
@@ -28,6 +30,7 @@ public class FullContentResponse extends ContentResponse{
         r.discountRate = c.getDiscountRate();
         r.isLiked = isLiked;
         r.isBookmarked = isBookmarked;
+        r.contentStatus = c.getContentStatus();
 
         // 무료 콘텐츠면 가격 숨김
         r.price = c.isFree() ? null : c.getPrice();

@@ -254,7 +254,7 @@ export default function ContentDetailPage() {
   const discount = content.discountRate || 0;
 
   // 무료 여부 확인 (여러 필드 체크)
-  const isFree = content.free ?? content.isFree ?? false;
+  const isFree = content.free ?? content.free ?? false;
 
   // 전체 내용을 볼 수 있는지 (무료거나 구매했거나 전체 content가 있는 경우)
   const canViewFull = isFree || isPurchased || !!content.content;
@@ -266,7 +266,7 @@ export default function ContentDetailPage() {
   const canPurchase = !isFree && !hasFullContent && hasPrice;
 
   // 디버깅용 로그
-  console.log('[ContentDetail] Purchase check:', {
+  console.log("[ContentDetail] Purchase check:", {
     isFree,
     isPurchased,
     hasFullContent,
@@ -274,7 +274,7 @@ export default function ContentDetailPage() {
     price: content.price,
     canPurchase,
     contentFree: content.free,
-    contentIsFree: content.isFree
+    contentIsFree: content.free,
   });
 
   // 표시할 본문 내용
@@ -361,13 +361,16 @@ export default function ContentDetailPage() {
                 <div className="mb-6 p-6 rounded-lg border-2 border-[#5b21b6] bg-muted/30">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold mb-3 text-lg">이 글 구매하기</h3>
+                      <h3 className="font-semibold mb-3 text-lg">
+                        이 글 구매하기
+                      </h3>
                       <div className="flex items-center gap-3 mb-2">
-                        {content.originalPrice && content.originalPrice > content.price && (
-                          <span className="text-sm text-muted-foreground line-through">
-                            {content.originalPrice.toLocaleString()}
-                          </span>
-                        )}
+                        {content.originalPrice &&
+                          content.originalPrice > content.price && (
+                            <span className="text-sm text-muted-foreground line-through">
+                              {content.originalPrice.toLocaleString()}
+                            </span>
+                          )}
                         <CreditBadge
                           type="starCandy"
                           amount={content.price}

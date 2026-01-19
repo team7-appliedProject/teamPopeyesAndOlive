@@ -23,7 +23,8 @@ public interface CreditRepository extends JpaRepository<Credit, Long> {
     boolean existsByPayment_Id(Long paymentId);
     @Query("select c from Credit c " +
             "where c.user.id = :userId " +
-            "and (c.expiredAt is null or c.expiredAt > :now)")
+            "and (c.expiredAt is null or c.expiredAt > :now)" +
+            "and (c.amount > 0)")
     List<Credit> findUsableCredits(
             @Param("userId") Long userId,
             @Param("now")LocalDateTime now

@@ -2,6 +2,7 @@ package popeye.popeyebackend.content.dto.response;
 
 import lombok.Getter;
 import popeye.popeyebackend.content.domain.Content;
+import popeye.popeyebackend.content.enums.ContentStatus;
 
 @Getter
 public class PreviewContentResponse extends ContentResponse { // 비로그인,미구매자는 미리보기만 봄
@@ -10,6 +11,8 @@ public class PreviewContentResponse extends ContentResponse { // 비로그인,�
     private String title;
     private String preview;
     private boolean isFree;
+    private Integer price;
+    private ContentStatus status;
     private Integer viewCount;
     private Long likeCount;
     private Boolean isLiked;
@@ -22,6 +25,8 @@ public class PreviewContentResponse extends ContentResponse { // 비로그인,�
         r.title = c.getTitle();
         r.isFree = c.isFree();
         r.viewCount = c.getViewCount();
+        r.price = c.getPrice();
+        r.status = c.getContentStatus();
         r.likeCount = c.getLikeCount();
         r.discountRate = c.getDiscountRate();
         r.isLiked = isLiked;
