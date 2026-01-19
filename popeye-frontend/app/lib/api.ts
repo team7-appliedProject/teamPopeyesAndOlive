@@ -479,6 +479,18 @@ export const withdrawalApi = {
 };
 
 // ============================================
+// Event API
+// ============================================
+export const eventApi = {
+  /** 무료 크레딧 지급 */
+  grantFreeCredits: (amount: number) =>
+    fetchApi<number>('/api/events/free-credits', {
+      method: 'POST',
+      params: { amount },
+    }),
+};
+
+// ============================================
 // Type Definitions
 // ============================================
 
@@ -628,13 +640,12 @@ export interface ReportResponse {
 // Payment Types
 export interface ChargeRequest {
   creditAmount: number;
-  pgProvider: "TOSS" | "KAKAO";
+  pgProvider: 'TOSS';
 }
 
 export interface PreparePaymentResponse {
+  paymentId: number;
   pgOrderId: string;
-  amount: number;
-  orderName: string;
 }
 
 export interface ConfirmPaymentRequest {

@@ -162,4 +162,20 @@ public class User {
         this.provider = provider;
         this.providerId = providerId;
     }
+
+    public void increaseFreeCredit(int amount){
+        this.totalSpinach += amount;
+    }
+
+    public void decreaseFreeCredit(int amount){
+        this.totalSpinach -= amount;
+    }
+
+    public void increasePaidCredit(int amount){
+        this.totalStarcandy += amount;
+    }
+
+    public void decreasePaidCredit(int amount){
+        this.totalStarcandy -= amount;
+    }
 }

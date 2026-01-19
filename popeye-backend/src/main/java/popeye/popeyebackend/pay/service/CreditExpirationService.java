@@ -8,6 +8,7 @@ import popeye.popeyebackend.pay.domain.Credit;
 import popeye.popeyebackend.pay.enums.CreditType;
 import popeye.popeyebackend.pay.enums.ReasonType;
 import popeye.popeyebackend.pay.repository.CreditRepository;
+import popeye.popeyebackend.user.domain.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +29,9 @@ public class CreditExpirationService {
         for (Credit credit : targets){
             int expiredAmount = credit.getAmount();
             if (expiredAmount <= 0) continue;
+
+            User user = credit.getUser();
+            user.decreaseFreeCredit(expiredAmount);
 
             creditHistoryService.record(
                     credit.getUser(),

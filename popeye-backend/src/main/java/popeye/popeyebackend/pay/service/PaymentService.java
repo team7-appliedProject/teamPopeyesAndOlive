@@ -167,6 +167,9 @@ public class PaymentService {
         String receiptUrl = (tossRes.getReceipt() != null) ? tossRes.getReceipt().getUrl() : null;
         payment.approve(paymentKey, receiptUrl);
 
+        User user = payment.getUser();
+        user.increasePaidCredit(payment.getCreditAmount());
+
         Credit credit = Credit.builder()
                 .user(payment.getUser())
                 .payment(payment)
@@ -176,6 +179,7 @@ public class PaymentService {
                 .build();
         creditRepository.save(credit);
 
+
         creditHistoryService.record(
                 payment.getUser(),
                 CreditType.PAID,
@@ -184,6 +188,7 @@ public class PaymentService {
                 null,
                 payment.getId()
         );
+
     }
 
 
@@ -245,6 +250,9 @@ public class PaymentService {
         // 2) PG 취소 성공 후에만 로컬 상태 변경
         credit.zeroize();
         payment.cancel();
+
+        User user = payment.getUser();
+        user.decreasePaidCredit(payment.getCreditAmount());
 
         creditHistoryService.record(
                 payment.getUser(),
