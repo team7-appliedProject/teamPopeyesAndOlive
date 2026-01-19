@@ -253,11 +253,29 @@ export default function ContentDetailPage() {
   // 할인율 계산
   const discount = content.discountRate || 0;
 
+  // 무료 여부 확인 (여러 필드 체크)
+  const isFree = content.free ?? content.isFree ?? false;
+
   // 전체 내용을 볼 수 있는지 (무료거나 구매했거나 전체 content가 있는 경우)
-  const canViewFull = content.free || isPurchased || !!content.content;
+  const canViewFull = isFree || isPurchased || !!content.content;
 
   // 구매 가능한지 (유료이고 아직 구매하지 않았고 가격이 있는 경우)
-  const canPurchase = !content.free && !isPurchased && content.price && content.price > 0;
+  // 조건: 무료가 아니고, content.content가 없고(구매 안함), price가 있고 0보다 큼
+  const hasFullContent = !!content.content;
+  const hasPrice = content.price != null && content.price > 0;
+  const canPurchase = !isFree && !hasFullContent && hasPrice;
+
+  // 디버깅용 로그
+  console.log('[ContentDetail] Purchase check:', {
+    isFree,
+    isPurchased,
+    hasFullContent,
+    hasPrice,
+    price: content.price,
+    canPurchase,
+    contentFree: content.free,
+    contentIsFree: content.isFree
+  });
 
   // 표시할 본문 내용
   const displayContent = content.content || content.preview || "";
@@ -282,7 +300,7 @@ export default function ContentDetailPage() {
               {/* Title & Badges */}
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
-                  {content.isFree ? (
+                  {isFree ? (
                     <Badge className="bg-[#22c55e] hover:bg-[#22c55e]/90">
                       무료
                     </Badge>
