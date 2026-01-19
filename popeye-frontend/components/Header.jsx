@@ -40,8 +40,9 @@ export function Header() {
           setIsLoggedIn(true);
           setUserInfo(response.data);
           // 잔액 정보도 userInfo에 포함되어 있음
-          setSpinachBalance(response.data.totalSpinach || 0);
-          setStarCandyBalance(response.data.totalStarcandy || 0);
+          // 백엔드 필드명: totalSpinach, totalStarcandy
+          setSpinachBalance(response.data.totalSpinach ?? 0);
+          setStarCandyBalance(response.data.totalStarcandy ?? 0);
         } else {
           setIsLoggedIn(false);
           setUserInfo(null);
