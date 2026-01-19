@@ -219,24 +219,24 @@ export default function ContentDetailPage() {
           {/* Main Content */}
           <Card>
             <CardContent className="p-6">
-              {/* Title & Badges */}
+                {/* Title & Badges */}
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
                   {content.free ? (
-                    <Badge className="bg-[#22c55e] hover:bg-[#22c55e]/90">
-                      무료
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary">유료</Badge>
-                  )}
-                  {discount > 0 && (
-                    <Badge variant="destructive">{discount}% 할인</Badge>
-                  )}
-                </div>
+                        <Badge className="bg-[#22c55e] hover:bg-[#22c55e]/90">
+                          무료
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">유료</Badge>
+                      )}
+                      {discount > 0 && (
+                        <Badge variant="destructive">{discount}% 할인</Badge>
+                      )}
+                    </div>
                 <h1 className="text-3xl font-bold">{content.title}</h1>
-              </div>
+                </div>
 
-              {/* Stats */}
+                {/* Stats */}
               {(content.viewCount || content.likeCount) && (
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
                   {content.viewCount && <span>조회 {content.viewCount.toLocaleString()}</span>}
@@ -244,63 +244,63 @@ export default function ContentDetailPage() {
                 </div>
               )}
 
-              <Separator className="my-6" />
+                <Separator className="my-6" />
 
-              {/* Content Body */}
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold mb-4">본문</h2>
+                {/* Content Body */}
+                <div className="mb-6">
+                  <h2 className="text-xl font-semibold mb-4">본문</h2>
                 {canViewFull ? (
-                  <div className="prose prose-sm max-w-none">
-                    <p className="whitespace-pre-line text-muted-foreground leading-relaxed">
-                      {displayContent}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <div className="blur-sm select-none pointer-events-none">
+                    <div className="prose prose-sm max-w-none">
                       <p className="whitespace-pre-line text-muted-foreground leading-relaxed">
-                        {displayContent}...
+                      {displayContent}
                       </p>
                     </div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center bg-background/80 rounded-lg p-6">
-                        <Lock className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">
-                          구매 후 전체 내용을 확인하실 수 있습니다
+                  ) : (
+                    <div className="relative">
+                      <div className="blur-sm select-none pointer-events-none">
+                        <p className="whitespace-pre-line text-muted-foreground leading-relaxed">
+                        {displayContent}...
                         </p>
                       </div>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center bg-background/80 rounded-lg p-6">
+                          <Lock className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">
+                            구매 후 전체 내용을 확인하실 수 있습니다
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
 
               <Separator className="my-6" />
 
-              {/* Actions */}
-              <div className="flex items-center gap-3">
-                <Button
-                  variant={isLiked ? "default" : "outline"}
-                  onClick={() => setIsLiked(!isLiked)}
-                  className={isLiked ? "text-red-500" : ""}
-                >
-                  <Heart className={`h-4 w-4 mr-2 ${isLiked ? 'fill-current' : ''}`} />
-                  좋아요
-                </Button>
-                <Button
-                  variant={isBookmarked ? "default" : "outline"}
-                  onClick={() => setIsBookmarked(!isBookmarked)}
-                >
-                  <Bookmark className={`h-4 w-4 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
-                  찜하기
-                </Button>
+                {/* Actions */}
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant={isLiked ? "default" : "outline"}
+                    onClick={() => setIsLiked(!isLiked)}
+                    className={isLiked ? "text-red-500" : ""}
+                  >
+                    <Heart className={`h-4 w-4 mr-2 ${isLiked ? 'fill-current' : ''}`} />
+                    좋아요
+                  </Button>
+                  <Button
+                    variant={isBookmarked ? "default" : "outline"}
+                    onClick={() => setIsBookmarked(!isBookmarked)}
+                  >
+                    <Bookmark className={`h-4 w-4 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
+                    찜하기
+                  </Button>
                 <Button 
                   variant="ghost" 
                   className="text-destructive"
                   onClick={() => setReportDialogOpen(true)}
                 >
-                  <Flag className="h-4 w-4 mr-2" />
-                  신고
-                </Button>
+                        <Flag className="h-4 w-4 mr-2" />
+                        신고
+                      </Button>
               </div>
 
               {/* 신고 모달 */}
@@ -312,7 +312,7 @@ export default function ContentDetailPage() {
                       글 신고
                     </DialogTitle>
                     <DialogDescription>
-                      이 글을 신고하시겠습니까? 신고가 누적되면 해당 글은 검토됩니다.
+                          이 글을 신고하시겠습니까? 신고가 누적되면 해당 글은 검토됩니다.
                     </DialogDescription>
                   </DialogHeader>
                   
@@ -347,8 +347,8 @@ export default function ContentDetailPage() {
                           <p className="text-xs text-muted-foreground">
                             허위 신고 시 불이익이 있을 수 있습니다.
                           </p>
-                        </div>
-                      </div>
+                </div>
+              </div>
                       
                       <DialogFooter className="gap-2 sm:gap-0">
                         <Button 

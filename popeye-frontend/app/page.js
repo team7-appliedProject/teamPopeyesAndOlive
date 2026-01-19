@@ -127,16 +127,16 @@ export default function Home() {
             <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : contents.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {contents.map((content, index) => (
-              <ContentCard
+            <ContentCard
                 key={content.contentId || content.id || index}
-                content={content}
-                onLike={handleLike}
-                onBookmark={handleBookmark}
-              />
-            ))}
-          </div>
+              content={content}
+              onLike={handleLike}
+              onBookmark={handleBookmark}
+            />
+          ))}
+        </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <p className="text-lg">
