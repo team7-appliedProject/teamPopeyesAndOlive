@@ -338,6 +338,82 @@ export default function ContentDetailPage() {
                 )}
               </div>
 
+              {/* Purchase Section - 본문 바로 아래 */}
+              {canPurchase && (
+                <div className="mb-6 p-6 rounded-lg border-2 border-[#5b21b6] bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold mb-3 text-lg">이 글 구매하기</h3>
+                      <div className="flex items-center gap-3 mb-2">
+                        {content.originalPrice && content.originalPrice > content.price && (
+                          <span className="text-sm text-muted-foreground line-through">
+                            {content.originalPrice.toLocaleString()}
+                          </span>
+                        )}
+                        <CreditBadge
+                          type="starCandy"
+                          amount={content.price}
+                          size="lg"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        💡 시금치 우선 차감 후 별사탕이 차감됩니다
+                      </p>
+                    </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="lg"
+                          className="bg-[#5b21b6] hover:bg-[#5b21b6]/90 ml-4"
+                          disabled={purchasing}
+                        >
+                          {purchasing ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              구매 중...
+                            </>
+                          ) : (
+                            "크레딧으로 구매"
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>글 구매</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            <div className="space-y-2 text-left">
+                              <p>"{content.title}" 글을 구매하시겠습니까?</p>
+                              <div className="rounded-lg bg-muted p-3 space-y-1">
+                                <div className="flex justify-between text-sm">
+                                  <span>가격:</span>
+                                  <CreditBadge
+                                    type="starCandy"
+                                    amount={content.price}
+                                    size="sm"
+                                  />
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  차감 순서: 시금치 → 별사탕
+                                </div>
+                              </div>
+                            </div>
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>취소</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handlePurchase}
+                            className="bg-[#5b21b6] hover:bg-[#5b21b6]/90"
+                          >
+                            구매하기
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              )}
+
               <Separator className="my-6" />
 
               {/* Actions */}
@@ -481,79 +557,6 @@ export default function ContentDetailPage() {
               </Dialog>
             </CardContent>
           </Card>
-
-          {/* Purchase Section */}
-          {canPurchase && (
-            <Card className="mt-6 border-2 border-[#5b21b6]">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold mb-2">이 글 구매하기</h3>
-                    <div className="flex items-center gap-3">
-                      <CreditBadge
-                        type="starCandy"
-                        amount={content.price}
-                        size="lg"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      💡 시금치 우선 차감 후 별사탕이 차감됩니다
-                    </p>
-                  </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        size="lg"
-                        className="bg-[#5b21b6] hover:bg-[#5b21b6]/90"
-                        disabled={purchasing}
-                      >
-                        {purchasing ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            구매 중...
-                          </>
-                        ) : (
-                          "크레딧으로 구매"
-                        )}
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>글 구매</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          <div className="space-y-2 text-left">
-                            <p>"{content.title}" 글을 구매하시겠습니까?</p>
-                            <div className="rounded-lg bg-muted p-3 space-y-1">
-                              <div className="flex justify-between text-sm">
-                                <span>가격:</span>
-                                <CreditBadge
-                                  type="starCandy"
-                                  amount={content.price}
-                                  size="sm"
-                                />
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                차감 순서: 시금치 → 별사탕
-                              </div>
-                            </div>
-                          </div>
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>취소</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handlePurchase}
-                          className="bg-[#5b21b6] hover:bg-[#5b21b6]/90"
-                        >
-                          구매하기
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
     </div>
