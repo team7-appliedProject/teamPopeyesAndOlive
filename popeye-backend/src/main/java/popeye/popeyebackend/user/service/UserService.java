@@ -182,6 +182,7 @@ public class UserService {
         }
 
         return UserProfileResponse.builder()
+                .creatorId(user.getCreator().getId())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
                 .profileImageUrl(user.getProfileImageUrl())
