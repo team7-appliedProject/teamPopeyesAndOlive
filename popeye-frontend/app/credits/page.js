@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CreditBadge } from '@/components/CreditBadge';
 import { Separator } from '@/components/ui/separator';
-import { creditApi } from '@/app/lib/api';
+import { creditApi, userApi, isSuccess } from '@/app/lib/api';
 
 export default function CreditsPage() {
   const router = useRouter();
@@ -24,16 +24,16 @@ export default function CreditsPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // TODO: 실제 API로 교체
-        const balanceData = await creditApi.getBalance().catch(() => null);
-        if (balanceData) {
-          setSpinachBalance(balanceData.spinach || 0);
-          setSpinachExpiry(balanceData.spinachExpiry || null);
-          setStarCandyBalance(balanceData.starCandy || 0);
+        
+        // 사용자 정보에서 크레딧 잔액 가져오기
+        const userResponse = await userApi.getMe().catch(() => null);
+        if (userResponse && isSuccess(userResponse) && userResponse.data) {
+          setSpinachBalance(userResponse.data.totalSpinach || 0);
+          setStarCandyBalance(userResponse.data.totalStarcandy || 0);
         }
         
         const historyData = await creditApi.getHistory(0, 10).catch(() => []);
-        setRecentTransactions(historyData);
+        setRecentTransactions(Array.isArray(historyData) ? historyData : []);
       } catch (err) {
         console.error('Failed to fetch credit data:', err);
       } finally {

@@ -69,14 +69,16 @@ public class SecurityConfig {
                             "/swagger-ui/**",
                             "/swagger-ui.html"
                     ).permitAll();
-                    auth.requestMatchers("/api/main/**").permitAll(); // 메인 페이지 통계 (공개)
-                    
+                    auth.requestMatchers("/api/main/**").permitAll(); // 메인 페이지 (공개)
+
                     // 콘텐츠 공개 조회 (인증 불필요)
                     auth.requestMatchers(HttpMethod.GET, "/api/contents/**").permitAll();
                     auth.requestMatchers(HttpMethod.GET, "/api/contents/free").permitAll();
 
-                    // 관리자 전용 경로
-                    auth.requestMatchers("/api/admin/**").hasRole("ADMIN");
+					auth.requestMatchers("/api/payments/**").hasAnyRole("USER", "CREATOR");
+
+					// 관리자 전용 경로
+					auth.requestMatchers("/api/admin/**").hasRole("ADMIN");
                     auth.requestMatchers(HttpMethod.GET, "/api/contents/banlist").hasRole("ADMIN");
                     auth.requestMatchers(HttpMethod.GET, "/api/users/ban-user").hasRole("ADMIN");
 
@@ -89,11 +91,7 @@ public class SecurityConfig {
                         auth.requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll();
                     }
 
-                    // 그 외 모든 요청은 인증 필요 (USER 이상)
-                    // 포함되는 경로: /api/bookmark/**, /api/contents/{contentId}, /api/users/me/**, 
-                    // /api/payments/**, /api/orders/**, /api/notification/**, /api/report/**, 
-                    // /api/files/**, /api/events/**, /api/credits/** 등
-                    auth.anyRequest().authenticated();
+                    auth.anyRequest().authenticated(); // 그 외 모든 요청은 인증 필요 (USER 이상)
                 });
 
         // U-05: OAuth2 설정이 있을 때만 OAuth2 로그인 활성화

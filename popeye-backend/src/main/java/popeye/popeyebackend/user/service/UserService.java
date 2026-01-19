@@ -36,6 +36,7 @@ import popeye.popeyebackend.user.repository.UserRepository;
 import popeye.popeyebackend.global.util.EmailService;
 import popeye.popeyebackend.global.util.HashUtil;
 import popeye.popeyebackend.user.service.PhoneVerificationService;
+import popeye.popeyebackend.user.service.ReferralCodeService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -59,6 +60,7 @@ public class UserService {
     private final PhoneVerificationService phoneVerificationService;
     private final RedisTemplate<String, String> redisTemplate;
     private final EmailService emailService;
+    private final ReferralCodeService referralCodeService;
     private static final String PASSWORD_RESET_PREFIX = "password:reset:";
     private static final long PASSWORD_RESET_TTL = 30 * 60L; // 30분
 
@@ -123,8 +125,8 @@ public class UserService {
                 .phoneNumberCollectionConsent(request.getPhoneNumberCollectionConsent())
                 .build();
 
-        // U-04: 고유 추천 코드 자동 생성
-        user.generateReferralCode();
+        // U-04: 고유 추천 코드 자동 생성 (나노아이디 사용, 중복 체크 포함)
+        referralCodeService.generateUniqueReferralCode(user);
 
         User savedUser = userRepository.save(user);
 
@@ -170,9 +172,9 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
 
-        // U-04: 기존 사용자 중 코드가 없는 경우를 대비한 지연 생성
+        // U-04: 기존 사용자 중 코드가 없는 경우를 대비한 지연 생성 (나노아이디 사용, 중복 체크 포함)
         if (user.getReferralCode() == null) {
-            user.generateReferralCode();
+            referralCodeService.generateUniqueReferralCode(user);
         }
 
         return UserProfileResponse.builder()

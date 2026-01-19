@@ -44,12 +44,12 @@ export function ContentCard({ content, onLike, onBookmark }) {
               유료
             </Badge>
           )}
-          {discount > 0 && (
+        {discount > 0 && (
             <Badge variant="destructive">
               {discount}% 할인
             </Badge>
-          )}
-        </div>
+        )}
+      </div>
 
         {/* Title */}
         <h3 className="font-semibold line-clamp-2 mb-3 group-hover:text-[#5b21b6] transition-colors">

@@ -27,7 +27,7 @@ export function Header() {
   const [spinachBalance, setSpinachBalance] = useState(0);
   const [starCandyBalance, setStarCandyBalance] = useState(0);
 
-  // 로그인 여부 확인
+  // 로그인 여부 확인 및 잔액 가져오기
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -39,15 +39,22 @@ export function Header() {
         if (response && isSuccess(response) && response.data) {
           setIsLoggedIn(true);
           setUserInfo(response.data);
+          // 잔액 정보도 userInfo에 포함되어 있음
+          setSpinachBalance(response.data.totalSpinach || 0);
+          setStarCandyBalance(response.data.totalStarcandy || 0);
         } else {
           setIsLoggedIn(false);
           setUserInfo(null);
+          setSpinachBalance(0);
+          setStarCandyBalance(0);
         }
       } catch (err) {
         // 401 또는 에러 시 비로그인 상태
         console.log('[Header] Auth check failed:', err);
         setIsLoggedIn(false);
         setUserInfo(null);
+        setSpinachBalance(0);
+        setStarCandyBalance(0);
       } finally {
         setIsLoading(false);
       }
@@ -55,25 +62,6 @@ export function Header() {
 
     checkAuth();
   }, []);
-
-  // 크레딧 잔액 가져오기 (로그인 시에만)
-  useEffect(() => {
-    if (!isLoggedIn) return;
-
-    const fetchBalance = async () => {
-      try {
-        const data = await creditApi.getBalance().catch(() => null);
-        if (data) {
-          setSpinachBalance(data.spinach || 0);
-          setStarCandyBalance(data.starCandy || 0);
-        }
-      } catch (err) {
-        console.error('Failed to fetch balance:', err);
-      }
-    };
-
-    fetchBalance();
-  }, [isLoggedIn]);
 
   // 알림 목록 가져오기 (로그인 시에만)
   useEffect(() => {
@@ -139,7 +127,7 @@ export function Header() {
       // 저장된 JWT 토큰 삭제
       localStorage.removeItem("accessToken");
       localStorage.removeItem("tokenType");
-      
+
       // 인증 상태 초기화
       setIsLoggedIn(false);
       setUserInfo(null);
@@ -147,7 +135,7 @@ export function Header() {
       setReadIds(new Set());
       setSpinachBalance(0);
       setStarCandyBalance(0);
-      
+
       // 로그인 페이지로 이동
       router.push("/login");
     }
@@ -280,9 +268,9 @@ export function Header() {
               {/* Profile Icon - 드롭다운 메뉴 */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className="rounded-full"
                   >
                     <User className="h-5 w-5" />
@@ -290,7 +278,7 @@ export function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   {userInfo?.role === 'ADMIN' ? (
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={() => router.push('/admin')}
                       className="cursor-pointer"
                     >
@@ -298,7 +286,7 @@ export function Header() {
                       관리자 페이지
                     </DropdownMenuItem>
                   ) : (
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={() => router.push('/mypage')}
                       className="cursor-pointer"
                     >
@@ -307,7 +295,7 @@ export function Header() {
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={handleLogout}
                     className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
                   >
