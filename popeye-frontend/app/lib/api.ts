@@ -51,14 +51,9 @@ export class ApiError extends Error {
 
 // 공통 응답 타입
 export interface ApiResponse<T> {
-  status: "success" | "error";
+  success: boolean;
   message: string;
   data: T;
-}
-
-/** ApiResponse가 성공인지 확인하는 헬퍼 함수 */
-export function isSuccess<T>(response: ApiResponse<T>): boolean {
-  return response.status === "success";
 }
 
 // 공통 fetch 옵션
@@ -94,25 +89,15 @@ async function fetchApi<T>(
   }
 
   // 기본 헤더 설정
-  const accessToken =
-    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-
-  // 2. 헤더 조립 (기존 헤더 + Content-Type)
-  const headers: Record<string, string> = {
+  const headers: HeadersInit = {
     "Content-Type": "application/json",
-    ...(fetchOptions.headers as Record<string, string>),
+    ...fetchOptions.headers,
   };
 
-  // 3. 토큰이 있으면 Authorization 헤더에 'Bearer 토큰' 형식으로 추가
-  if (accessToken) {
-    headers["Authorization"] = `Bearer ${accessToken}`;
-  }
-
-  // 4. 요청 보내기
   const response = await fetch(url, {
     ...fetchOptions,
-    headers, // 👈 3번에서 만든 헤더(토큰 포함)가 들어감
-    credentials: "include", // (참고: 토큰 방식이라 이거 없어도 되지만, 혹시 나중에 쿠키 쓸 수도 있으니 둬도 무방함)
+    headers,
+    credentials: "include", // 쿠키 포함 (인증용)
   });
 
   // 에러 응답 처리
@@ -140,61 +125,8 @@ async function fetchApi<T>(
     return undefined as T;
   }
 
-  // 빈 응답 처리 (200 OK이지만 body가 비어있는 경우)
-  const text = await response.text();
-  if (!text || text.length === 0) {
-    return undefined as T;
-  }
-
-  // JSON 파싱
-  try {
-    return JSON.parse(text);
-  } catch {
-    // JSON이 아닌 경우 텍스트 그대로 반환
-    return text as T;
-  }
+  return response.json();
 }
-
-// ============================================
-// Auth API
-// ============================================
-export const authApi = {
-  /** 로그인 */
-  login: (data: LoginRequest) =>
-    fetchApi<ApiResponse<TokenResponse>>("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-
-  /** 회원가입 */
-  signup: (data: SignupRequest) =>
-    fetchApi<ApiResponse<number>>("/api/auth/signup", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-
-  /** SMS 인증번호 발송 */
-  sendSms: (phoneNumber: string) =>
-    fetchApi<ApiResponse<void>>("/api/auth/sms/send", {
-      method: "POST",
-      body: JSON.stringify({ phoneNumber }),
-    }),
-
-  /** SMS 인증번호 검증 */
-  verifySms: (phoneNumber: string, code: string) =>
-    fetchApi<ApiResponse<void>>("/api/auth/sms/verify", {
-      method: "POST",
-      body: JSON.stringify({ phoneNumber, code }),
-    }),
-};
-
-// ============================================
-// Main API (메인 페이지 통계)
-// ============================================
-export const mainApi = {
-  /** 메인 페이지 통계 조회 */
-  getMain: () => fetchApi<MainStats>("/api/main"),
-};
 
 // ============================================
 // Admin API
@@ -259,9 +191,6 @@ export const userApi = {
   /** 내 프로필 조회 */
   getMyProfile: () => fetchApi<ApiResponse<UserProfile>>("/api/users/me"),
 
-  /** 내 정보 조회 (마이페이지용) - ApiResponse 형태로 반환 */
-  getMe: () => fetchApi<ApiResponse<UserProfile>>("/api/users/me"),
-
   /** 프로필 수정 */
   updateProfile: (data: UpdateProfileRequest) =>
     fetchApi<ApiResponse<void>>("/api/users/me", {
@@ -303,40 +232,12 @@ export const userApi = {
       return res.json() as Promise<ProfilePhotoResponse>;
     });
   },
-
-  /** 밴 유저 목록 조회 (관리자 전용) */
-  getBannedUsers: (page = 0, size = 10) =>
-    fetchApi<BanUserRes[]>("/api/users/ban-user", {
-      params: { page, size },
-    }),
 };
 
 // ============================================
 // Content API
 // ============================================
 export const contentApi = {
-  /** 콘텐츠 전체 조회 */
-  getAll: (page = 0, size = 20) =>
-    fetchApi<ContentListItem[]>("/api/contents", {
-      params: { page, size },
-    }),
-
-  /** 무료 콘텐츠 조회 */
-  getFree: (page = 0, size = 20) =>
-    fetchApi<ContentListItem[]>("/api/contents/free", {
-      params: { page, size },
-    }),
-
-  /** 유료 콘텐츠 조회 */
-  getPaid: (page = 0, size = 20) =>
-    fetchApi<ContentListItem[]>("/api/contents/paid", {
-      params: { page, size },
-    }),
-
-  /** 콘텐츠 상세 조회 */
-  getById: (contentId: number) =>
-    fetchApi<ContentDetail>(`/api/contents/${contentId}`),
-
   /** 콘텐츠 생성 */
   create: (data: ContentCreateRequest) =>
     fetchApi<number>("/api/contents", {
@@ -348,12 +249,6 @@ export const contentApi = {
   delete: (contentId: number) =>
     fetchApi<void>(`/api/contents/${contentId}`, {
       method: "DELETE",
-    }),
-
-  /** 밴 컨텐츠 목록 조회 (관리자 전용) */
-  getBannedContents: (page = 0, size = 10) =>
-    fetchApi<BannedContentRes[]>("/api/contents/banlist", {
-      params: { page, size },
     }),
 };
 
@@ -407,85 +302,13 @@ export const orderApi = {
 };
 
 // ============================================
-// Notification API
-// ============================================
-export const notificationApi = {
-  /** 알림 전체 조회 */
-  getAll: () => fetchApi<NotificationRes[]>("/api/notification"),
-
-  /** 알림 읽음 처리 */
-  markAsRead: (notiId: number) =>
-    fetchApi<NotiReadRes>(`/api/notification/${notiId}`, {
-      method: "PATCH",
-    }),
-};
-
-// ============================================
-// Credit API
-// ============================================
-export const creditApi = {
-  /** 크레딧 잔액 조회 */
-  getBalance: () => fetchApi<CreditBalance>("/api/credits/balance"),
-
-  /** 크레딧 사용 내역 조회 */
-  getHistory: (page = 0, size = 20) =>
-    fetchApi<CreditHistoryItem[]>("/api/credits/history", {
-      params: { page, size },
-    }),
-};
-// Settlement API
-// ============================================
-export const settlementApi = {
-  /** 정산 가능 잔액 조회 */
-  getAvailableBalance: (creatorId: number) =>
-    fetchApi<AvailableBalanceResponse>(
-      `/api/creators/${creatorId}/settlements/available-balance`
-    ),
-
-  /** 컨텐츠별 누적 정산 요약 조회 */
-  getContentSettlementSummaries: (creatorId: number) =>
-    fetchApi<ContentSettlementSummaryResponse[]>(
-      `/api/creators/${creatorId}/settlements/by-content`
-    ),
-
-  /** 컨텐츠 월 단위 상세 정산(일별 리스트) 조회 */
-  getMonthlyContentSettlement: (
-    creatorId: number,
-    contentId: number,
-    month: string
-  ) =>
-    fetchApi<DailyContentSettlementResponse>(
-      `/api/creators/${creatorId}/settlements/contents/${contentId}`,
-      {
-        params: { month },
-      }
-    ),
-};
-
-// ============================================
-// Withdrawal API
-// ============================================
-export const withdrawalApi = {
-  /** 출금 신청 */
-  requestWithdrawal: (creatorId: number, data: WithdrawalRequest) =>
-    fetchApi<WithdrawalResponse>(`/api/creators/${creatorId}/withdrawals`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-
-  /** 출금 내역 조회 */
-  getWithdrawals: (creatorId: number) =>
-    fetchApi<WithdrawalResponse[]>(`/api/creators/${creatorId}/withdrawals`),
-};
-
-// ============================================
 // Event API
 // ============================================
 export const eventApi = {
   /** 무료 크레딧 지급 */
   grantFreeCredits: (amount: number) =>
-    fetchApi<number>('/api/events/free-credits', {
-      method: 'POST',
+    fetchApi<number>("/api/events/free-credits", {
+      method: "POST",
       params: { amount },
     }),
 };
@@ -493,13 +316,6 @@ export const eventApi = {
 // ============================================
 // Type Definitions
 // ============================================
-
-// Main Stats Types
-export interface MainStats {
-  totalContents: number;
-  totalOlive: number;
-  totalPopeye: number;
-}
 
 // Admin Types
 export interface AdminDailyData {
@@ -523,9 +339,9 @@ export interface DevilUser {
 }
 
 export interface BanUserRequest {
-  banUserId: number;  // 백엔드 BanUserInfoDto와 일치
+  userId: number;
   reason: string;
-  banDays?: number | null; // 영구 밴이면 null 또는 생략
+  banDays?: number; // 영구 밴이면 생략
 }
 
 export interface InactiveContentRequest {
@@ -543,18 +359,18 @@ export interface ReportProcess {
 }
 
 export interface ReportProcessRequest {
-  state: "TRUE" | "REJECTED" | "FALSE";  // TRUE: 승인, REJECTED: 거절, FALSE: 악성신고(신고자 처벌)
+  state: "ACCEPTED" | "REJECTED";
 }
 
 // User Types
 export interface UserProfile {
+  id: number;
   email: string;
   nickname: string;
-  profileImageUrl: string | null;
-  role: string;
-  referralCode: string | null;
-  totalSpinach: number;
-  totalStarcandy: number;
+  profilePhotoUrl: string | null;
+  role: "USER" | "CREATOR" | "ADMIN";
+  freeCredit: number;
+  paidCredit: number;
 }
 
 export interface UpdateProfileRequest {
@@ -566,81 +382,31 @@ export interface ProfilePhotoResponse {
   profilePhotoUrl: string;
 }
 
-export interface BanUserRes {
-  id: number;
-  bannedAt: string;
-  unbannedAt: string;
-  banDays: number;
-  reason: string;
-}
-
 // Content Types
-export interface ContentListItem {
-  id?: string;
-  contentId?: number;
-  title: string;
-  creatorName?: string;
-  creatorNickname?: string;
-  creatorAvatar?: string;
-  thumbnail?: string;
-  price?: number;
-  originalPrice?: number;
-  free?: boolean;          // Java boolean isFree -> Jackson "free"
-  isFree?: boolean;        // 호환성 유지
-  likes?: number;
-  isLiked?: boolean;
-  isBookmarked: boolean;
-}
-
-export interface ContentDetail {
-  id: number;
-  title: string;
-  content?: string;      // FullContentResponse에서 제공
-  preview?: string;      // PreviewContentResponse에서 제공
-  price?: number | null; // 무료면 null
-  free: boolean;         // Java boolean isFree -> Jackson "free"
-  status?: string;
-  // 프론트엔드 확장 필드 (선택적)
-  creatorName?: string;
-  discountRate?: number;
-  viewCount?: number;
-  likeCount?: number;
-}
-
 export interface ContentCreateRequest {
   title: string;
-  content: string;
+  body: string;
   price: number;
-  discountRate: number;
-  free: boolean;  // Java의 'isFree' 필드는 JSON에서 'free'로 직렬화됨
-}
-
-export interface BannedContentRes {
-  id: number;
-  reason: string;
-  date: string;
-  title: string;
-  content: string;
+  thumbnailUrl?: string;
+  mediaUrls?: string[];
 }
 
 // Report Types
 export interface ReportRequest {
   targetId: number;
-  type: "CONTENT";  // 백엔드 TargetType enum과 일치
+  targetType: "USER" | "CONTENT" | "COMMENT";
   reason: string;
 }
 
 export interface ReportResponse {
   reportId: number;
-  reason: string;
-  state: "REQUESTED" | "APPROVED" | "REJECTED";
-  reportAt: string;
+  createdAt: string;
 }
 
 // Payment Types
 export interface ChargeRequest {
   creditAmount: number;
-  pgProvider: 'TOSS';
+  pgProvider: "TOSS";
 }
 
 export interface PreparePaymentResponse {
@@ -662,100 +428,5 @@ export interface PurchaseResponse {
   usedPaidCredit: number;
 }
 
-// Notification Types
-export interface NotificationRes {
-  id: number;
-  msg: string;
-  date: string;
-  isRead?: boolean; // 프론트에서 로컬 관리
-}
-
-export interface NotiReadRes {
-  notiId: number;
-  isRead: boolean;
-}
-// Settlement Types
-export interface AvailableBalanceResponse {
-  settlementSum: number;
-  withdrawnSum: number;
-  available: number;
-}
-
-export interface ContentSettlementSummaryResponse {
-  contentId: number;
-  title: string;
-  totalRevenue: number;
-  platformFee: number;
-  totalPayout: number;
-  lastSettledAt: string;
-  settlementCount: number;
-}
-
-export interface ContentSettlementPeriodItem {
-  periodStart: string;
-  periodEnd: string;
-  orderCount: number;
-  totalRevenue: number;
-  totalPlatformFee: number;
-  totalPayout: number;
-  latestSettledAt: string | null;
-}
-
-export interface DailyContentSettlementResponse {
-  contentId: number;
-  from: string;
-  to: string;
-  items: ContentSettlementPeriodItem[];
-}
-
-// Withdrawal Types
-export interface WithdrawalRequest {
-  amount: number;
-}
-
-export interface WithdrawalResponse {
-  id: number;
-  creatorId: number;
-  amount: number;
-  status: "REQ" | "SUC" | "REJ";
-  requestedAt: string;
-  processedAt: string | null;
-  failureReason: string | null;
-}
-
-// Auth Types
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface SignupRequest {
-  email: string;
-  password: string;
-  nickname: string;
-  phoneNumber: string;
-  referralCode?: string;
-  phoneNumberCollectionConsent: boolean;
-}
-
-export interface TokenResponse {
-  accessToken: string;
-  tokenType: string;
-}
-
-// Credit Types
-export interface CreditBalance {
-  spinach: number;
-  spinachExpiry: string | null;
-  starCandy: number;
-}
-
-export interface CreditHistoryItem {
-  id: string;
-  type: "charge" | "use" | "reward" | "expire" | "refund";
-  amount: number;
-  creditType: "spinach" | "starCandy";
-  description: string;
-  date: string;
-  status: "pending" | "completed";
-}
+// Event Types
+// grantFreeCredits returns creditId (number)

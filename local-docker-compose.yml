@@ -2,8 +2,8 @@ services:
   db:
     image: mysql:8.0
     container_name: popeye-db
-    ports:
-      - "3306:3306"
+    # ports:
+    #   - "3306:3306"
     volumes:
       - ./db/data:/var/lib/mysql
       - ./db/init:/docker-entrypoint-initdb.d # 초기 SQL 필요 시
