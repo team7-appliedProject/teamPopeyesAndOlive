@@ -12,6 +12,7 @@ import popeye.popeyebackend.global.security.details.PrincipalDetails;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.enums.Role;
 import popeye.popeyebackend.user.repository.UserRepository;
+import popeye.popeyebackend.user.service.ReferralCodeService;
 
 import java.util.Map;
 
@@ -23,6 +24,7 @@ import java.util.Map;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
+    private final ReferralCodeService referralCodeService;
 
     //OAuth2 로그인 시 사용자 정보를 가져와서 처리
     @Override
@@ -80,7 +82,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .totalStarcandy(0)
                 .build();
 
-        user.generateReferralCode();
+        // U-04: 고유한 레퍼럴 코드 생성 (나노아이디 사용, 중복 체크 포함)
+        // ReferralCodeService 사용 (순환 참조 방지)
+        referralCodeService.generateUniqueReferralCode(user);
 
         log.info("OAuth2 신규 사용자 생성: {} ({})", email, nickname);
         return userRepository.save(user);
