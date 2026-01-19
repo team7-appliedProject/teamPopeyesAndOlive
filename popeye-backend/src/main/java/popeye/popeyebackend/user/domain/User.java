@@ -127,4 +127,20 @@ public class User {
     public void changeProfilePhoto(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
     }
+
+    public void increaseFreeCredit(int amount){
+        this.totalSpinach += amount;
+    }
+
+    public void decreaseFreeCredit(int amount){
+        this.totalSpinach -= amount;
+    }
+
+    public void increasePaidCredit(int amount){
+        this.totalStarcandy += amount;
+    }
+
+    public void decreasePaidCredit(int amount){
+        this.totalStarcandy -= amount;
+    }
 }

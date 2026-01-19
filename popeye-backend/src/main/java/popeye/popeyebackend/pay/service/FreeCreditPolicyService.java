@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import popeye.popeyebackend.pay.domain.Credit;
 import popeye.popeyebackend.pay.enums.CreditType;
+import popeye.popeyebackend.pay.enums.ReasonType;
 import popeye.popeyebackend.pay.repository.CreditRepository;
 import popeye.popeyebackend.user.domain.User;
 
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 public class FreeCreditPolicyService {
     private static final int FREE_CREDIT_EXPIRE_DAYS = 7;
     private final CreditRepository creditRepository;
+    private final CreditHistoryService creditHistoryService;
 
     @Transactional
     public Credit grantFreeCredit(User user, int amount){
@@ -32,6 +34,18 @@ public class FreeCreditPolicyService {
                 .build();
 
 
-        return creditRepository.save(credit);
+        Credit saved = creditRepository.save(credit);
+
+        creditHistoryService.record(
+                user,
+                CreditType.FREE,
+                ReasonType.CHARGE,
+                amount,
+                null,
+                null
+        );
+        user.increaseFreeCredit(amount);
+
+        return saved;
     }
 }

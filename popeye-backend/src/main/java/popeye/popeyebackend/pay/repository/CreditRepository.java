@@ -30,6 +30,7 @@ public interface CreditRepository extends JpaRepository<Credit, Long> {
     );
 
     @Query("select c from Credit c " +
+            "join fetch c.user u " +
             "where c.creditType = popeye.popeyebackend.pay.enums.CreditType.FREE " +
             "and c.expiredAt is not null " +
             "and c.expiredAt < :now " +
