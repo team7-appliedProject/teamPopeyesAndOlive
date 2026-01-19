@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import popeye.popeyebackend.content.global.s3.S3Uploader;
 import popeye.popeyebackend.global.security.jwt.JwtTokenProvider;
+import popeye.popeyebackend.pay.service.FreeCreditPolicyService;
 import popeye.popeyebackend.user.domain.BannedUser;
 import popeye.popeyebackend.user.domain.Creator;
 import popeye.popeyebackend.user.domain.DevilUser;
@@ -63,6 +64,7 @@ public class UserService {
     private final ReferralCodeService referralCodeService;
     private static final String PASSWORD_RESET_PREFIX = "password:reset:";
     private static final long PASSWORD_RESET_TTL = 30 * 60L; // 30분
+    private final FreeCreditPolicyService freeCreditPolicyService;
 
     //U-01: 회원가입, U-02: 본인 인증 검증 추가
     @Transactional
@@ -124,6 +126,8 @@ public class UserService {
                 .phoneNumber(request.getPhoneNumber())
                 .phoneNumberCollectionConsent(request.getPhoneNumberCollectionConsent())
                 .build();
+
+        freeCreditPolicyService.grantFreeCredit(user, 1000);
 
         // U-04: 고유 추천 코드 자동 생성 (나노아이디 사용, 중복 체크 포함)
         referralCodeService.generateUniqueReferralCode(user);
