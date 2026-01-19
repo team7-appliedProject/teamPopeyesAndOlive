@@ -14,23 +14,13 @@ public class ContentBookmarkController {
 
     private final ContentBookmarkService bookmarkService;
 
-    // 북마크 추가
+    // 북마크 토글 (추가/삭제)
     @PostMapping("/contents/{contentId}")
-    public ResponseEntity<Void> bookmark(
+    public ResponseEntity<Void> toggleBookmark(
             @AuthenticationPrincipal PrincipalDetails details,
             @PathVariable("contentId") Long id
     ) {
         bookmarkService.bookmark(details.getUserId(), id);
         return ResponseEntity.ok().build();
-    }
-
-    // 북마크 삭제
-    @DeleteMapping("/contents/{contentId}")
-    public ResponseEntity<Void> unbookmark(
-            @AuthenticationPrincipal PrincipalDetails details,
-            @PathVariable("contentId") Long id
-    ) {
-        bookmarkService.unbookmark(details.getUserId(), id);
-        return ResponseEntity.noContent().build();
     }
 }

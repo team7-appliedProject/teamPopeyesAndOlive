@@ -29,7 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { contentApi, reportApi } from '@/app/lib/api';
+import { contentApi, reportApi, orderApi, ApiError } from '@/app/lib/api';
 
 export default function ContentDetailPage() {
   const params = useParams();
@@ -67,8 +67,21 @@ export default function ContentDetailPage() {
         if (data.content) {
           setIsPurchased(true);
         }
+        
+        // 좋아요/북마크 상태 설정
+        if (data.isLiked !== undefined) {
+          setIsLiked(data.isLiked);
+        }
+        if (data.isBookmarked !== undefined) {
+          setIsBookmarked(data.isBookmarked);
+        }
       } catch (err) {
         console.error('[ContentDetail] Error:', err);
+        // 401 또는 403 에러인 경우 로그인 페이지로 리다이렉트
+        if (err.status === 401 || err.status === 403) {
+          router.push('/login');
+          return;
+        }
         setError(err.message || '콘텐츠를 불러오는데 실패했습니다.');
       } finally {
         setLoading(false);
@@ -78,23 +91,55 @@ export default function ContentDetailPage() {
     if (contentId) {
       fetchContent();
     }
-  }, [contentId]);
+  }, [contentId, router]);
 
   const handlePurchase = async () => {
     try {
       setPurchasing(true);
-      // TODO: 실제 구매 API 호출
-      // await purchaseApi.purchase(contentId);
       
-      // 구매 후 콘텐츠 다시 조회
+      // 구매 API 호출
+      const purchaseResponse = await orderApi.purchase(Number(contentId));
+      
+      console.log('[ContentDetail] Purchase success:', purchaseResponse);
+      
+      // 구매 후 콘텐츠 다시 조회하여 전체 내용 가져오기
       const data = await contentApi.getById(Number(contentId));
       setContent(data);
       setIsPurchased(true);
       
-      alert('구매가 완료되었습니다!');
+      // 구매 성공 메시지 (사용된 크레딧 정보 포함)
+      const creditInfo = [];
+      if (purchaseResponse.usedFreeCredit > 0) {
+        creditInfo.push(`시금치 ${purchaseResponse.usedFreeCredit}개`);
+      }
+      if (purchaseResponse.usedPaidCredit > 0) {
+        creditInfo.push(`별사탕 ${purchaseResponse.usedPaidCredit}개`);
+      }
+      
+      const message = creditInfo.length > 0
+        ? `구매가 완료되었습니다!\n사용된 크레딧: ${creditInfo.join(', ')}`
+        : '구매가 완료되었습니다!';
+      
+      alert(message);
     } catch (err) {
       console.error('[ContentDetail] Purchase error:', err);
-      alert(err.message || '구매에 실패했습니다.');
+      
+      let errorMessage = '구매에 실패했습니다.';
+      
+      if (err instanceof ApiError) {
+        // API 에러 처리
+        if (err.code === 'NOT_ENOUGH_CREDIT') {
+          errorMessage = '크레딧이 부족합니다. 크레딧을 충전한 후 다시 시도해주세요.';
+        } else if (err.code === 'INVALID_REQUEST') {
+          errorMessage = '이미 구매한 콘텐츠이거나 구매할 수 없는 콘텐츠입니다.';
+        } else {
+          errorMessage = err.errorResponse.message || errorMessage;
+        }
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      
+      alert(errorMessage);
     } finally {
       setPurchasing(false);
     }
@@ -280,7 +325,24 @@ export default function ContentDetailPage() {
                 <div className="flex items-center gap-3">
                   <Button
                     variant={isLiked ? "default" : "outline"}
-                    onClick={() => setIsLiked(!isLiked)}
+                    onClick={async () => {
+                      try {
+                        await contentApi.toggleLike(Number(contentId));
+                        setIsLiked(!isLiked);
+                        // 콘텐츠 다시 조회하여 최신 상태 반영
+                        const data = await contentApi.getById(Number(contentId));
+                        if (data.likeCount !== undefined) {
+                          setContent({ ...content, likeCount: data.likeCount });
+                        }
+                      } catch (err) {
+                        console.error('[ContentDetail] Like error:', err);
+                        if (err.status === 401 || err.status === 403) {
+                          router.push('/login');
+                        } else {
+                          alert('좋아요 처리에 실패했습니다.');
+                        }
+                      }
+                    }}
                     className={isLiked ? "text-red-500" : ""}
                   >
                     <Heart className={`h-4 w-4 mr-2 ${isLiked ? 'fill-current' : ''}`} />
@@ -288,7 +350,19 @@ export default function ContentDetailPage() {
                   </Button>
                   <Button
                     variant={isBookmarked ? "default" : "outline"}
-                    onClick={() => setIsBookmarked(!isBookmarked)}
+                    onClick={async () => {
+                      try {
+                        await contentApi.toggleBookmark(Number(contentId));
+                        setIsBookmarked(!isBookmarked);
+                      } catch (err) {
+                        console.error('[ContentDetail] Bookmark error:', err);
+                        if (err.status === 401 || err.status === 403) {
+                          router.push('/login');
+                        } else {
+                          alert('북마크 처리에 실패했습니다.');
+                        }
+                      }
+                    }}
                   >
                     <Bookmark className={`h-4 w-4 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
                     찜하기

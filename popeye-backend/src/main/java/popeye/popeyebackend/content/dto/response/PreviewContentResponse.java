@@ -10,14 +10,25 @@ public class PreviewContentResponse extends ContentResponse { // 비로그인,�
     private String title;
     private String preview;
     private boolean isFree;
+    private Integer viewCount;
+    private Long likeCount;
+    private Boolean isLiked;
+    private Boolean isBookmarked;
+    private Integer discountRate;
 
-    public static PreviewContentResponse from(Content c) {
+    public static PreviewContentResponse from(Content c, boolean isLiked, boolean isBookmarked) {
         PreviewContentResponse r = new PreviewContentResponse();
         r.id = c.getId();
         r.title = c.getTitle();
         r.isFree = c.isFree();
+        r.viewCount = c.getViewCount();
+        r.likeCount = c.getLikeCount();
+        r.discountRate = c.getDiscountRate();
+        r.isLiked = isLiked;
+        r.isBookmarked = isBookmarked;
         r.preview = c.getContent().substring(0,
                 Math.min(100, c.getContent().length()));
+
         return r;
     }
 }
