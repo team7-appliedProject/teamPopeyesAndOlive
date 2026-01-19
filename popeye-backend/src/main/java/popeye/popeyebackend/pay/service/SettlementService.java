@@ -21,7 +21,9 @@ import popeye.popeyebackend.pay.repository.WithdrawalRepository;
 import popeye.popeyebackend.pay.enums.WithdrawalStatus;
 import popeye.popeyebackend.pay.repository.projection.ContentSettlementPeriodProjection;
 import popeye.popeyebackend.user.domain.Creator;
+import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.repository.CreatorRepository;
+import popeye.popeyebackend.user.service.UserService;
 
 /**
  * 정산 서비스 (API용)
@@ -36,8 +38,9 @@ public class SettlementService {
 	private final WithdrawalRepository withdrawalRepository;
 	private final CreatorRepository creatorRepository;
 	private final ContentRepository contentRepository;
+    private final UserService userService;
 
-	public AvailableBalanceResponse getAvailableBalance(Long loginUserId, Long creatorId) {
+    public AvailableBalanceResponse getAvailableBalance(Long loginUserId, Long creatorId) {
 		validateCreator(loginUserId, creatorId);
 		return calculateAvailableBalanceDetail(creatorId);
 	}
@@ -132,7 +135,7 @@ public class SettlementService {
 	}
 
 	private void validateCreator(Long loginUserId, Long creatorId) {
-		Creator creator = creatorRepository.findByIdWithUser(creatorId)
+        Creator creator = creatorRepository.findByIdWithUser(creatorId)
 			.orElseThrow(() ->
 				new IllegalArgumentException("크리에이터를 찾을 수 없습니다: " + creatorId)
 			);

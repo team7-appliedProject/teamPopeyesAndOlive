@@ -26,8 +26,8 @@ public class SettlementController {
 
 	@GetMapping("/available-balance")
 	public ResponseEntity<AvailableBalanceResponse> getAvailableBalance(
-		 @AuthenticationPrincipal PrincipalDetails userDetails,
-		@PathVariable Long creatorId
+            @AuthenticationPrincipal PrincipalDetails userDetails,
+		    @PathVariable Long creatorId
 	) {
 		 Long loginUserId = userDetails.getUserId();
 

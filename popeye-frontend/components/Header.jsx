@@ -1,20 +1,34 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Search, User, Bell, Check, LogIn, UserPlus, LogOut } from 'lucide-react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { CreditBadge } from './CreditBadge';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  Search,
+  User,
+  Bell,
+  Check,
+  LogIn,
+  UserPlus,
+  LogOut,
+} from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { CreditBadge } from "./CreditBadge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from './ui/dropdown-menu';
-import { notificationApi, creditApi, userApi, authApi, isSuccess } from '@/app/lib/api';
+} from "./ui/dropdown-menu";
+import {
+  notificationApi,
+  creditApi,
+  userApi,
+  authApi,
+  isSuccess,
+} from "@/app/lib/api";
 
 export function Header() {
   const router = useRouter();
@@ -32,16 +46,17 @@ export function Header() {
     const checkAuth = async () => {
       try {
         setIsLoading(true);
-        console.log('[Header] Checking auth...');
+        console.log("[Header] Checking auth...");
         const response = await userApi.getMe();
-        console.log('[Header] User response:', response);
+        console.log("[Header] User response:", response);
         // ApiResponse 형태: { status: "success", data: { ... } }
         if (response && isSuccess(response) && response.data) {
           setIsLoggedIn(true);
           setUserInfo(response.data);
           // 잔액 정보도 userInfo에 포함되어 있음
-          setSpinachBalance(response.data.totalSpinach || 0);
-          setStarCandyBalance(response.data.totalStarcandy || 0);
+          // 백엔드 필드명: totalSpinach, totalStarcandy
+          setSpinachBalance(response.data.totalSpinach ?? 0);
+          setStarCandyBalance(response.data.totalStarcandy ?? 0);
         } else {
           setIsLoggedIn(false);
           setUserInfo(null);
@@ -50,7 +65,7 @@ export function Header() {
         }
       } catch (err) {
         // 401 또는 에러 시 비로그인 상태
-        console.log('[Header] Auth check failed:', err);
+        console.log("[Header] Auth check failed:", err);
         setIsLoggedIn(false);
         setUserInfo(null);
         setSpinachBalance(0);
@@ -72,7 +87,7 @@ export function Header() {
         const data = await notificationApi.getAll();
         setNotifications(data);
       } catch (err) {
-        console.error('Failed to fetch notifications:', err);
+        console.error("Failed to fetch notifications:", err);
       }
     };
 
@@ -80,19 +95,19 @@ export function Header() {
   }, [isLoggedIn]);
 
   // 안 읽은 알림 개수
-  const unreadCount = notifications.filter(n => !readIds.has(n.id)).length;
+  const unreadCount = notifications.filter((n) => !readIds.has(n.id)).length;
 
   // 알림 읽음 처리
   const handleMarkAsRead = async (notiId, e) => {
     e.stopPropagation();
-    
+
     if (readIds.has(notiId)) return;
 
     try {
       await notificationApi.markAsRead(notiId);
-      setReadIds(prev => new Set([...prev, notiId]));
+      setReadIds((prev) => new Set([...prev, notiId]));
     } catch (err) {
-      console.error('Failed to mark notification as read:', err);
+      console.error("Failed to mark notification as read:", err);
     }
   };
 
@@ -105,7 +120,7 @@ export function Header() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return '방금 전';
+    if (diffMins < 1) return "방금 전";
     if (diffMins < 60) return `${diffMins}분 전`;
     if (diffHours < 24) return `${diffHours}시간 전`;
     if (diffDays < 7) return `${diffDays}일 전`;
@@ -122,7 +137,10 @@ export function Header() {
       });
     } catch (err) {
       // 에러 무시하고 로그아웃 진행
-      console.log('[Header] Logout API call failed, but continuing logout:', err);
+      console.log(
+        "[Header] Logout API call failed, but continuing logout:",
+        err,
+      );
     } finally {
       // 저장된 JWT 토큰 삭제
       localStorage.removeItem("accessToken");
@@ -145,7 +163,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="w-full flex h-16 items-center gap-4 px-4 md:px-8">
         {/* Logo */}
-        <Link 
+        <Link
           href="/"
           className="flex items-center gap-2 hover:opacity-80 transition-opacity flex-shrink-0"
         >
@@ -161,10 +179,7 @@ export function Header() {
         <div className="flex-1 max-w-2xl mx-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="글 검색..." 
-              className="pl-10 bg-muted/50"
-            />
+            <Input placeholder="글 검색..." className="pl-10 bg-muted/50" />
           </div>
         </div>
 
@@ -180,7 +195,10 @@ export function Header() {
             // 로그인 상태: 크레딧, 알림, 프로필
             <>
               {/* Credit Balance - 클릭 시 /credits로 이동 */}
-              <Link href="/credits" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+              <Link
+                href="/mypage"
+                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+              >
                 <CreditBadge type="spinach" amount={spinachBalance} />
                 <CreditBadge type="starCandy" amount={starCandyBalance} />
               </Link>
@@ -188,39 +206,46 @@ export function Header() {
               {/* Notifications */}
               <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className="rounded-full relative"
                   >
                     <Bell className="h-5 w-5" />
                     {/* 안 읽은 알림이 있으면 빨간 점 표시 */}
                     {unreadCount > 0 && (
                       <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center">
-                        {unreadCount > 9 ? '9+' : unreadCount}
+                        {unreadCount > 9 ? "9+" : unreadCount}
                       </span>
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80 max-h-[400px] overflow-y-auto">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-80 max-h-[400px] overflow-y-auto"
+                >
                   <div className="px-3 py-2 border-b">
                     <h3 className="font-semibold">알림</h3>
                     {unreadCount > 0 && (
-                      <p className="text-xs text-muted-foreground">읽지 않은 알림 {unreadCount}개</p>
+                      <p className="text-xs text-muted-foreground">
+                        읽지 않은 알림 {unreadCount}개
+                      </p>
                     )}
                   </div>
-                  
+
                   {notifications.length > 0 ? (
                     notifications.map((noti) => {
                       const isRead = readIds.has(noti.id);
                       return (
-                        <DropdownMenuItem 
-                          key={noti.id} 
-                          className={`flex items-start gap-3 p-3 cursor-pointer ${!isRead ? 'bg-blue-50/50' : ''}`}
+                        <DropdownMenuItem
+                          key={noti.id}
+                          className={`flex items-start gap-3 p-3 cursor-pointer ${!isRead ? "bg-blue-50/50" : ""}`}
                           onSelect={(e) => e.preventDefault()}
                         >
                           <div className="flex-1 min-w-0">
-                            <p className={`text-sm ${!isRead ? 'font-medium' : 'text-muted-foreground'}`}>
+                            <p
+                              className={`text-sm ${!isRead ? "font-medium" : "text-muted-foreground"}`}
+                            >
                               {noti.msg}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
@@ -230,11 +255,11 @@ export function Header() {
                           <button
                             onClick={(e) => handleMarkAsRead(noti.id, e)}
                             className={`flex-shrink-0 h-6 w-6 rounded-full flex items-center justify-center transition-colors ${
-                              isRead 
-                                ? 'bg-green-100 text-green-600' 
-                                : 'bg-gray-100 text-gray-400 hover:bg-green-100 hover:text-green-600'
+                              isRead
+                                ? "bg-green-100 text-green-600"
+                                : "bg-gray-100 text-gray-400 hover:bg-green-100 hover:text-green-600"
                             }`}
-                            title={isRead ? '읽음' : '읽음으로 표시'}
+                            title={isRead ? "읽음" : "읽음으로 표시"}
                           >
                             <Check className="h-3.5 w-3.5" />
                           </button>
@@ -251,11 +276,11 @@ export function Header() {
                   {notifications.length > 0 && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         className="text-center text-sm text-primary cursor-pointer justify-center"
                         onClick={() => {
                           setIsOpen(false);
-                          router.push('/notifications');
+                          router.push("/notifications");
                         }}
                       >
                         모든 알림 보기
@@ -268,18 +293,14 @@ export function Header() {
               {/* Profile Icon - 드롭다운 메뉴 */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-full"
-                  >
+                  <Button variant="ghost" size="icon" className="rounded-full">
                     <User className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  {userInfo?.role === 'ADMIN' ? (
+                  {userInfo?.role === "ADMIN" ? (
                     <DropdownMenuItem
-                      onClick={() => router.push('/admin')}
+                      onClick={() => router.push("/admin")}
                       className="cursor-pointer"
                     >
                       <User className="mr-2 h-4 w-4" />
@@ -287,7 +308,7 @@ export function Header() {
                     </DropdownMenuItem>
                   ) : (
                     <DropdownMenuItem
-                      onClick={() => router.push('/mypage')}
+                      onClick={() => router.push("/mypage")}
                       className="cursor-pointer"
                     >
                       <User className="mr-2 h-4 w-4" />

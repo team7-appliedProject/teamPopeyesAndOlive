@@ -1,15 +1,23 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Heart, Bookmark, Flag, Lock, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CreditBadge } from '@/components/CreditBadge';
-import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import {
+  Heart,
+  Bookmark,
+  Flag,
+  Lock,
+  ArrowLeft,
+  Loader2,
+  CheckCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CreditBadge } from "@/components/CreditBadge";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -28,14 +36,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { contentApi, reportApi } from '@/app/lib/api';
+} from "@/components/ui/dialog";
+import { contentApi, reportApi, orderApi, ApiError } from "@/app/lib/api";
 
 export default function ContentDetailPage() {
   const params = useParams();
   const router = useRouter();
   const contentId = params.id;
-  
+
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -43,10 +51,10 @@ export default function ContentDetailPage() {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
-  
+
   // 신고 관련 상태
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
-  const [reportReason, setReportReason] = useState('');
+  const [reportReason, setReportReason] = useState("");
   const [reporting, setReporting] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
 
@@ -56,20 +64,33 @@ export default function ContentDetailPage() {
       try {
         setLoading(true);
         setError(null);
-        
-        console.log('[ContentDetail] Fetching content:', contentId);
+
+        console.log("[ContentDetail] Fetching content:", contentId);
         const data = await contentApi.getById(Number(contentId));
-        console.log('[ContentDetail] Response:', data);
-        
+        console.log("[ContentDetail] Response:", data);
+
         setContent(data);
-        
+
         // 전체 내용(content)이 있으면 구매된 것으로 처리
         if (data.content) {
           setIsPurchased(true);
         }
+
+        // 좋아요/북마크 상태 설정
+        if (data.isLiked !== undefined) {
+          setIsLiked(data.isLiked);
+        }
+        if (data.isBookmarked !== undefined) {
+          setIsBookmarked(data.isBookmarked);
+        }
       } catch (err) {
-        console.error('[ContentDetail] Error:', err);
-        setError(err.message || '콘텐츠를 불러오는데 실패했습니다.');
+        console.error("[ContentDetail] Error:", err);
+        // 401 또는 403 에러인 경우 로그인 페이지로 리다이렉트
+        if (err.status === 401 || err.status === 403) {
+          router.push("/login");
+          return;
+        }
+        setError(err.message || "콘텐츠를 불러오는데 실패했습니다.");
       } finally {
         setLoading(false);
       }
@@ -78,23 +99,58 @@ export default function ContentDetailPage() {
     if (contentId) {
       fetchContent();
     }
-  }, [contentId]);
+  }, [contentId, router]);
 
   const handlePurchase = async () => {
     try {
       setPurchasing(true);
-      // TODO: 실제 구매 API 호출
-      // await purchaseApi.purchase(contentId);
-      
-      // 구매 후 콘텐츠 다시 조회
+
+      // 구매 API 호출
+      const purchaseResponse = await orderApi.purchase(Number(contentId));
+
+      console.log("[ContentDetail] Purchase success:", purchaseResponse);
+
+      // 구매 후 콘텐츠 다시 조회하여 전체 내용 가져오기
       const data = await contentApi.getById(Number(contentId));
       setContent(data);
       setIsPurchased(true);
-      
-      alert('구매가 완료되었습니다!');
+
+      // 구매 성공 메시지 (사용된 크레딧 정보 포함)
+      const creditInfo = [];
+      if (purchaseResponse.usedFreeCredit > 0) {
+        creditInfo.push(`시금치 ${purchaseResponse.usedFreeCredit}개`);
+      }
+      if (purchaseResponse.usedPaidCredit > 0) {
+        creditInfo.push(`별사탕 ${purchaseResponse.usedPaidCredit}개`);
+      }
+
+      const message =
+        creditInfo.length > 0
+          ? `구매가 완료되었습니다!\n사용된 크레딧: ${creditInfo.join(", ")}`
+          : "구매가 완료되었습니다!";
+
+      alert(message);
     } catch (err) {
-      console.error('[ContentDetail] Purchase error:', err);
-      alert(err.message || '구매에 실패했습니다.');
+      console.error("[ContentDetail] Purchase error:", err);
+
+      let errorMessage = "구매에 실패했습니다.";
+
+      if (err instanceof ApiError) {
+        // API 에러 처리
+        if (err.code === "NOT_ENOUGH_CREDIT") {
+          errorMessage =
+            "크레딧이 부족합니다. 크레딧을 충전한 후 다시 시도해주세요.";
+        } else if (err.code === "INVALID_REQUEST") {
+          errorMessage =
+            "이미 구매한 콘텐츠이거나 구매할 수 없는 콘텐츠입니다.";
+        } else {
+          errorMessage = err.errorResponse.message || errorMessage;
+        }
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      alert(errorMessage);
     } finally {
       setPurchasing(false);
     }
@@ -103,31 +159,30 @@ export default function ContentDetailPage() {
   // 신고하기
   const handleReport = async () => {
     if (!reportReason.trim()) {
-      alert('신고 사유를 입력해주세요.');
+      alert("신고 사유를 입력해주세요.");
       return;
     }
 
     try {
       setReporting(true);
-      
+
       await reportApi.create({
         targetId: Number(contentId),
-        type: 'CONTENT',
+        type: "CONTENT",
         reason: reportReason.trim(),
       });
-      
+
       setReportSuccess(true);
-      setReportReason('');
-      
+      setReportReason("");
+
       // 2초 후 모달 닫기
       setTimeout(() => {
         setReportDialogOpen(false);
         setReportSuccess(false);
       }, 2000);
-      
     } catch (err) {
-      console.error('[ContentDetail] Report error:', err);
-      alert(err.message || '신고 접수에 실패했습니다.');
+      console.error("[ContentDetail] Report error:", err);
+      alert(err.message || "신고 접수에 실패했습니다.");
     } finally {
       setReporting(false);
     }
@@ -137,7 +192,7 @@ export default function ContentDetailPage() {
   const handleReportDialogClose = () => {
     if (!reporting) {
       setReportDialogOpen(false);
-      setReportReason('');
+      setReportReason("");
       setReportSuccess(false);
     }
   };
@@ -182,7 +237,9 @@ export default function ContentDetailPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground mb-4">콘텐츠를 찾을 수 없습니다.</p>
+            <p className="text-muted-foreground mb-4">
+              콘텐츠를 찾을 수 없습니다.
+            </p>
             <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               뒤로가기
@@ -195,20 +252,23 @@ export default function ContentDetailPage() {
 
   // 할인율 계산
   const discount = content.discountRate || 0;
-  
+
   // 전체 내용을 볼 수 있는지 (무료거나 구매했거나 전체 content가 있는 경우)
   const canViewFull = content.free || isPurchased || !!content.content;
-  
+
+  // 구매 가능한지 (유료이고 아직 구매하지 않았고 가격이 있는 경우)
+  const canPurchase = !content.free && !isPurchased && content.price && content.price > 0;
+
   // 표시할 본문 내용
-  const displayContent = content.content || content.preview || '';
+  const displayContent = content.content || content.preview || "";
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* 뒤로가기 버튼 */}
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             onClick={() => router.back()}
             className="mb-4"
           >
@@ -219,107 +279,149 @@ export default function ContentDetailPage() {
           {/* Main Content */}
           <Card>
             <CardContent className="p-6">
-                {/* Title & Badges */}
+              {/* Title & Badges */}
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
-                  {content.free ? (
-                        <Badge className="bg-[#22c55e] hover:bg-[#22c55e]/90">
-                          무료
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">유료</Badge>
-                      )}
-                      {discount > 0 && (
-                        <Badge variant="destructive">{discount}% 할인</Badge>
-                      )}
-                    </div>
-                <h1 className="text-3xl font-bold">{content.title}</h1>
+                  {content.isFree ? (
+                    <Badge className="bg-[#22c55e] hover:bg-[#22c55e]/90">
+                      무료
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">유료</Badge>
+                  )}
+                  {discount > 0 && (
+                    <Badge variant="destructive">{discount}% 할인</Badge>
+                  )}
                 </div>
+                <h1 className="text-3xl font-bold">{content.title}</h1>
+              </div>
 
-                {/* Stats */}
+              {/* Stats */}
               {(content.viewCount || content.likeCount) && (
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
-                  {content.viewCount && <span>조회 {content.viewCount.toLocaleString()}</span>}
-                  {content.likeCount && <span>좋아요 {content.likeCount.toLocaleString()}</span>}
+                  {content.viewCount && (
+                    <span>조회 {content.viewCount.toLocaleString()}</span>
+                  )}
+                  {content.likeCount && (
+                    <span>좋아요 {content.likeCount.toLocaleString()}</span>
+                  )}
                 </div>
               )}
 
-                <Separator className="my-6" />
+              <Separator className="my-6" />
 
-                {/* Content Body */}
-                <div className="mb-6">
-                  <h2 className="text-xl font-semibold mb-4">본문</h2>
+              {/* Content Body */}
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold mb-4">본문</h2>
                 {canViewFull ? (
-                    <div className="prose prose-sm max-w-none">
-                      <p className="whitespace-pre-line text-muted-foreground leading-relaxed">
+                  <div className="prose prose-sm max-w-none">
+                    <p className="whitespace-pre-line text-muted-foreground leading-relaxed">
                       {displayContent}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <div className="blur-sm select-none pointer-events-none">
+                      <p className="whitespace-pre-line text-muted-foreground leading-relaxed">
+                        {displayContent}...
                       </p>
                     </div>
-                  ) : (
-                    <div className="relative">
-                      <div className="blur-sm select-none pointer-events-none">
-                        <p className="whitespace-pre-line text-muted-foreground leading-relaxed">
-                        {displayContent}...
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center bg-background/80 rounded-lg p-6">
+                        <Lock className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          구매 후 전체 내용을 확인하실 수 있습니다
                         </p>
                       </div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center bg-background/80 rounded-lg p-6">
-                          <Lock className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground">
-                            구매 후 전체 내용을 확인하실 수 있습니다
-                          </p>
-                        </div>
-                      </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
+              </div>
 
               <Separator className="my-6" />
 
-                {/* Actions */}
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant={isLiked ? "default" : "outline"}
-                    onClick={() => setIsLiked(!isLiked)}
-                    className={isLiked ? "text-red-500" : ""}
-                  >
-                    <Heart className={`h-4 w-4 mr-2 ${isLiked ? 'fill-current' : ''}`} />
-                    좋아요
-                  </Button>
-                  <Button
-                    variant={isBookmarked ? "default" : "outline"}
-                    onClick={() => setIsBookmarked(!isBookmarked)}
-                  >
-                    <Bookmark className={`h-4 w-4 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
-                    찜하기
-                  </Button>
-                <Button 
-                  variant="ghost" 
+              {/* Actions */}
+              <div className="flex items-center gap-3">
+                <Button
+                  variant={isLiked ? "default" : "outline"}
+                  onClick={async () => {
+                    try {
+                      await contentApi.toggleLike(Number(contentId));
+                      setIsLiked(!isLiked);
+                      // 콘텐츠 다시 조회하여 최신 상태 반영
+                      const data = await contentApi.getById(Number(contentId));
+                      if (data.likeCount !== undefined) {
+                        setContent({ ...content, likeCount: data.likeCount });
+                      }
+                    } catch (err) {
+                      console.error("[ContentDetail] Like error:", err);
+                      if (err.status === 401 || err.status === 403) {
+                        router.push("/login");
+                      } else {
+                        alert("좋아요 처리에 실패했습니다.");
+                      }
+                    }
+                  }}
+                  className={isLiked ? "text-red-500" : ""}
+                >
+                  <Heart
+                    className={`h-4 w-4 mr-2 ${isLiked ? "fill-current" : ""}`}
+                  />
+                  좋아요
+                </Button>
+                <Button
+                  variant={isBookmarked ? "default" : "outline"}
+                  onClick={async () => {
+                    try {
+                      await contentApi.toggleBookmark(Number(contentId));
+                      setIsBookmarked(!isBookmarked);
+                    } catch (err) {
+                      console.error("[ContentDetail] Bookmark error:", err);
+                      if (err.status === 401 || err.status === 403) {
+                        router.push("/login");
+                      } else {
+                        alert("북마크 처리에 실패했습니다.");
+                      }
+                    }
+                  }}
+                >
+                  <Bookmark
+                    className={`h-4 w-4 mr-2 ${isBookmarked ? "fill-current" : ""}`}
+                  />
+                  찜하기
+                </Button>
+                <Button
+                  variant="ghost"
                   className="text-destructive"
                   onClick={() => setReportDialogOpen(true)}
                 >
-                        <Flag className="h-4 w-4 mr-2" />
-                        신고
-                      </Button>
+                  <Flag className="h-4 w-4 mr-2" />
+                  신고
+                </Button>
               </div>
 
               {/* 신고 모달 */}
-              <Dialog open={reportDialogOpen} onOpenChange={handleReportDialogClose}>
+              <Dialog
+                open={reportDialogOpen}
+                onOpenChange={handleReportDialogClose}
+              >
                 <DialogContent className="sm:max-w-md">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                      <Flag className="h-5 w-5 text-destructive" />
-                      글 신고
+                      <Flag className="h-5 w-5 text-destructive" />글 신고
                     </DialogTitle>
                     <DialogDescription>
-                          이 글을 신고하시겠습니까? 신고가 누적되면 해당 글은 검토됩니다.
+                      이 글을 신고하시겠습니까? 신고가 누적되면 해당 글은
+                      검토됩니다.
                     </DialogDescription>
                   </DialogHeader>
-                  
+
                   {reportSuccess ? (
                     <div className="py-8 text-center">
                       <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                      <p className="text-lg font-medium">신고가 접수되었습니다</p>
+                      <p className="text-lg font-medium">
+                        신고가 접수되었습니다
+                      </p>
                       <p className="text-sm text-muted-foreground mt-2">
                         신고 내용을 검토 후 조치하겠습니다.
                       </p>
@@ -333,7 +435,7 @@ export default function ContentDetailPage() {
                             {content?.title}
                           </p>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <Label htmlFor="report-reason">신고 사유 *</Label>
                           <Textarea
@@ -347,18 +449,18 @@ export default function ContentDetailPage() {
                           <p className="text-xs text-muted-foreground">
                             허위 신고 시 불이익이 있을 수 있습니다.
                           </p>
-                </div>
-              </div>
-                      
+                        </div>
+                      </div>
+
                       <DialogFooter className="gap-2 sm:gap-0">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           onClick={handleReportDialogClose}
                           disabled={reporting}
                         >
                           취소
                         </Button>
-                        <Button 
+                        <Button
                           variant="destructive"
                           onClick={handleReport}
                           disabled={reporting || !reportReason.trim()}
@@ -369,7 +471,7 @@ export default function ContentDetailPage() {
                               처리 중...
                             </>
                           ) : (
-                            '신고하기'
+                            "신고하기"
                           )}
                         </Button>
                       </DialogFooter>
@@ -381,14 +483,18 @@ export default function ContentDetailPage() {
           </Card>
 
           {/* Purchase Section */}
-          {!canViewFull && content.price && (
+          {canPurchase && (
             <Card className="mt-6 border-2 border-[#5b21b6]">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold mb-2">이 글 구매하기</h3>
                     <div className="flex items-center gap-3">
-                      <CreditBadge type="starCandy" amount={content.price} size="lg" />
+                      <CreditBadge
+                        type="starCandy"
+                        amount={content.price}
+                        size="lg"
+                      />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
                       💡 시금치 우선 차감 후 별사탕이 차감됩니다
@@ -396,8 +502,8 @@ export default function ContentDetailPage() {
                   </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button 
-                        size="lg" 
+                      <Button
+                        size="lg"
                         className="bg-[#5b21b6] hover:bg-[#5b21b6]/90"
                         disabled={purchasing}
                       >
@@ -407,7 +513,7 @@ export default function ContentDetailPage() {
                             구매 중...
                           </>
                         ) : (
-                          '크레딧으로 구매'
+                          "크레딧으로 구매"
                         )}
                       </Button>
                     </AlertDialogTrigger>
@@ -420,7 +526,11 @@ export default function ContentDetailPage() {
                             <div className="rounded-lg bg-muted p-3 space-y-1">
                               <div className="flex justify-between text-sm">
                                 <span>가격:</span>
-                                <CreditBadge type="starCandy" amount={content.price} size="sm" />
+                                <CreditBadge
+                                  type="starCandy"
+                                  amount={content.price}
+                                  size="sm"
+                                />
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 차감 순서: 시금치 → 별사탕
@@ -431,7 +541,7 @@ export default function ContentDetailPage() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>취소</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogAction
                           onClick={handlePurchase}
                           className="bg-[#5b21b6] hover:bg-[#5b21b6]/90"
                         >

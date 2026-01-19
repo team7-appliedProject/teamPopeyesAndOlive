@@ -151,6 +151,14 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of("FORBIDDEN", e.getMessage()));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
+        log.error(e.getMessage());
+        return  ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of("BAD_REQUEST", e.getMessage()));
+    }
+
     //기타 최상위 예외처리
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<ApiResponse<?>> handleException(Exception e) {

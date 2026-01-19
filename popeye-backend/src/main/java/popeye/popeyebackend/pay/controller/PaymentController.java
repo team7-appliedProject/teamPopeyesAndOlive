@@ -33,7 +33,7 @@ public class PaymentController {
             ){
 
         // 임시: 인증 시스템 완성 전까지 임시 userId 사용
-        Long userId = principalDetails.getUserId(); // TODO: 인증 시스템 완성 후 principalDetails.getUserId()로 변경
+         Long userId = principalDetails.getUserId();
 
         PreparePaymentResponseDto responseDto = paymentService.prepareCharge(
                 userId,
@@ -81,13 +81,12 @@ public class PaymentController {
      */
     @PostMapping("/{paymentId}/refund")
     public ResponseEntity<Void> refund(@PathVariable Long paymentId,
-                                       @Valid @RequestBody RefundRequestDto refundRequestDto
-                                       // @AuthenticationPrincipal PrincipalDetails principalDetails // 추후 사용 예정
+                                       @Valid @RequestBody RefundRequestDto refundRequestDto,
+                                        @AuthenticationPrincipal PrincipalDetails principalDetails // 추후 사용 예정
                                        ){
 
         // 임시: 인증 시스템 완성 전까지 임시 userId 사용
-        Long userId = 1L; // TODO: 인증 시스템 완성 후 principalDetails.getUserId()로 변경
-        // Long userId = principalDetails.getUserId();
+         Long userId = principalDetails.getUserId();
 
         paymentService.refund(paymentId, refundRequestDto.getCancelReason(), userId);
         return ResponseEntity.noContent().build();

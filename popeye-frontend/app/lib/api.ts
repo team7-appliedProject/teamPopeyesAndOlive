@@ -57,8 +57,13 @@ export interface ApiResponse<T> {
 }
 
 /** ApiResponse가 성공인지 확인하는 헬퍼 함수 */
-export function isSuccess<T>(response: ApiResponse<T>): boolean {
-  return response.status === "success";
+export function isSuccess<T>(response: any): boolean {
+    if (!response) return false;
+    // 1. 표준 ApiResponse 형식인 경우
+    if (response.status === "success") return true;
+    // 2. 데이터만 온 경우에도 성공으로 인정 (호환성)
+    if (response.data || (response.id && !response.error)) return true;
+    return false;
 }
 
 // 공통 fetch 옵션
@@ -386,6 +391,18 @@ export const contentApi = {
     fetchApi<BannedContentRes[]>("/api/contents/banlist", {
       params: { page, size },
     }),
+
+  /** 좋아요 토글 */
+  toggleLike: (contentId: number) =>
+    fetchApi<void>(`/api/contents/${contentId}/like`, {
+      method: "POST",
+    }),
+
+  /** 북마크 토글 */
+  toggleBookmark: (contentId: number) =>
+    fetchApi<void>(`/api/bookmark/contents/${contentId}`, {
+      method: "POST",
+    }),
 };
 
 // ============================================
@@ -424,6 +441,12 @@ export const paymentApi = {
       method: "POST",
       body: JSON.stringify({ cancelReason }),
     }),
+
+  /** 내 결제 내역 조회 */
+  getMyPayments: (page = 0, size = 20) =>
+    fetchApi<PageResponse<PaymentListItem>>("/api/payments/me", {
+      params: { page, size },
+    }),
 };
 
 // ============================================
@@ -460,7 +483,7 @@ export const creditApi = {
 
   /** 크레딧 사용 내역 조회 */
   getHistory: (page = 0, size = 20) =>
-    fetchApi<CreditHistoryItem[]>("/api/credits/history", {
+    fetchApi<PageResponse<CreditHistoryItem>>("/api/credits/histories/me", {
       params: { page, size },
     }),
 };
@@ -579,6 +602,7 @@ export interface ReportProcessRequest {
 
 // User Types
 export interface UserProfile {
+  id: number;
   email: string;
   nickname: string;
   profileImageUrl: string | null;
@@ -642,6 +666,8 @@ export interface ContentDetail {
   discountRate?: number;
   viewCount?: number;
   likeCount?: number;
+  isLiked?: boolean;
+  isBookmarked?: boolean;
 }
 
 export interface ContentCreateRequest {
@@ -689,6 +715,20 @@ export interface ConfirmPaymentRequest {
   pgOrderId: string;
   paymentKey: string;
   amount: number;
+}
+
+export interface PaymentListItem {
+  paymentId: number;
+  pgOrderId: string;
+  paymentType: "CREATED" | "DONE" | "CANCELED" | "ABORTED";
+  amount: number;
+  creditAmount: number;
+  pgProvider: "TOSS";
+  createdAt: string;
+  approvedAt: string | null;
+  canceledAt: string | null;
+  receiptUrl: string | null;
+  failureReason: string | null;
 }
 
 // Order Types
@@ -787,12 +827,29 @@ export interface CreditBalance {
   starCandy: number;
 }
 
-export interface CreditHistoryItem {
-  id: string;
-  type: "charge" | "use" | "reward" | "expire" | "refund";
-  amount: number;
-  creditType: "spinach" | "starCandy";
-  description: string;
-  date: string;
-  status: "pending" | "completed";
+// Page Response 타입
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
 }
+
+export interface CreditHistoryItem {
+  creditHistoryId: number;
+  creditType: "SPINACH" | "PAID";
+  reasonType: "CHARGE" | "PURCHASE" | "REFUND" | "EXPIRE";
+  delta: number;
+  changedAt: string;
+  orderId: number | null;
+  paymentId: number | null;
+}
+
+// ============================================
+// Legacy & Compatibility (맨 아래 추가 필수!)
+// ============================================
+export const charge = paymentApi.prepare;
+
