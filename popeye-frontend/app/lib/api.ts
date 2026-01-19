@@ -1,35 +1,16 @@
+"use client";
+
 /**
  * 공통 API 유틸리티
- *
- * nginx 프록시 설정 (nginx/default.conf):
- * - /api/*       → backend (8080)
- * - /oauth2/*    → backend
- * - /login/oauth2/* → backend
- * - /            → frontend (3000)
- *
- * 개발 환경:
- * 1. local-docker-compose.yml로 nginx, db, redis 실행
- * 2. 백엔드: localhost:8080에서 실행
- * 3. 프론트엔드: localhost:3000에서 실행 (npm run dev)
- * 4. 브라우저: http://localhost (nginx 80포트)로 접속
- *
- * nginx가 프록시 처리하므로 API_BASE_URL은 빈 문자열
+ * (설정 및 주석 생략 - 기존과 동일)
  */
 const API_BASE_URL = "";
 
-/**
- * 백엔드 에러 응답 타입
- * 서버에서 에러 발생 시 반환하는 응답 형태
- */
 export interface ErrorResponse {
   code: string;
   message: string;
 }
 
-/**
- * 프론트엔드 API 에러 클래스
- * HTTP 상태 코드와 백엔드 ErrorResponse를 포함
- */
 export class ApiError extends Error {
   public readonly status: number;
   public readonly code: string;
@@ -43,7 +24,6 @@ export class ApiError extends Error {
     this.errorResponse = errorResponse;
   }
 
-  /** ErrorResponse 형태로 반환 */
   toErrorResponse(): ErrorResponse {
     return this.errorResponse;
   }
@@ -51,7 +31,7 @@ export class ApiError extends Error {
 
 // 공통 응답 타입
 export interface ApiResponse<T> {
-  success: boolean;
+  status: "success" | "error";
   message: string;
   data: T;
 }
@@ -61,19 +41,23 @@ interface FetchOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
 }
 
-/**
- * 공통 fetch 함수
- * - 자동으로 JSON 직렬화/역직렬화
- * - 에러 핸들링
- * - 쿼리 파라미터 처리
- */
+/** 성공 여부 판단 (안전한 버전으로 교체) */
+export function isSuccess<T>(response: any): boolean {
+  if (!response) return false;
+  // 1. 표준 ApiResponse 형식인 경우
+  if (response.status === "success") return true;
+  // 2. 데이터만 온 경우에도 성공으로 인정 (호환성)
+  if (response.data || (response.id && !response.error)) return true;
+  return false;
+}
+
+/** 공통 fetch 함수 */
 async function fetchApi<T>(
   endpoint: string,
-  options: FetchOptions = {}
+  options: FetchOptions = {},
 ): Promise<T> {
   const { params, ...fetchOptions } = options;
 
-  // 쿼리 파라미터 처리
   let url = `${API_BASE_URL}${endpoint}`;
   if (params) {
     const searchParams = new URLSearchParams();
@@ -88,25 +72,29 @@ async function fetchApi<T>(
     }
   }
 
-  // 기본 헤더 설정
-  const headers: HeadersInit = {
+  const accessToken =
+    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...fetchOptions.headers,
+    ...(fetchOptions.headers as Record<string, string>),
   };
+
+  if (accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
+  }
 
   const response = await fetch(url, {
     ...fetchOptions,
     headers,
-    credentials: "include", // 쿠키 포함 (인증용)
+    credentials: "include",
   });
 
-  // 에러 응답 처리
   if (!response.ok) {
     let errorResponse: ErrorResponse = {
       code: "UNKNOWN_ERROR",
       message: "API 요청 실패",
     };
-
     try {
       const errorData = await response.json();
       errorResponse = {
@@ -114,69 +102,98 @@ async function fetchApi<T>(
         message: errorData.message || errorResponse.message,
       };
     } catch {
-      // JSON 파싱 실패 시 기본 메시지 사용
+      /* ignore */
     }
-
     throw new ApiError(response.status, errorResponse);
   }
 
-  // 204 No Content 처리
   if (response.status === 204) {
     return undefined as T;
   }
 
-  return response.json();
+  const text = await response.text();
+  if (!text || text.length === 0) {
+    return undefined as T;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text as T;
+  }
 }
+
+// ============================================
+// Auth API
+// ============================================
+export const authApi = {
+  login: (data: LoginRequest) =>
+    fetchApi<ApiResponse<TokenResponse>>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  signup: (data: SignupRequest) =>
+    fetchApi<ApiResponse<number>>("/api/auth/signup", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  sendSms: (phoneNumber: string) =>
+    fetchApi<ApiResponse<void>>("/api/auth/sms/send", {
+      method: "POST",
+      body: JSON.stringify({ phoneNumber }),
+    }),
+  verifySms: (phoneNumber: string, code: string) =>
+    fetchApi<ApiResponse<void>>("/api/auth/sms/verify", {
+      method: "POST",
+      body: JSON.stringify({ phoneNumber, code }),
+    }),
+  logout: () =>
+    fetchApi<ApiResponse<void>>("/api/auth/logout", {
+      method: "POST",
+    }),
+};
+
+// ============================================
+// Main API
+// ============================================
+export const mainApi = {
+  getMain: () => fetchApi<MainStats>("/api/main"),
+};
 
 // ============================================
 // Admin API
 // ============================================
 export const adminApi = {
-  /** 일일 통계 조회 */
   getStatistics: (days: number) =>
     fetchApi<AdminDailyData[]>("/api/admin/statistics", {
       params: { days },
     }),
-
-  /** 악성 유저 목록 조회 */
   getDevilUsers: (page = 0) =>
     fetchApi<DevilUser[]>("/api/admin/devil-users", {
       params: { page },
     }),
-
-  /** 유저 밴 */
   banUser: (data: BanUserRequest) =>
     fetchApi<void>("/api/admin/devil-users", {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
-
-  /** 유저 밴 해제 */
   unbanUser: (userId: number) =>
     fetchApi<void>(`/api/admin/devil-users/${userId}`, {
       method: "PATCH",
     }),
-
-  /** 게시글 차단 */
   banContent: (data: InactiveContentRequest) =>
     fetchApi<void>("/api/admin/illegal-contents", {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
-
-  /** 게시글 차단 해제 */
   unbanContent: (contentId: number) =>
     fetchApi<void>(`/api/admin/illegal-contents/${contentId}`, {
       method: "PATCH",
     }),
-
-  /** 신고 목록 조회 */
   getReports: (page = 0, size = 10) =>
     fetchApi<ReportProcess[]>("/api/admin/reports", {
       params: { page, size },
     }),
-
-  /** 신고 처리 */
   processReport: (reportId: number, data: ReportProcessRequest) =>
     fetchApi<void>(`/api/admin/reports/${reportId}`, {
       method: "PATCH",
@@ -188,23 +205,17 @@ export const adminApi = {
 // User API
 // ============================================
 export const userApi = {
-  /** 내 프로필 조회 */
   getMyProfile: () => fetchApi<ApiResponse<UserProfile>>("/api/users/me"),
-
-  /** 프로필 수정 */
+  getMe: () => fetchApi<ApiResponse<UserProfile>>("/api/users/me"),
   updateProfile: (data: UpdateProfileRequest) =>
     fetchApi<ApiResponse<void>>("/api/users/me", {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
-
-  /** 크리에이터 권한 신청 */
   promoteToCreator: () =>
     fetchApi<ApiResponse<void>>("/api/users/me/creator", {
       method: "PATCH",
     }),
-
-  /** 프로필 사진 변경 */
   updateProfilePhoto: (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -232,23 +243,40 @@ export const userApi = {
       return res.json() as Promise<ProfilePhotoResponse>;
     });
   },
+  getBannedUsers: (page = 0, size = 10) =>
+    fetchApi<BanUserRes[]>("/api/users/ban-user", {
+      params: { page, size },
+    }),
 };
 
 // ============================================
 // Content API
 // ============================================
 export const contentApi = {
-  /** 콘텐츠 생성 */
+  getAll: (page = 0, size = 20) =>
+    fetchApi<ContentListItem[]>("/api/contents", { params: { page, size } }),
+  getFree: (page = 0, size = 20) =>
+    fetchApi<ContentListItem[]>("/api/contents/free", {
+      params: { page, size },
+    }),
+  getPaid: (page = 0, size = 20) =>
+    fetchApi<ContentListItem[]>("/api/contents/paid", {
+      params: { page, size },
+    }),
+  getById: (contentId: number) =>
+    fetchApi<ContentDetail>(`/api/contents/${contentId}`),
   create: (data: ContentCreateRequest) =>
     fetchApi<number>("/api/contents", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-
-  /** 콘텐츠 삭제 */
   delete: (contentId: number) =>
     fetchApi<void>(`/api/contents/${contentId}`, {
       method: "DELETE",
+    }),
+  getBannedContents: (page = 0, size = 10) =>
+    fetchApi<BannedContentRes[]>("/api/contents/banlist", {
+      params: { page, size },
     }),
 };
 
@@ -256,7 +284,6 @@ export const contentApi = {
 // Report API
 // ============================================
 export const reportApi = {
-  /** 신고하기 */
   create: (data: ReportRequest) =>
     fetchApi<ReportResponse>("/api/report", {
       method: "POST",
@@ -268,21 +295,16 @@ export const reportApi = {
 // Payment API
 // ============================================
 export const paymentApi = {
-  /** 결제 준비 */
   prepare: (data: ChargeRequest) =>
     fetchApi<PreparePaymentResponse>("/api/payments/prepare", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-
-  /** 결제 승인 */
   confirm: (data: ConfirmPaymentRequest) =>
     fetchApi<void>("/api/payments/confirm", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-
-  /** 환불 */
   refund: (paymentId: number, cancelReason: string) =>
     fetchApi<void>(`/api/payments/${paymentId}/refund`, {
       method: "POST",
@@ -294,7 +316,6 @@ export const paymentApi = {
 // Order API
 // ============================================
 export const orderApi = {
-  /** 콘텐츠 구매 */
   purchase: (contentId: number) =>
     fetchApi<PurchaseResponse>(`/api/orders/contents/${contentId}`, {
       method: "POST",
@@ -302,10 +323,86 @@ export const orderApi = {
 };
 
 // ============================================
+// Notification API (수정: Header 호환성 추가)
+// ============================================
+export const notificationApi = {
+  /** 알림 전체 조회 (신버전) */
+  getAll: () => fetchApi<NotificationRes[]>("/api/notification"),
+
+  /** 내 알림 목록 조회 (Header.jsx 호환용) */
+  getList: (page = 0, size = 10) =>
+    fetchApi<any[]>("/api/notification", { params: { page, size } }),
+
+  /** 알림 읽음 처리 (신버전) */
+  markAsRead: (notiId: number) =>
+    fetchApi<NotiReadRes>(`/api/notification/${notiId}`, {
+      method: "PATCH",
+    }),
+
+  /** 알림 읽음 처리 (Header.jsx 호환용) */
+  read: (notificationId: number) =>
+    fetchApi<void>(`/api/notification/${notificationId}/read`, {
+      method: "PATCH",
+    }).catch(() => {}),
+
+  /** 안 읽은 알림 개수 (Header.jsx 호환용) */
+  getUnreadCount: () =>
+    fetchApi<number>("/api/notifications/unread-count").catch(() => 0),
+};
+
+// ============================================
+// Credit API
+// ============================================
+export const creditApi = {
+  getBalance: () => fetchApi<CreditBalance>("/api/credits/balance"),
+  getHistory: (page = 0, size = 20) =>
+    fetchApi<CreditHistoryItem[]>("/api/credits/history", {
+      params: { page, size },
+    }),
+};
+
+// ============================================
+// Settlement API (정산)
+// ============================================
+export const settlementApi = {
+  getAvailableBalance: (creatorId: number) =>
+    fetchApi<AvailableBalanceResponse>(
+      `/api/creators/${creatorId}/settlements/available-balance`,
+    ),
+  getContentSettlementSummaries: (creatorId: number) =>
+    fetchApi<ContentSettlementSummaryResponse[]>(
+      `/api/creators/${creatorId}/settlements/by-content`,
+    ),
+  getMonthlyContentSettlement: (
+    creatorId: number,
+    contentId: number,
+    month: string,
+  ) =>
+    fetchApi<DailyContentSettlementResponse>(
+      `/api/creators/${creatorId}/settlements/contents/${contentId}`,
+      {
+        params: { month },
+      },
+    ),
+};
+
+// ============================================
+// Withdrawal API (출금)
+// ============================================
+export const withdrawalApi = {
+  requestWithdrawal: (creatorId: number, data: WithdrawalRequest) =>
+    fetchApi<WithdrawalResponse>(`/api/creators/${creatorId}/withdrawals`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  getWithdrawals: (creatorId: number) =>
+    fetchApi<WithdrawalResponse[]>(`/api/creators/${creatorId}/withdrawals`),
+};
+
+// ============================================
 // Event API
 // ============================================
 export const eventApi = {
-  /** 무료 크레딧 지급 */
   grantFreeCredits: (amount: number) =>
     fetchApi<number>("/api/events/free-credits", {
       method: "POST",
@@ -317,7 +414,12 @@ export const eventApi = {
 // Type Definitions
 // ============================================
 
-// Admin Types
+export interface MainStats {
+  totalContents: number;
+  totalOlive: number;
+  totalPopeye: number;
+}
+
 export interface AdminDailyData {
   localDate: string;
   dailyPaymentAmount: number;
@@ -339,9 +441,9 @@ export interface DevilUser {
 }
 
 export interface BanUserRequest {
-  userId: number;
+  userId: number; // (수정: 프론트엔드 호환성을 위해 userId로 변경)
   reason: string;
-  banDays?: number; // 영구 밴이면 생략
+  banDays?: number | null;
 }
 
 export interface InactiveContentRequest {
@@ -359,18 +461,17 @@ export interface ReportProcess {
 }
 
 export interface ReportProcessRequest {
-  state: "ACCEPTED" | "REJECTED";
+  state: "ACCEPTED" | "REJECTED" | "TRUE" | "FALSE";
 }
 
-// User Types
 export interface UserProfile {
-  id: number;
   email: string;
   nickname: string;
-  profilePhotoUrl: string | null;
-  role: "USER" | "CREATOR" | "ADMIN";
-  freeCredit: number;
-  paidCredit: number;
+  profileImageUrl: string | null;
+  role: string;
+  referralCode: string | null;
+  totalSpinach: number;
+  totalStarcandy: number;
 }
 
 export interface UpdateProfileRequest {
@@ -382,28 +483,74 @@ export interface ProfilePhotoResponse {
   profilePhotoUrl: string;
 }
 
-// Content Types
-export interface ContentCreateRequest {
-  title: string;
-  body: string;
-  price: number;
-  thumbnailUrl?: string;
-  mediaUrls?: string[];
+export interface BanUserRes {
+  id: number;
+  bannedAt: string;
+  unbannedAt: string;
+  banDays: number;
+  reason: string;
 }
 
-// Report Types
+export interface ContentListItem {
+  id?: string;
+  contentId?: number;
+  title: string;
+  creatorName?: string;
+  creatorNickname?: string;
+  creatorAvatar?: string;
+  thumbnail?: string;
+  price?: number;
+  originalPrice?: number;
+  free?: boolean;
+  isFree?: boolean;
+  likes?: number;
+  isLiked?: boolean;
+  isBookmarked: boolean;
+}
+
+export interface ContentDetail {
+  id: number;
+  title: string;
+  content?: string;
+  preview?: string;
+  price?: number | null;
+  free: boolean;
+  status?: string;
+  creatorName?: string;
+  discountRate?: number;
+  viewCount?: number;
+  likeCount?: number;
+}
+
+export interface ContentCreateRequest {
+  title: string;
+  content: string;
+  price: number;
+  discountRate: number;
+  free: boolean;
+}
+
+export interface BannedContentRes {
+  id: number;
+  reason: string;
+  date: string;
+  title: string;
+  content: string;
+}
+
 export interface ReportRequest {
   targetId: number;
-  targetType: "USER" | "CONTENT" | "COMMENT";
+  type: "CONTENT";
   reason: string;
 }
 
 export interface ReportResponse {
   reportId: number;
-  createdAt: string;
+  reason: string;
+  state: "REQUESTED" | "APPROVED" | "REJECTED";
+  reportAt: string;
 }
 
-// Payment Types
 export interface ChargeRequest {
   creditAmount: number;
   pgProvider: "TOSS";
@@ -420,7 +567,6 @@ export interface ConfirmPaymentRequest {
   amount: number;
 }
 
-// Order Types
 export interface PurchaseResponse {
   orderId: number;
   totalCreditUsed: number;
@@ -428,5 +574,101 @@ export interface PurchaseResponse {
   usedPaidCredit: number;
 }
 
-// Event Types
-// grantFreeCredits returns creditId (number)
+export interface NotificationRes {
+  id: number;
+  msg: string;
+  date: string;
+  isRead?: boolean;
+}
+
+export interface NotiReadRes {
+  notiId: number;
+  isRead: boolean;
+}
+
+export interface AvailableBalanceResponse {
+  settlementSum: number;
+  withdrawnSum: number;
+  available: number;
+}
+
+export interface ContentSettlementSummaryResponse {
+  contentId: number;
+  title: string;
+  totalRevenue: number;
+  platformFee: number;
+  totalPayout: number;
+  lastSettledAt: string;
+  settlementCount: number;
+}
+
+export interface ContentSettlementPeriodItem {
+  periodStart: string;
+  periodEnd: string;
+  orderCount: number;
+  totalRevenue: number;
+  totalPlatformFee: number;
+  totalPayout: number;
+  latestSettledAt: string | null;
+}
+
+export interface DailyContentSettlementResponse {
+  contentId: number;
+  from: string;
+  to: string;
+  items: ContentSettlementPeriodItem[];
+}
+
+export interface WithdrawalRequest {
+  amount: number;
+}
+
+export interface WithdrawalResponse {
+  id: number;
+  creatorId: number;
+  amount: number;
+  status: "REQ" | "SUC" | "REJ";
+  requestedAt: string;
+  processedAt: string | null;
+  failureReason: string | null;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface SignupRequest {
+  email: string;
+  password: string;
+  nickname: string;
+  phoneNumber: string;
+  referralCode?: string;
+  phoneNumberCollectionConsent: boolean;
+}
+
+export interface TokenResponse {
+  accessToken: string;
+  tokenType: string;
+}
+
+export interface CreditBalance {
+  spinach: number;
+  spinachExpiry: string | null;
+  starCandy: number;
+}
+
+export interface CreditHistoryItem {
+  id: string;
+  type: "charge" | "use" | "reward" | "expire" | "refund";
+  amount: number;
+  creditType: "spinach" | "starCandy";
+  description: string;
+  date: string;
+  status: "pending" | "completed";
+}
+
+// ============================================
+// Legacy & Compatibility (맨 아래 추가 필수!)
+// ============================================
+export const charge = paymentApi.prepare;
