@@ -7,10 +7,9 @@ import popeye.popeyebackend.global.util.NanoIdUtil;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.user.repository.UserRepository;
 
-/**
- * 레퍼럴 코드 생성 전용 서비스
- * 순환 참조를 방지하기 위해 별도 서비스로 분리
- */
+//레퍼럴 코드 생성 전용 서비스
+//순환 참조를 방지하기 위해 별도 서비스로 분리
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -19,13 +18,7 @@ public class ReferralCodeService {
     private final UserRepository userRepository;
     private static final int MAX_ATTEMPTS = 10; // 최대 시도 횟수
 
-    /**
-     * 고유한 레퍼럴 코드 생성 (나노아이디 사용, 중복 체크 포함)
-     * 나노아이디는 충돌 확률이 매우 낮지만, unique 제약조건을 위해 중복 체크 수행
-     *
-     * @param user 레퍼럴 코드를 생성할 사용자
-     * @throws RuntimeException 최대 시도 횟수 초과 시
-     */
+    //레퍼럴코드 생성
     public void generateUniqueReferralCode(User user) {
         if (user.getReferralCode() != null) {
             return; // 이미 코드가 있으면 생성하지 않음
