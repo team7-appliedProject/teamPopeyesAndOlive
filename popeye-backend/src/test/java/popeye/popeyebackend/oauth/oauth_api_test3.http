@@ -1,0 +1,498 @@
+### ========================================
+### OAuth2 API 테스트 파일 v3
+### 최신 구현사항 반영 (나노아이디 레퍼럴 코드)
+### ========================================
+
+### 전역 변수 설정
+@host = http://localhost:8080
+
+### 토큰 변수 초기화
+@auth_token = 
+@auth_token_user1 = 
+@auth_token_user2 = 
+@auth_token_user3 = 
+
+### ========================================
+### U-02: 본인 인증 테스트
+### ========================================
+
+### 1. 인증번호 발송 (U-02)
+# 휴대폰 번호로 인증번호를 발송합니다.
+# 콘솔 로그에서 인증번호를 확인하세요.
+
+POST {{host}}/api/auth/sms/send
+Content-Type: application/json
+
+{
+  "phoneNumber": "01011111111"
+}
+
+### 2. 인증번호 검증 (U-02)
+# 발송된 인증번호를 입력하여 본인 인증을 완료합니다.
+# 위의 1번 요청 후 콘솔 로그에서 확인한 인증번호를 code에 입력하세요.
+
+POST {{host}}/api/auth/sms/verify
+Content-Type: application/json
+
+{
+  "phoneNumber": "01011111111",
+  "code": "인증번호_입력"
+}
+
+### ========================================
+### U-01: 회원가입 테스트 (나노아이디 레퍼럴 코드)
+### ========================================
+
+### 3. 회원가입 (U-01) - 추천인 코드 없이
+# 본인 인증 완료 후 가입 시:
+# - 1000 시금치 자동 지급
+# - 나노아이디 기반 레퍼럴 코드 자동 생성 (8자리)
+# 주의: 위의 인증번호 검증이 완료되어야 회원가입이 가능합니다.
+
+POST {{host}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "user1@test.com",
+  "password": "qwer@123",
+  "nickname": "테스트유저1",
+  "phoneNumber": "01011111111",
+  "phoneNumberCollectionConsent": true
+}
+
+### 4. 로그인 및 토큰 저장 (user1)
+# 회원가입 후 로그인하여 토큰을 발급받습니다.
+
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user1@test.com",
+  "password": "qwer@123"
+}
+
+> {%
+    if (response.status === 200) {
+        client.global.set("auth_token_user1", response.body.data.accessToken);
+        client.log("user1 토큰 저장 완료: " + client.global.get("auth_token_user1"));
+    }
+%}
+
+### 5. 프로필 조회 - 나노아이디 레퍼럴 코드 확인 (U-04)
+# 생성된 레퍼럴 코드를 확인합니다.
+# 확인 사항:
+# - referralCode가 8자리인지 확인
+# - 0, O, 1, I, L 문자가 포함되지 않았는지 확인
+# - 형식: 23456789ABCDEFGHJKLMNPQRSTUVWXYZ (대문자+숫자)
+# 예시: "A3B5C7D9", "2F4H6J8K" 등
+
+GET {{host}}/api/users/me
+Authorization: Bearer {{auth_token_user1}}
+
+
+### ========================================
+### U-01: 추천인 코드 입력 테스트 (나노아이디)
+### ========================================
+
+### 6. 본인 인증 (user2용)
+# 추천인 코드 입력 가입을 위한 본인 인증
+
+POST {{host}}/api/auth/sms/send
+Content-Type: application/json
+
+{
+  "phoneNumber": "01022222222"
+}
+
+POST {{host}}/api/auth/sms/verify
+Content-Type: application/json
+
+{
+  "phoneNumber": "01022222222",
+  "code": "인증번호_입력"
+}
+
+### 7. 추천인 코드 입력 회원가입 (U-01)
+# 위의 5번 테스트에서 확인한 나노아이디 레퍼럴 코드를 입력합니다.
+# 추천인과 신규 가입자 모두에게 500 시금치가 추가 지급됩니다.
+# 주의: referralCode는 5번 테스트에서 확인한 실제 코드로 변경하세요!
+
+POST {{host}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "user2@test.com",
+  "password": "qwer@123",
+  "nickname": "테스트유저2",
+  "phoneNumber": "01022222222",
+  "phoneNumberCollectionConsent": true,
+  "referralCode": "여기에_5번에서_확인한_나노아이디_코드_입력"
+}
+
+### 8. 로그인 및 토큰 저장 (user2)
+# 추천인 코드로 가입한 사용자 로그인
+
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user2@test.com",
+  "password": "qwer@123"
+}
+
+> {%
+    if (response.status === 200) {
+        client.global.set("auth_token_user2", response.body.data.accessToken);
+        client.log("user2 토큰 저장 완료: " + client.global.get("auth_token_user2"));
+    }
+%}
+
+### 9. 신규 가입자 리워드 확인 (U-01)
+# 신규 가입자는 1500 시금치를 받아야 합니다.
+# (기본 1000 + 추천인 보너스 500)
+
+GET {{host}}/api/users/me
+Authorization: Bearer {{auth_token_user2}}
+
+
+### 10. 추천인 리워드 확인 (U-01)
+# 추천인(user1)도 500 시금치를 받았는지 확인합니다.
+
+GET {{host}}/api/users/me
+Authorization: Bearer {{auth_token_user1}}
+
+
+### ========================================
+### U-01: 추천인 코드 오류 테스트
+### ========================================
+
+### 11. 본인 인증 (user3용)
+# 오류 테스트를 위한 본인 인증
+
+POST {{host}}/api/auth/sms/send
+Content-Type: application/json
+
+{
+  "phoneNumber": "01033333333"
+}
+
+POST {{host}}/api/auth/sms/verify
+Content-Type: application/json
+
+{
+  "phoneNumber": "01033333333",
+  "code": "인증번호_입력"
+}
+
+### 12. 유효하지 않은 추천인 코드 테스트 (실패 케이스)
+# 존재하지 않는 추천인 코드 입력 시 에러가 발생해야 합니다.
+
+POST {{host}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "user3@test.com",
+  "password": "qwer@123",
+  "nickname": "테스트유저3",
+  "phoneNumber": "01033333333",
+  "phoneNumberCollectionConsent": true,
+  "referralCode": "INVALID9"
+}
+
+### 13. 자기 자신의 추천 코드 테스트 (실패 케이스)
+# 자기 자신의 추천 코드를 입력하면 에러가 발생해야 합니다.
+# 1) 먼저 user3로 가입 (추천인 코드 없이)
+
+POST {{host}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "user3@test.com",
+  "password": "qwer@123",
+  "nickname": "테스트유저3",
+  "phoneNumber": "01033333333",
+  "phoneNumberCollectionConsent": true
+}
+
+# 2) user3 로그인 및 자신의 레퍼럴 코드 확인
+
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user3@test.com",
+  "password": "qwer@123"
+}
+
+> {%
+    if (response.status === 200) {
+        client.global.set("auth_token_user3", response.body.data.accessToken);
+    }
+%}
+
+GET {{host}}/api/users/me
+Authorization: Bearer {{auth_token_user3}}
+
+
+# 3) 자기 자신의 추천 코드로 재가입 시도 (실패해야 함)
+# 주의: 위에서 확인한 자신의 레퍼럴 코드를 사용하세요.
+
+POST {{host}}/api/auth/sms/send
+Content-Type: application/json
+
+{
+  "phoneNumber": "01044444444"
+}
+
+POST {{host}}/api/auth/sms/verify
+Content-Type: application/json
+
+{
+  "phoneNumber": "01044444444",
+  "code": "인증번호_입력"
+}
+
+POST {{host}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "user4@test.com",
+  "password": "qwer@123",
+  "nickname": "테스트유저4",
+  "phoneNumber": "01044444444",
+  "phoneNumberCollectionConsent": true,
+  "referralCode": "여기에_위에서_확인한_자신의_레퍼럴코드_입력"
+}
+
+### ========================================
+### U-04: 프로필 관리 테스트
+### ========================================
+
+### 14. 프로필 정보 수정 (U-04)
+# 닉네임과 프로필 이미지를 변경합니다.
+
+PATCH {{host}}/api/users/me
+Authorization: Bearer {{auth_token_user1}}
+Content-Type: application/json
+
+{
+  "nickname": "수정된닉네임",
+  "profileImageUrl": "https://popeye.com/profiles/user1.png"
+}
+
+### 15. 수정 결과 확인 (U-04)
+# 닉네임이 변경되었는지, 레퍼럴 코드는 그대로 유지되는지 확인합니다.
+
+GET {{host}}/api/users/me
+Authorization: Bearer {{auth_token_user1}}
+
+
+### 16. 닉네임 중복 체크 테스트 (실패 케이스)
+# 이미 사용 중인 닉네임으로 변경 시도 시 에러가 나야 합니다.
+
+PATCH {{host}}/api/users/me
+Authorization: Bearer {{auth_token_user2}}
+Content-Type: application/json
+
+{
+  "nickname": "테스트유저1"
+}
+
+### ========================================
+### U-03: 크리에이터 승격 테스트
+### ========================================
+
+### 17. 크리에이터 승격 요청 (U-03)
+# Role이 CREATOR로 바뀌고 creators 테이블에 레코드가 생성됩니다.
+
+PATCH {{host}}/api/users/me/creator
+Authorization: Bearer {{auth_token_user1}}
+
+
+### 18. 승격 후 상태 확인
+# Role이 ROLE_CREATOR로 변경되었는지 확인합니다.
+
+GET {{host}}/api/users/me
+Authorization: Bearer {{auth_token_user1}}
+
+
+### ========================================
+### U-08: 크리에이터 정산 정보 업데이트 테스트
+### ========================================
+
+### 19. 크리에이터 정산 정보 업데이트 (U-08)
+# 실명, 은행명, 계좌번호를 입력하여 정산 정보를 업데이트합니다.
+# 계좌번호는 AES-256 암호화되어 저장됩니다.
+
+PATCH {{host}}/api/users/me/settlement
+Authorization: Bearer {{auth_token_user1}}
+Content-Type: application/json
+
+{
+  "realName": "홍길동",
+  "bank_name": "신한은행",
+  "account": "110-123-456789"
+}
+
+### 20. 정산 정보 업데이트 확인
+# DB에서 계좌번호가 암호화되어 저장되었는지 확인합니다.
+# (실제 DB 조회는 별도로 확인 필요)
+
+### ========================================
+### U-06: 비밀번호 찾기 테스트
+### ========================================
+
+### 21. 비밀번호 재설정 요청 (U-06)
+# 이메일로 비밀번호 재설정 링크를 발송합니다.
+# 이메일 서비스가 설정되어 있어야 정상 작동합니다.
+# (테스트 환경에서는 이메일이 실제로 발송되지 않을 수 있으므로 로그 확인)
+
+POST {{host}}/api/auth/password/reset
+Content-Type: application/json
+
+{
+  "email": "user1@test.com"
+}
+
+### 22. 비밀번호 재설정 처리 (U-06)
+# 21번 요청 후 이메일에서 받은 토큰을 사용하여 비밀번호를 재설정합니다.
+# 토큰은 이메일 링크에서 확인하거나, Redis에서 직접 확인할 수 있습니다.
+# 주의: 실제 이메일 발송이 안 되는 경우, Redis에서 토큰을 직접 확인해야 합니다.
+
+POST {{host}}/api/auth/password/reset/confirm
+Content-Type: application/json
+
+{
+  "token": "여기에_이메일에서_받은_토큰_입력",
+  "newPassword": "newpass@123"
+}
+
+### 23. 재설정된 비밀번호로 로그인 테스트 (U-06)
+# 22번에서 재설정한 비밀번호로 로그인이 가능한지 확인합니다.
+
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user1@test.com",
+  "password": "newpass@123"
+}
+
+### 24. 비밀번호 재설정 오류 테스트 - 잘못된 이메일 (실패 케이스)
+# 존재하지 않는 이메일로 재설정 요청 시 에러가 발생해야 합니다.
+
+POST {{host}}/api/auth/password/reset
+Content-Type: application/json
+
+{
+  "email": "nonexistent@test.com"
+}
+
+### ========================================
+### U-09: 회원 탈퇴 테스트
+### ========================================
+
+### 25. 회원 탈퇴 (U-09)
+# 회원 탈퇴를 요청합니다.
+# Soft Delete 방식으로 deletedAt에 탈퇴 일시가 기록됩니다.
+
+DELETE {{host}}/api/users/me
+Authorization: Bearer {{auth_token_user2}}
+
+
+### 26. 탈퇴 후 로그인 시도 (실패 케이스)
+# 탈퇴한 계정으로 로그인 시도 시 에러가 발생해야 합니다.
+
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user2@test.com",
+  "password": "qwer@123"
+}
+
+### 27. 탈퇴한 계정으로 재가입 시도 - 30일 이내 (실패 케이스)
+# 탈퇴 후 30일 이내에 재가입 시도 시 에러가 발생해야 합니다.
+# 주의: 실제로는 30일을 기다려야 하므로, 테스트 시 DB에서 deletedAt 날짜를 수정하거나 시간을 기다려야 합니다.
+
+POST {{host}}/api/auth/sms/send
+Content-Type: application/json
+
+{
+  "phoneNumber": "01055555555"
+}
+
+POST {{host}}/api/auth/sms/verify
+Content-Type: application/json
+
+{
+  "phoneNumber": "01055555555",
+  "code": "인증번호_입력"
+}
+
+POST {{host}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "user2@test.com",
+  "password": "qwer@123",
+  "nickname": "재가입시도",
+  "phoneNumber": "01055555555",
+  "phoneNumberCollectionConsent": true
+}
+
+### ========================================
+### U-05: OAuth2 소셜 로그인 테스트 (선택사항)
+### ========================================
+
+### 28. Google OAuth2 로그인 시작
+# 브라우저에서 이 URL로 접속하면 Google 로그인 페이지로 리다이렉트됩니다.
+# OAuth2 설정이 활성화되어 있어야 합니다.
+# (환경 변수 GOOGLE_CLIENT_ID와 GOOGLE_CLIENT_SECRET이 설정되어 있어야 함)
+
+# GET {{host}}/oauth2/authorization/google
+# 주의: 브라우저에서 직접 접속해야 합니다. HTTP 클라이언트로는 테스트하기 어렵습니다.
+
+### 29. OAuth2 로그인 후 프로필 확인
+# OAuth2로 로그인한 사용자의 프로필을 확인합니다.
+# 나노아이디 레퍼럴 코드가 자동 생성되었는지 확인합니다.
+# 주의: OAuth2 로그인 후 발급받은 JWT 토큰을 사용해야 합니다.
+
+# GET {{host}}/api/users/me
+# Authorization: Bearer {{oauth2_token}}
+# 주의: OAuth2 로그인 후 받은 토큰을 사용하세요.
+
+### ========================================
+### 나노아이디 레퍼럴 코드 형식 검증
+### ========================================
+
+### 30. 레퍼럴 코드 형식 확인 가이드
+# 나노아이디 레퍼럴 코드는 다음 조건을 만족해야 합니다:
+# ✅ 8자리 고정
+# ✅ 사용 가능한 문자: 23456789ABCDEFGHJKLMNPQRSTUVWXYZ
+# ✅ 제외된 문자: 0, O, 1, I, L (헷갈리기 쉬운 문자)
+# ✅ 대문자만 사용
+# 
+# 정상 예시: "A3B5C7D9", "2F4H6J8K", "3G5H7J9K"
+# 비정상 예시: 
+#   - "A3B5C7D90" (9자리, 너무 김)
+#   - "A3B5C7D" (7자리, 너무 짧음)
+#   - "A3B5C7D1" (1 포함, 제외된 문자)
+#   - "A3B5C7DO" (O 포함, 제외된 문자)
+#   - "a3b5c7d9" (소문자, 대문자만 사용)
+
+### ========================================
+### 테스트 체크리스트
+### ========================================
+# 
+# 필수 테스트 항목:
+# ✅ 3번: 회원가입 성공 및 레퍼럴 코드 자동 생성
+# ✅ 5번: 나노아이디 레퍼럴 코드 형식 확인 (8자리, 특정 문자 제외)
+# ✅ 7번: 나노아이디 코드로 추천인 찾기 성공
+# ✅ 9-10번: 추천인 리워드 지급 확인
+# ✅ 12번: 잘못된 코드 입력 시 에러 발생
+# ✅ 13번: 자기 자신의 코드 입력 시 에러 발생
+# 
+# 선택 테스트 항목:
+# ⚠️ 28-29번: OAuth2 로그인 (환경 변수 설정 필요)
+# ⚠️ 27번: 탈퇴 후 재가입 제한 (30일 대기 필요)

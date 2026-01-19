@@ -83,6 +83,15 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(message));
     }
 
+    // IllegalArgumentException 처리 -로직검증실패시(추가)
+    @ExceptionHandler(IllegalArgumentException.class)
+    protected ResponseEntity<ApiResponse<?>> handleIllegalArgumentException(IllegalArgumentException e) {
+        log.error("IllegalArgumentException: {}", e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(e.getMessage()));
+    }
+
     //미지원HTTP메서드 호출시
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     protected ResponseEntity<ApiResponse<?>> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
@@ -102,9 +111,7 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(errorCode.getMessage()));
     }
 
-    /**
-     * 비즈니스 예외
-     */
+    //비즈니스예외처리
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ErrorResponse> handleApiException(ApiException e) {
         return ResponseEntity

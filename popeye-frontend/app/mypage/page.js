@@ -29,9 +29,26 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { CreditBadge } from "@/components/CreditBadge";
-import { userApi, creditApi, isSuccess } from "@/app/lib/api";
+} from '@/components/ui/table';
+import { CreditBadge } from '@/components/CreditBadge';
+import { userApi,creditApi, isSuccess } from '@/app/lib/api';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function MyPage() {
   const router = useRouter();
@@ -41,6 +58,12 @@ export default function MyPage() {
   const [bookmarkedContents, setBookmarkedContents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [promotingToCreator, setPromotingToCreator] = useState(false);
+  const [showSettlementDialog, setShowSettlementDialog] = useState(false);
+  const [settlementInfo, setSettlementInfo] = useState({
+    realName: '',
+    bank_name: '',
+    account: ''
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,7 +78,8 @@ export default function MyPage() {
 
         // 크레딧 사용 내역 가져오기
         try {
-          const historyData = await creditApi.getHistory(0, 20);
+          const historyData = await 
+          .getHistory(0, 20);
           setCreditHistory(historyData?.content || []);
         } catch (err) {
           console.error("Failed to fetch credit history:", err);
@@ -79,13 +103,38 @@ export default function MyPage() {
       return;
     }
 
+    // 정산 정보 입력 다이얼로그 표시
+    setShowSettlementDialog(true);
+  };
+
+  // 정산 정보 입력 후 크리에이터 전환 및 정산 정보 저장
+  const handleSettlementSubmit = async () => {
+    // 유효성 검사
+    if (!settlementInfo.realName || !settlementInfo.bank_name || !settlementInfo.account) {
+      alert('모든 정산 정보를 입력해주세요.');
+      return;
+    }
+
     try {
       setPromotingToCreator(true);
-      const response = await userApi.promoteToCreator();
-      console.log("[MyPage] Promote to creator response:", response);
+      
+      // 1. 크리에이터 전환
+      const promoteResponse = await userApi.promoteToCreator();
+      console.log('[MyPage] Promote to creator response:', promoteResponse);
+      
+      if (!isSuccess(promoteResponse)) {
+        alert(promoteResponse.message || '크리에이터 전환에 실패했습니다.');
+        return;
+      }
 
-      if (isSuccess(response)) {
-        alert("크리에이터로 전환되었습니다!");
+      // 2. 정산 정보 저장
+      const settlementResponse = await userApi.updateSettlementInfo(settlementInfo);
+      console.log('[MyPage] Settlement info response:', settlementResponse);
+      
+      if (isSuccess(settlementResponse)) {
+        alert('크리에이터로 전환되었고 정산 정보가 등록되었습니다!');
+        setShowSettlementDialog(false);
+        
         // 유저 정보 새로고침
         const userResponse = await userApi.getMe();
         if (isSuccess(userResponse) && userResponse.data) {
@@ -93,11 +142,12 @@ export default function MyPage() {
         }
         router.push("/creator");
       } else {
-        alert(response.message || "크리에이터 전환에 실패했습니다.");
+        alert(settlementResponse.message || '정산 정보 저장에 실패했습니다.');
       }
     } catch (err) {
-      console.error("Failed to promote to creator:", err);
-      alert(err.message || "크리에이터 전환에 실패했습니다.");
+      console.error('Failed to promote to creator:', err);
+      const errorMessage = err.errorResponse?.message || err.message || '크리에이터 전환에 실패했습니다.';
+      alert(errorMessage);
     } finally {
       setPromotingToCreator(false);
     }
@@ -471,6 +521,94 @@ export default function MyPage() {
           </div>
         </div>
       </div>
+
+      {/* 정산 정보 입력 다이얼로그 */}
+      <Dialog open={showSettlementDialog} onOpenChange={setShowSettlementDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>올리브 전환 및 정산 정보 입력</DialogTitle>
+            <DialogDescription>
+              올리브로 전환하기 위해 정산 정보를 입력해주세요.
+              계좌번호는 안전하게 암호화되어 저장됩니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="realName">예금주명 <span className="text-red-500">*</span></Label>
+              <Input
+                id="realName"
+                placeholder="홍길동"
+                value={settlementInfo.realName}
+                onChange={(e) => setSettlementInfo({ ...settlementInfo, realName: e.target.value })}
+                disabled={promotingToCreator}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bank_name">은행명 <span className="text-red-500">*</span></Label>
+              <Select
+                value={settlementInfo.bank_name}
+                onValueChange={(value) => setSettlementInfo({ ...settlementInfo, bank_name: value })}
+                disabled={promotingToCreator}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="은행을 선택하세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="KB국민은행">KB국민은행</SelectItem>
+                  <SelectItem value="신한은행">신한은행</SelectItem>
+                  <SelectItem value="우리은행">우리은행</SelectItem>
+                  <SelectItem value="하나은행">하나은행</SelectItem>
+                  <SelectItem value="NH농협은행">NH농협은행</SelectItem>
+                  <SelectItem value="카카오뱅크">카카오뱅크</SelectItem>
+                  <SelectItem value="토스뱅크">토스뱅크</SelectItem>
+                  <SelectItem value="IBK기업은행">IBK기업은행</SelectItem>
+                  <SelectItem value="SC제일은행">SC제일은행</SelectItem>
+                  <SelectItem value="한국씨티은행">한국씨티은행</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="account">계좌번호 <span className="text-red-500">*</span></Label>
+              <Input
+                id="account"
+                placeholder="110-123-456789"
+                value={settlementInfo.account}
+                onChange={(e) => setSettlementInfo({ ...settlementInfo, account: e.target.value })}
+                disabled={promotingToCreator}
+              />
+              <p className="text-xs text-muted-foreground">
+                하이픈(-) 포함하여 입력해주세요
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowSettlementDialog(false);
+                setSettlementInfo({ realName: '', bank_name: '', account: '' });
+              }}
+              disabled={promotingToCreator}
+            >
+              취소
+            </Button>
+            <Button
+              className="bg-[#5b21b6] hover:bg-[#5b21b6]/90"
+              onClick={handleSettlementSubmit}
+              disabled={promotingToCreator}
+            >
+              {promotingToCreator ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  처리 중...
+                </>
+              ) : (
+                '전환하기'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

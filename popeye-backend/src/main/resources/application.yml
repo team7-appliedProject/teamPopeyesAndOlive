@@ -19,15 +19,15 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-#    show-sql: true
-    #properties:
-      #hibernate:
-        # SQL을 보기 좋게 정렬합니다.
-        #format_sql: true
-        # SQL의 주석(어디서 실행된 쿼리인지)을 보여줍니다.
-        #use_sql_comments: true
-        # MySQL 방언 명시
-#        dialect: org.hibernate.dialect.MySQLDialect
+  #    show-sql: true
+  #properties:
+  #hibernate:
+  # SQL을 보기 좋게 정렬합니다.
+  #format_sql: true
+  # SQL의 주석(어디서 실행된 쿼리인지)을 보여줍니다.
+  #use_sql_comments: true
+  # MySQL 방언 명시
+  #        dialect: org.hibernate.dialect.MySQLDialect
 
   batch:
     job:
@@ -54,12 +54,12 @@ spring:
               - email
               - profile
             redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/login/oauth2/code/google}
-        provider:
-          google:
-            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
-            token-uri: https://www.googleapis.com/oauth2/v4/token
-            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
-            user-name-attribute: sub
+#        provider:
+#          google:
+#            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+#            token-uri: https://www.googleapis.com/oauth2/v4/token
+#            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+#            user-name-attribute: sub
 
   servlet:
     multipart:
@@ -79,9 +79,11 @@ cloud:
       secret-key: ${AWS_SECRET_KEY}
 
 popeye:
-  secret-key: "my_super_secret_key_popeye_1234!"
+  secret-key: "my_super_secret_key_popeye_12345!"
   oauth2:
-    redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:3000/oauth2/redirect}
+#    redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:3000/oauth2/redirect}
+    redirect-uri: http://localhost:3000/oauth2/login/success
+
   toss:
     secret-key: ${TOSS_SECRET_KEY}
     client-key: ${TOSS_CLIENT_KEY}

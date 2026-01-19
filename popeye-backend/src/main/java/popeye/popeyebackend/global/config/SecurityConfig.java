@@ -25,10 +25,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import java.util.List;
 
-/**
- * JWT 필터를 적용한 최종 보안 설정
- * 패키지 경로: popeye.popeyebackend.global.config
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true)
@@ -86,10 +82,9 @@ public class SecurityConfig {
                     auth.requestMatchers(HttpMethod.POST, "/api/contents").hasRole("CREATOR"); // 콘텐츠 생성
                     auth.requestMatchers("/api/creators/**").hasRole("CREATOR"); // 정산, 출금 관련
 
-                    // U-05: OAuth2 설정이 있을 때만 OAuth2 경로 허용
-                    if (isOAuth2Enabled()) {
-                        auth.requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll();
-                    }
+                    // U-05: OAuth2 경로는 항상 허용 (환경 변수 미설정 시에도 경로 접근 가능)
+                    // 실제 OAuth2 로그인은 isOAuth2Enabled()로 조건부 활성화
+                    auth.requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll();
 
                     auth.anyRequest().authenticated(); // 그 외 모든 요청은 인증 필요 (USER 이상)
                 });
