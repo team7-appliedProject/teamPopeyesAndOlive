@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import popeye.popeyebackend.user.domain.User;
+ import popeye.popeyebackend.user.domain.User;
 
 import java.time.LocalDateTime;
 
@@ -30,9 +30,8 @@ public class ContentLike {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Builder
-    public ContentLike (User user, Content content) {
+    public ContentLike (User user, Content content) { // User user,
         this.user = user;
         this.content = content;
     }
-
 }

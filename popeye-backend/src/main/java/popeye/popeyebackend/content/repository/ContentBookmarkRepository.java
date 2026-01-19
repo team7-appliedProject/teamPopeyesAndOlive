@@ -10,10 +10,10 @@ import java.util.List;
 public interface ContentBookmarkRepository
         extends JpaRepository<ContentBookmark, Long> {
 
-    boolean existsByUserAndContent(User user, Content content);
+     boolean existsByUserAndContent(User user, Content content);
 
-    void deleteByUserAndContent(User user, Content content);
+     void deleteByUserAndContent(User user, Content content);
 
-    List<ContentBookmark> findAllByUserOrderByCreatedAtDesc(User user);
+     List<ContentBookmark> findAllByUserOrderByCreatedAtDesc(User user);
 
 }

@@ -3,6 +3,7 @@ package popeye.popeyebackend.global.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -17,6 +18,7 @@ import popeye.popeyebackend.report.exception.MissedReportTypeException;
 import popeye.popeyebackend.report.exception.NoReportFoundException;
 import popeye.popeyebackend.user.exception.UserNotFoundException;
 
+import javax.naming.AuthenticationException;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -123,6 +125,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(e.getErrorCode().getStatus())
                 .body(ErrorResponse.of(e.getErrorCode().name(), e.getMessage()));
+    }
+
+    // preAuthorize 에러
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException e) {
+        log.error(e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of("FORBIDDEN", e.getMessage()));
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAuthorizationDeniedException(AuthorizationDeniedException e) {
+        log.error(e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of("FORBIDDEN", e.getMessage()));
     }
 
     //기타 최상위 예외처리

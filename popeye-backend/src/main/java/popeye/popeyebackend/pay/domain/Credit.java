@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import popeye.popeyebackend.user.domain.User;
 import popeye.popeyebackend.pay.enums.CreditType;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity

@@ -48,7 +48,8 @@ public class Content {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private ContentStatus contentStatus = ContentStatus.INACTIVE;
+    @Builder.Default
+    private ContentStatus contentStatus = ContentStatus.ACTIVE;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id")
@@ -77,6 +78,20 @@ public class Content {
     public void inactivate() {
         this.contentStatus = ContentStatus.INACTIVE;
         this.modifiedAt = LocalDateTime.now();
+    }
+
+    // 관리자 밴
+    public void ban() {
+        this.contentStatus = ContentStatus.INACTIVE;
+    }
+
+    // 작성자 소프트 삭제
+    public void softDelete() {
+        this.contentStatus = ContentStatus.SOFTDELETED;
+    }
+
+    public boolean isSoftDeleted() {
+        return this.contentStatus == ContentStatus.SOFTDELETED;
     }
 
     public boolean isActive() {

@@ -45,6 +45,7 @@ public class Payment {
     private User user;
 
     @Column(name = "created_at", updatable = false)
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "approved_at")

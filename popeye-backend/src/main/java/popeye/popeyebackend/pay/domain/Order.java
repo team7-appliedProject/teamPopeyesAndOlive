@@ -52,6 +52,7 @@ public class Order {
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
+    @Builder.Default
     private Boolean settlement = false; // 크리에이터 정산 여부
 
     @PrePersist

@@ -14,7 +14,7 @@ import popeye.popeyebackend.user.enums.Role;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
+import popeye.popeyebackend.global.util.NanoIdUtil;
 
 @Entity
 @Table(name = "users")
@@ -66,8 +66,22 @@ public class User {
     @Column(name = "referral_code", unique = true)
     private String referralCode;
 
-    // @OneToMany(mappedBy = "creator")
-    // private List<Settlement> settlements;
+    // U-09: 회원 탈퇴 일시 (Soft Delete)
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    // U-01: 연락처 수집 동의 (차단 시 수집 목적)
+    @Column(name = "phone_number_collection_consent", nullable = false)
+    @Builder.Default
+    private Boolean phoneNumberCollectionConsent = false;
+
+    // U-05: OAuth2 소셜 로그인 제공자 (google, local 등)
+    @Column(name = "provider")
+    private String provider;
+
+    // U-05: OAuth2 소셜 로그인 제공자 ID (Google의 경우 sub 값)
+    @Column(name = "provider_id")
+    private String providerId;
 
     @OneToMany(mappedBy = "user")
     private List<Order> orders;
@@ -113,12 +127,20 @@ public class User {
         }
     }
 
-    //U-04 추천코드 생성
+    //U-04 추천코드 생성 (나노아이디 사용)
+    // 주의: 이 메서드는 중복 체크를 하지 않습니다. 
+    // 중복 체크는 UserService에서 처리해야 합니다.
     public void generateReferralCode() {
         if (this.referralCode == null) {
-            // UUID의 앞 8자리를 대문자로 추출하여 고유 코드 생성
-            this.referralCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            // 나노아이디를 사용하여 8자리 고유 코드 생성
+            // 헷갈리기 쉬운 문자(0, O, 1, I, L) 제외
+            this.referralCode = NanoIdUtil.generateReferralCode();
         }
+    }
+
+    //U-04: 레퍼럴 코드 직접 설정 (중복 체크 후 사용)
+    public void setReferralCode(String referralCode) {
+        this.referralCode = referralCode;
     }
     public void updateRole(Role newRole) {
         this.role = newRole;
@@ -126,5 +148,42 @@ public class User {
 
     public void changeProfilePhoto(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    //U-06: 비밀번호 재설정
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    //U-09: 회원 탈퇴
+    public void deleteUser(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    //U-01: 시금치 추가 (추천인 리워드 지급용)
+    public void addSpinach(int amount) {
+        this.totalSpinach = (this.totalSpinach == null ? 0 : this.totalSpinach) + amount;
+    }
+
+    //U-05: OAuth2 소셜 로그인 정보 업데이트
+    public void updateOAuth2Info(String provider, String providerId) {
+        this.provider = provider;
+        this.providerId = providerId;
+    }
+
+    public void increaseFreeCredit(int amount){
+        this.totalSpinach += amount;
+    }
+
+    public void decreaseFreeCredit(int amount){
+        this.totalSpinach -= amount;
+    }
+
+    public void increasePaidCredit(int amount){
+        this.totalStarcandy += amount;
+    }
+
+    public void decreasePaidCredit(int amount){
+        this.totalStarcandy -= amount;
     }
 }

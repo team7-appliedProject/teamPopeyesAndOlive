@@ -32,7 +32,7 @@ public class ContentBookmark {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Builder
-    public ContentBookmark(User user, Content content, Integer price) {
+    public ContentBookmark(User user,Content content, Integer price) { // User user
         this.user = user;
         this.content = content;
         this.price = price;

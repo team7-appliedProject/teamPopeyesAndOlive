@@ -118,6 +118,9 @@ public class OrderService {
                     null
             );
         }
+        if (usedFree > 0) user.decreaseFreeCredit(usedFree);
+        if (usedPaid > 0) user.decreasePaidCredit(usedPaid);
+
 
         return orderId;
     }

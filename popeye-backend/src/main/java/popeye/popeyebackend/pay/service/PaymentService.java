@@ -1,6 +1,7 @@
 package popeye.popeyebackend.pay.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -24,6 +25,7 @@ import popeye.popeyebackend.user.service.UserService;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -72,38 +74,91 @@ public class PaymentService {
      * - Credit(PAID): Payment 1건당 1 row 생성 (amount=creditAmount)
      */
     @Transactional
-    public void confirmCharge(String pgOrderId, String paymentKey, int amount){
+    public void confirmCharge(String pgOrderId, String paymentKey, Integer amount){
+        log.info("결제 승인 시작: pgOrderId={}, paymentKey={}, amount={}", pgOrderId, paymentKey, amount);
+        
         Payment payment = paymentRepository.findByPgOrderId(pgOrderId)
-                .orElseThrow(() -> new ApiException(ErrorCode.PAYMENT_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.error("Payment를 찾을 수 없음: pgOrderId={}", pgOrderId);
+                    return new ApiException(ErrorCode.PAYMENT_NOT_FOUND);
+                });
+
+        log.info("Payment 조회 성공: paymentId={}, paymentType={}, amount={}", 
+                payment.getId(), payment.getPaymentType(), payment.getAmount());
 
         // 멱등성1: 이미 승인(DONE)된 결제면 중복 처리 방지
         if (payment.getPaymentType() == PaymentType.DONE){
+            log.info("이미 승인된 결제: paymentId={}", payment.getId());
             return;
         }
 
         // 멱등성2: 이미 해당 payment로 credit이 생성되어 있으면 중복 생성 방지
         if (creditRepository.existsByPayment_Id(payment.getId())){
+            log.info("이미 Credit이 생성된 결제: paymentId={}", payment.getId());
             return;
         }
 
+        // amount가 전달되지 않으면 서버에 저장된 값 사용
+        int finalAmount = (amount != null) ? amount : payment.getAmount();
+        log.info("최종 금액: finalAmount={} (전달된 amount={}, 서버 저장 amount={})", 
+                finalAmount, amount, payment.getAmount());
+        
         // 1) 서버 저장값과 Client 전달 amount 1차 검증(변조 방지)
-        if (payment.getAmount() != amount) {
+        // amount가 null이면 서버 값 사용하므로 항상 같아야 함
+        if (amount != null && payment.getAmount() != finalAmount) {
             // 승인 실패(또는 변조)로 간주
-            payment.abort("AMOUNT_MISMATCH");
+            log.error("금액 불일치: server={}, client={}", payment.getAmount(), finalAmount);
+            payment.abort("AMOUNT_MISMATCH: server=" + payment.getAmount() + ", client=" + finalAmount);
             throw new ApiException(ErrorCode.INVALID_REQUEST);
         }
 
         // 2) Toss 승인 API 실제 호출
         TossConfirmResponseDto tossRes;
         try {
-            tossRes = tossPaymentsClient.confirm(paymentKey, pgOrderId, amount);
+            log.info("Toss 승인 API 호출: paymentKey={}, pgOrderId={}, amount={}", 
+                    paymentKey, pgOrderId, finalAmount);
+            tossRes = tossPaymentsClient.confirm(paymentKey, pgOrderId, finalAmount);
+            log.info("Toss 승인 API 성공: totalAmount={}", 
+                    tossRes != null && tossRes.getTotalAmount() != null ? tossRes.getTotalAmount() : "null");
         } catch (HttpStatusCodeException e) {
-            payment.abort("TOSS_CONFIRM_FAILED: " + e.getResponseBodyAsString());
+            String errorBody = e.getResponseBodyAsString();
+            log.error("Toss 승인 API 실패: status={}, body={}", 
+                    e.getStatusCode(), errorBody);
+            
+            // "기존 요청을 처리중입니다" 에러인 경우, 이미 처리 중이므로 Payment 상태 확인
+            if (errorBody != null && errorBody.contains("기존 요청을 처리중입니다")) {
+                log.warn("Toss에서 '기존 요청을 처리중입니다' 에러 발생. Payment 상태 확인 후 처리");
+                
+                // 잠시 대기 후 Payment 상태 재확인
+                try {
+                    Thread.sleep(1000); // 1초 대기
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+                
+                // Payment 상태 재확인
+                Payment refreshedPayment = paymentRepository.findByPgOrderId(pgOrderId)
+                        .orElseThrow(() -> new ApiException(ErrorCode.PAYMENT_NOT_FOUND));
+                
+                // 이미 승인되었으면 성공으로 처리
+                if (refreshedPayment.getPaymentType() == PaymentType.DONE) {
+                    log.info("Payment가 이미 승인됨. 성공으로 처리");
+                    return; // 이미 처리되었으므로 종료
+                }
+            }
+            
+            payment.abort("TOSS_CONFIRM_FAILED: " + errorBody);
+            throw new ApiException(ErrorCode.INVALID_REQUEST);
+        } catch (Exception e) {
+            log.error("Toss 승인 API 예외 발생", e);
+            payment.abort("TOSS_CONFIRM_EXCEPTION: " + e.getMessage());
             throw new ApiException(ErrorCode.INVALID_REQUEST);
         }
 
         // 3) Toss 응답 기반 2차 검증
-        if (tossRes == null || tossRes.getTotalAmount() == null || tossRes.getTotalAmount() != amount) {
+        if (tossRes == null || tossRes.getTotalAmount() == null || tossRes.getTotalAmount() != finalAmount) {
+            log.error("Toss 응답 검증 실패: tossRes={}, totalAmount={}, expected={}", 
+                    tossRes, tossRes != null ? tossRes.getTotalAmount() : "null", finalAmount);
             payment.abort("TOSS_AMOUNT_MISMATCH");
             throw new ApiException(ErrorCode.INVALID_REQUEST);
         }
@@ -111,6 +166,9 @@ public class PaymentService {
         // 4) 승인 성공 반영: Payment CREATED -> DONE
         String receiptUrl = (tossRes.getReceipt() != null) ? tossRes.getReceipt().getUrl() : null;
         payment.approve(paymentKey, receiptUrl);
+
+        User user = payment.getUser();
+        user.increasePaidCredit(payment.getCreditAmount());
 
         Credit credit = Credit.builder()
                 .user(payment.getUser())
@@ -121,6 +179,7 @@ public class PaymentService {
                 .build();
         creditRepository.save(credit);
 
+
         creditHistoryService.record(
                 payment.getUser(),
                 CreditType.PAID,
@@ -129,6 +188,7 @@ public class PaymentService {
                 null,
                 payment.getId()
         );
+
     }
 
 
@@ -190,6 +250,9 @@ public class PaymentService {
         // 2) PG 취소 성공 후에만 로컬 상태 변경
         credit.zeroize();
         payment.cancel();
+
+        User user = payment.getUser();
+        user.decreasePaidCredit(payment.getCreditAmount());
 
         creditHistoryService.record(
                 payment.getUser(),

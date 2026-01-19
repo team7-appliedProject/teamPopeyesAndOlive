@@ -8,7 +8,7 @@ public class ContentResponse {
 
     private Long id;
     private String title;
-    private int price;
+    private Integer price;
     private boolean isFree;
     private String status;
 

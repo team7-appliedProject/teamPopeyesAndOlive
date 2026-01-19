@@ -17,41 +17,60 @@ import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.domain.ContentBan;
 import popeye.popeyebackend.content.domain.ContentMedia;
 import popeye.popeyebackend.content.dto.request.ContentCreateRequest;
-import popeye.popeyebackend.content.dto.response.BannedContentRes;
-import popeye.popeyebackend.content.dto.response.ContentResponse;
-import popeye.popeyebackend.content.dto.response.FullContentResponse;
-import popeye.popeyebackend.content.dto.response.PreviewContentResponse;
+import popeye.popeyebackend.content.dto.response.*;
 import popeye.popeyebackend.content.enums.ContentStatus;
+import popeye.popeyebackend.content.global.s3.S3Uploader;
 import popeye.popeyebackend.content.repository.ContentBanRepository;
 import popeye.popeyebackend.content.enums.MediaType;
 import popeye.popeyebackend.content.repository.ContentMediaRepository;
+import popeye.popeyebackend.content.exception.AccessDeniedException;
+import popeye.popeyebackend.content.exception.ContentNotFoundException;
+import popeye.popeyebackend.content.exception.UserNotFoundException;
 import popeye.popeyebackend.content.repository.ContentRepository;
+import popeye.popeyebackend.pay.domain.Order;
+import popeye.popeyebackend.pay.enums.OrderStatus;
+import popeye.popeyebackend.pay.repository.OrderRepository;
+import popeye.popeyebackend.user.domain.Creator;
 import popeye.popeyebackend.user.domain.User;
+import popeye.popeyebackend.user.repository.CreatorRepository;
 import popeye.popeyebackend.user.service.UserService;
 import popeye.popeyebackend.user.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class ContentService {
+
     private final ContentRepository contentRepository;
     private final ContentBanRepository contentBanRepository;
     private final UserService userService;
     private final UserRepository userRepository;
+    private final CreatorRepository creatorRepository;
+    private final OrderRepository orderRepository;
     private final ContentMediaRepository contentMediaRepository;
+    private final S3Uploader s3Uploader;
 
+    // 생성
     public Long createContent(Long userId, ContentCreateRequest req) {
-        User creator = userRepository.findById(userId).orElseThrow();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        Creator creator = creatorRepository.findByUser(user)
+                .orElseThrow(() -> new IllegalStateException("크리에이터 권한이 없습니다."));
 
         Content content = Content.builder()
                 .title(req.getTitle())
                 .content(req.getContent())
                 .price(req.getPrice())
                 .discountRate(req.getDiscountRate())
-                .isFree(req.isFree()).build();
+                .isFree(req.isFree())
+                .creator(creator)
+                .build();
 
         Content saved = contentRepository.save(content);
 
@@ -123,38 +142,84 @@ public class ContentService {
     }
 
     @Transactional(readOnly = true)
-    public ContentResponse getContent(Long contentId) {
+    public ContentResponse getContent(Long contentId, Long userId) {
+
         Content content = contentRepository
                 .findByIdAndContentStatus(contentId, ContentStatus.ACTIVE)
-                .orElseThrow();
+                .orElseThrow(ContentNotFoundException::new);
 
-        content.increaseViewCount();
-        return ContentResponse.from(content);
-    }
+        User viewer = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
 
-    @Transactional(readOnly = true)
-    public Object getContentWithAccessControl(Long contentId, boolean hasPurchased) {
-        Content c = contentRepository.findByIdAndContentStatus(contentId, ContentStatus.ACTIVE)
-                .orElseThrow();
-        c.increaseViewCount();
-
-        if (c.isFree() || hasPurchased) {
-            return FullContentResponse.from(c);
+        if (canViewFullContent(content, viewer)) {
+            content.increaseViewCount();
+            return FullContentResponse.from(content);
         }
-        return PreviewContentResponse.from(c);
+
+        return PreviewContentResponse.from(content);
     }
 
+    // 콘텐츠 삭제
     public void deleteContent(Long userId, Long contentId) {
+
         Content content = contentRepository.findById(contentId)
-                .orElseThrow();
+                .orElseThrow(ContentNotFoundException::new);
 
         if (!content.getCreator().getId().equals(userId)) {
-            throw new IllegalStateException("작성자만 삭제할 수 있습니다.");
+            throw new AccessDeniedException("작성자만 삭제할 수 있습니다.");
         }
 
-        content.inactivate(); // 실제 삭제 아님 (비공개 처리)
+        content.softDelete();
     }
 
+    public void hardDeleteContent(Long adminUserId, Long contentId) {
+
+        User admin = userRepository.findById(adminUserId)
+                .orElseThrow(UserNotFoundException::new);
+
+        if (!admin.getRole().equals("ADMIN")) {
+            throw new AccessDeniedException("관리자만 하드 삭제할 수 있습니다.");
+        }
+
+        Content content = contentRepository.findById(contentId)
+                .orElseThrow(ContentNotFoundException::new);
+
+        // 컨텐츠에서 저장했던 파일 삭제
+        List<ContentMedia> contentMedia = content.getContentMedia();
+        for (ContentMedia media : contentMedia) {
+            s3Uploader.deleteFile(media.getMediaUrl());
+        }
+
+        contentRepository.delete(content);
+    }
+
+
+    private boolean canViewFullContent(Content content, User viewer) {
+
+        boolean isCreator = content.getCreator().getId().equals(viewer.getId());
+        boolean isAdmin = viewer.getRole().equals("ADMIN"); // 임시 (viewer.isAdmin())
+
+        if (isCreator || isAdmin) {
+            return true;
+        }
+
+        if (content.isFree()) {
+            return true;
+        }
+
+        if (hasPurchased(viewer.getId(), content.getId())){
+            return true;
+        }
+        return false;
+    }
+
+    // 구매여부
+    private boolean hasPurchased(Long userId, Long contentId) {
+        Order content = orderRepository.findByUserIdAndContentId(userId, contentId)
+                .orElseThrow(ContentNotFoundException::new);
+
+        return content.getOrderStatus().equals(OrderStatus.COMPLETED);
+    }
 
     // content에서 media url 추출
     private List<ExtractedMediaInfo> extractImageUrls(String htmlContent) {
@@ -193,6 +258,12 @@ public class ContentService {
         return urls;
     }
 
+    public List<ContentListRes> getFreeContentList(boolean isfree, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Content> list = contentRepository.findByContentStatusAndIsFree(ContentStatus.ACTIVE, isfree, pageable);
+        return list.stream().map(ContentListRes::from).toList();
+    }
+
     @Getter
     @AllArgsConstructor
     private static class ExtractedMediaInfo {
@@ -209,5 +280,12 @@ public class ContentService {
         Pageable pageable = PageRequest.of(page, size);
         Page<ContentBan> banned = contentBanRepository.findAllByIsBanned(true, pageable);
         return banned.stream().map(BannedContentRes::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ContentListRes> getContentList(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Content> all = contentRepository.findAllByContentStatus(ContentStatus.ACTIVE, pageable);
+        return all.stream().map(ContentListRes::from).toList();
     }
 }

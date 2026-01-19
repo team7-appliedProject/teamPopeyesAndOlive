@@ -1,6 +1,7 @@
 package popeye.popeyebackend.user.domain;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -31,5 +32,11 @@ public class DevilUser {
 
     public void plusDevilCount() {
         this.devilCount++;
+    }
+
+    @Builder
+    public DevilUser(User user, String hashedPhoneNumber) {
+        this.user = user;
+        this.hashedPhoneNumber = hashedPhoneNumber;
     }
 }

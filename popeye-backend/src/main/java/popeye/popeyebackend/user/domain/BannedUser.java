@@ -46,6 +46,12 @@ public class BannedUser {
         this.user = bannedUser;
     }
 
+    public void updateBan(int banDays, String reason) {
+        this.banDays += banDays;
+        this.unbannedAt = unbannedAt.plusDays(banDays);
+        this.reason += "\n" + LocalDate.now() + " - " + reason;
+    }
+
     public boolean isUnbanned() {
         return unbannedAt.isBefore(LocalDate.now());
     }

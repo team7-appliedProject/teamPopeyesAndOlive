@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import popeye.popeyebackend.global.exception.ApiException;
+import popeye.popeyebackend.global.exception.ErrorCode;
 import popeye.popeyebackend.global.security.details.PrincipalDetails;
 import popeye.popeyebackend.pay.dto.payment.ChargeRequestDto;
 import popeye.popeyebackend.pay.dto.payment.ConfirmPaymentRequestDto;
@@ -26,11 +28,12 @@ public class PaymentController {
      */
     @PostMapping("/prepare")
     public ResponseEntity<PreparePaymentResponseDto> prepare(
-            @AuthenticationPrincipal PrincipalDetails principalDetails,
+             @AuthenticationPrincipal PrincipalDetails principalDetails, // 추후 사용 예정
             @Valid @RequestBody ChargeRequestDto chargeRequestDto
             ){
 
-        Long userId = principalDetails.getUserId();
+        // 임시: 인증 시스템 완성 전까지 임시 userId 사용
+        Long userId = principalDetails.getUserId(); // TODO: 인증 시스템 완성 후 principalDetails.getUserId()로 변경
 
         PreparePaymentResponseDto responseDto = paymentService.prepareCharge(
                 userId,
@@ -49,12 +52,26 @@ public class PaymentController {
     public ResponseEntity<Void> confirm(
             @Valid @RequestBody ConfirmPaymentRequestDto confirmPaymentRequestDto
             ){
+        
+        // amount 검증: null이 아니고 10 미만이면 에러
+        if (confirmPaymentRequestDto.getAmount() != null && confirmPaymentRequestDto.getAmount() < 10) {
+            throw new ApiException(ErrorCode.INVALID_REQUEST);
+        }
 
-        paymentService.confirmCharge(
-                confirmPaymentRequestDto.getPgOrderId(),
-                confirmPaymentRequestDto.getPaymentKey(),
-                confirmPaymentRequestDto.getAmount()
-        );
+        try {
+            paymentService.confirmCharge(
+                    confirmPaymentRequestDto.getPgOrderId(),
+                    confirmPaymentRequestDto.getPaymentKey(),
+                    confirmPaymentRequestDto.getAmount()
+            );
+        } catch (ApiException e) {
+            // 에러를 그대로 전달
+            throw e;
+        } catch (Exception e) {
+            // 예상치 못한 에러
+            throw new ApiException(ErrorCode.INVALID_REQUEST);
+        }
+        
         return ResponseEntity.noContent().build();
     }
 
@@ -64,11 +81,13 @@ public class PaymentController {
      */
     @PostMapping("/{paymentId}/refund")
     public ResponseEntity<Void> refund(@PathVariable Long paymentId,
-                                       @Valid @RequestBody RefundRequestDto refundRequestDto,
-                                       @AuthenticationPrincipal PrincipalDetails principalDetails
+                                       @Valid @RequestBody RefundRequestDto refundRequestDto
+                                       // @AuthenticationPrincipal PrincipalDetails principalDetails // 추후 사용 예정
                                        ){
 
-       Long userId = principalDetails.getUserId();
+        // 임시: 인증 시스템 완성 전까지 임시 userId 사용
+        Long userId = 1L; // TODO: 인증 시스템 완성 후 principalDetails.getUserId()로 변경
+        // Long userId = principalDetails.getUserId();
 
         paymentService.refund(paymentId, refundRequestDto.getCancelReason(), userId);
         return ResponseEntity.noContent().build();

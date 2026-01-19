@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.dto.request.ContentCreateRequest;
 import popeye.popeyebackend.content.dto.response.BannedContentRes;
+import popeye.popeyebackend.content.dto.response.ContentListRes;
+import popeye.popeyebackend.content.dto.response.ContentResponse;
 import popeye.popeyebackend.content.service.ContentService;
 import popeye.popeyebackend.global.security.details.PrincipalDetails;
 
@@ -25,17 +27,24 @@ public class ContentController {
 
     private final ContentService contentService;
 
+    @PreAuthorize("hasRole('CREATOR')")
     @PostMapping
-    public ResponseEntity<Long> create(@RequestBody ContentCreateRequest req) {
-        Long id = contentService.createContent(1L, req); // 임시 userId
+    public ResponseEntity<Long> create(
+            @AuthenticationPrincipal PrincipalDetails principalDetails,
+            @RequestBody ContentCreateRequest req) {
+        Long userId = principalDetails.getUserId();
+        Long id = contentService.createContent(userId, req); // 임시 userId
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
-//    @GetMapping("/{userId}")
-//    public Object get(@PathVariable Long userId) {
-//        boolean hasPurchased = orderService.hasPurchased(userId, contentId); //유료서비스
-//        return contentService.getContentWithAccessControl(id, hasPurchased);
-//    } //제작자랑 어드민은 자기꺼보게
+    @GetMapping("/{contentId}")
+    public ResponseEntity<ContentResponse> getContent(
+            @AuthenticationPrincipal PrincipalDetails details,
+            @PathVariable Long contentId) {
+        Long userId = details.getUserId();
+        ContentResponse content = contentService.getContent(contentId, userId);
+        return ResponseEntity.ok(content);
+    } //제작자랑 어드민은 자기꺼보게
 
     @DeleteMapping("/{contentId}")
     public ResponseEntity<Void> delete(
@@ -53,5 +62,20 @@ public class ContentController {
     ){
         List<BannedContentRes> list = contentService.getBannedContentList(page, size);
         return ResponseEntity.ok(list);
+    }
+
+    @GetMapping()
+    public ResponseEntity<List<ContentListRes>> getAllContent(@RequestParam int page, @RequestParam int size) {
+        return ResponseEntity.ok(contentService.getContentList(page, size));
+    }
+
+    @GetMapping("/free")
+    public ResponseEntity<List<ContentListRes>> getFreeContent(@RequestParam int page, @RequestParam int size) {
+        return ResponseEntity.ok(contentService.getFreeContentList(true, page, size));
+    }
+
+    @GetMapping("/paid")
+    public ResponseEntity<List<ContentListRes>> getPaidContent(@RequestParam int page, @RequestParam int size) {
+        return ResponseEntity.ok(contentService.getFreeContentList(false, page, size));
     }
 }

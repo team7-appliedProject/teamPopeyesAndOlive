@@ -23,4 +23,5 @@ public interface CreatorRepository extends JpaRepository<Creator,Long> {
 		where c.id = :id
 		""")
 	Optional<Creator> findByIdWithUser(@Param("id") Long id);
+
 }

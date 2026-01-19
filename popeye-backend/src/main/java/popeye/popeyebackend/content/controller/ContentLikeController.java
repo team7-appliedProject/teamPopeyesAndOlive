@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import popeye.popeyebackend.content.service.ContentLikeService;
+import popeye.popeyebackend.global.security.details.PrincipalDetails;
 
 @RestController
 @RequestMapping("/api/contents")
@@ -17,11 +18,11 @@ import popeye.popeyebackend.content.service.ContentLikeService;
 public class ContentLikeController {
     ContentLikeService contentLikeService;
 
-    @PostMapping("/{id}/like")
+    @PostMapping("/{contentId}/like")
     public ResponseEntity<Void> toggleLike(
-//            @AuthenticationPrincipal PrincipalDetails details,
-            @PathVariable Long id) {
-        contentLikeService.toggleLike(1L, id); // 임시 userId
+          @AuthenticationPrincipal PrincipalDetails details,
+            @PathVariable Long contentId) {
+        contentLikeService.toggleLike(details.getUserId(), contentId);
         return ResponseEntity.ok().build();
     }
 }
