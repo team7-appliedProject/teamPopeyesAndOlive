@@ -191,7 +191,6 @@ export default function DevilUsersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>유저 ID</TableHead>
                     <TableHead>닉네임</TableHead>
                     <TableHead>이메일</TableHead>
                     <TableHead>신고 횟수</TableHead>
@@ -203,8 +202,7 @@ export default function DevilUsersPage() {
                   {devilUsers.length > 0 ? (
                     devilUsers.map((user) => (
                       <TableRow key={user.userId}>
-                        <TableCell className="font-medium">{user.userId}</TableCell>
-                        <TableCell>{user.nickname || '-'}</TableCell>
+                        <TableCell className="font-medium">{user.nickname || '-'}</TableCell>
                         <TableCell>{user.email || '-'}</TableCell>
                         <TableCell>{getDevilCountBadge(user.devilCount || 0)}</TableCell>
                         <TableCell>
@@ -227,7 +225,7 @@ export default function DevilUsersPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
                         악성 유저가 없습니다.
                       </TableCell>
                     </TableRow>

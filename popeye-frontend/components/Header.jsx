@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { notificationApi, creditApi, userApi, isSuccess } from '@/app/lib/api';
+import { notificationApi, userApi, isSuccess } from '@/app/lib/api';
 
 export function Header() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export function Header() {
   const [spinachBalance, setSpinachBalance] = useState(0);
   const [starCandyBalance, setStarCandyBalance] = useState(0);
 
-  // 로그인 여부 확인
+  // 로그인 여부 확인 및 잔액 가져오기
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -39,15 +39,22 @@ export function Header() {
         if (response && isSuccess(response) && response.data) {
           setIsLoggedIn(true);
           setUserInfo(response.data);
+          // 잔액 정보도 userInfo에 포함되어 있음
+          setSpinachBalance(response.data.totalSpinach || 0);
+          setStarCandyBalance(response.data.totalStarcandy || 0);
         } else {
           setIsLoggedIn(false);
           setUserInfo(null);
+          setSpinachBalance(0);
+          setStarCandyBalance(0);
         }
       } catch (err) {
         // 401 또는 에러 시 비로그인 상태
         console.log('[Header] Auth check failed:', err);
         setIsLoggedIn(false);
         setUserInfo(null);
+        setSpinachBalance(0);
+        setStarCandyBalance(0);
       } finally {
         setIsLoading(false);
       }
@@ -55,25 +62,6 @@ export function Header() {
 
     checkAuth();
   }, []);
-
-  // 크레딧 잔액 가져오기 (로그인 시에만)
-  useEffect(() => {
-    if (!isLoggedIn) return;
-
-    const fetchBalance = async () => {
-      try {
-        const data = await creditApi.getBalance().catch(() => null);
-        if (data) {
-          setSpinachBalance(data.spinach || 0);
-          setStarCandyBalance(data.starCandy || 0);
-        }
-      } catch (err) {
-        console.error('Failed to fetch balance:', err);
-      }
-    };
-
-    fetchBalance();
-  }, [isLoggedIn]);
 
   // 알림 목록 가져오기 (로그인 시에만)
   useEffect(() => {
