@@ -1,0 +1,136 @@
+### 전역 변수 설정 (테스트할 주소)
+@baseUrl = http://localhost:8080/api/admin
+@url = http://localhost:8080
+
+### 1. 관리자 일일 통계 확인
+GET {{baseUrl}}/statistics?days=7
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+
+### 2. 관리자 전용 - 유저 악성 정보 조회 - 성공
+# (보통 관리자만 볼 수 있게 막아두는 API)
+GET {{baseUrl}}/devil-users?page=0
+Content-Type: application/json
+
+### 2. 관리자 전용 - 유저 밴 - 성공
+# (2번 유저 관리자 권한 밴)
+PATCH {{baseUrl}}/devil-users
+Content-Type: application/json
+
+{
+  "banUserId": 2,
+  "reason": "테스트용 벤",
+  "banDays": 5
+}
+
+### 4. 관리자 전용 - 유저 밴 해제
+# 로그인 체크 여부는 reg와 합친 이후에 테스트
+PATCH {{baseUrl}}/devil-users/2
+Content-Type: application/json
+
+
+### 5. 관리자 전용 - 컨텐츠 벤 - 성공
+PATCH {{baseUrl}}/illegal-contents
+Content-Type: application/json
+
+{
+  "contentId": 1,
+  "reason": "test입니다."
+}
+
+### 6. 관리자 전용 - 게시글 차단 해제 - 성공
+PATCH {{baseUrl}}/illegal-contents/1
+Content-Type: application/json
+
+### 7. 게시글 신고
+POST http://localhost:8080/api/report
+Content-Type: application/json
+
+{
+  "reason": "test",
+  "type": "CONTENT",
+  "targetId": 3
+}
+
+### 8. 관리자 전용 - 신고 조회
+GET {{baseUrl}}/reports?page=0&size=10
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+### 9. 관리자 전용 - 신고 처리 (거부)
+PATCH {{baseUrl}}/reports/16
+Content-Type: application/json
+
+{
+  "targetId": 1,
+  "targetType": "CONTENT",
+  "reason": "거부",
+  "state": "REJECTED"
+}
+
+### 9. 관리자 전용 - 신고 처리 (가짜 신고)
+PATCH {{baseUrl}}/reports/11
+Content-Type: application/json
+
+{
+  "targetId": 1,
+  "targetType": "CONTENT",
+  "reason": "거부",
+  "state": "FALSE"
+}
+
+### 9. 관리자 전용 - 신고 처리 (신고 받아들이기)
+PATCH {{baseUrl}}/reports/19
+Content-Type: application/json
+
+{
+  "targetId": 1,
+  "targetType": "CONTENT",
+  "reason": "거부",
+  "state": "TRUE"
+}
+###
+#----------------------------
+### 인증번호 받기
+POST {{url}}/api/auth/sms/send
+Content-Type: application/json
+
+{
+  "phoneNumber": "01022222222"
+}
+###
+POST {{url}}/api/auth/sms/verify
+Content-Type: application/json
+
+{
+  "phoneNumber": "01022222222",
+  "code": "766836"
+}
+
+###
+POST {{url}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email" : "test1@test.com",
+  "password" : "!@#123QWEqwe",
+  "nickname" : "banuser2",
+  "phoneNumber" : "01022222222",
+  "phoneNumberCollectionConsent": true
+}
+
+### 로그인
+POST {{url}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test123@test.com",
+  "password": "!@#123QWEqwe"
+}
+
+> {%
+    var token = response.body.data.accessToken;
+    client.global.set("authToken", token);
+    client.log("토큰 저장 완료: " + token);
+ %}

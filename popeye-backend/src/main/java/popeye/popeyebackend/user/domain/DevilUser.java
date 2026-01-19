@@ -1,0 +1,42 @@
+package popeye.popeyebackend.user.domain;
+
+import jakarta.persistence.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Getter
+@Table(name = "devil_users")
+@NoArgsConstructor
+public class DevilUser {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    private Long blockedDays = 0L;
+
+    @Column
+    private Integer devilCount = 0;
+
+    @Column
+    private String hashedPhoneNumber;
+
+    public void plusBlockedDays(int days) {
+        this.blockedDays += days;
+    }
+
+    public void plusDevilCount() {
+        this.devilCount++;
+    }
+
+    @Builder
+    public DevilUser(User user, String hashedPhoneNumber) {
+        this.user = user;
+        this.hashedPhoneNumber = hashedPhoneNumber;
+    }
+}

@@ -1,0 +1,24 @@
+### 1. contents 만들기
+POST http://localhost:8080/api/contents
+Content-Type: application/json
+
+{
+  "title": "test title",
+  "content": "test content",
+  "price": 0,
+  "discountRate": 0,
+  "isFree": true
+}
+
+### 콘텐츠 조회
+GET {{host}}/api/contents/1
+Authorization: {{token}}
+
+### 콘텐츠 삭제 (작성자)
+DELETE {{host}}/api/contents/1
+Authorization: {{token}}
+
+### 콘텐츠 삭제 (작성자 아님 → 403 이 나와야함)
+DELETE {{host}}/api/contents/2
+Authorization: {{token}}
+

@@ -1,0 +1,97 @@
+###===================U-05 Google OAuth2 소셜 로그인 테스트
+###주의: OAuth2 로그인은 브라우저에서 직접 테스트해야 합니다.
+
+###1. Google OAuth2 로그인 시작
+# 브라우저에서 아래 URL로 접속하세요:
+# http://localhost:8080/oauth2/authorization/google
+
+# Google OAuth2 로그인 URL
+# GET {{host}}/oauth2/authorization/google
+
+###2. OAuth2 로그인 성공 후 토큰 확인
+# 로그인 성공 후 프론트엔드로 리다이렉트되며, URL에 토큰이 포함됩니다.
+#예시: http://localhost:3000/oauth2/redirect?token=eyJhbGci...&tokenType=Bearer
+
+###3. OAuth2 로그인 후 프로필 조회 테스트
+#주의: OAuth2 로그인으로 생성된 사용자는:
+#- provider: "google"
+#- providerId: Google의 고유 ID (sub)
+#- phoneNumber: "01000000000" (기본값)
+#- phoneNumberCollectionConsent: false (기본값)
+#- totalSpinach: 1000 (신규 가입 보너스)
+
+GET http://localhost:8080/api/user/profile
+Authorization: Bearer 여기에_OAuth2_로그인_후_받은_토큰_입력
+
+###4. OAuth2 로그인 사용자 프로필 수정 테스트
+#OAuth2로 로그인한 사용자도 프로필 수정이 가능합니다.
+
+PATCH http://localhost:8080/api/user/profile
+Content-Type: application/json
+Authorization: Bearer 여기에_OAuth2_로그인_후_받은_토큰_입력
+
+{
+  "nickname": "OAuth2User",
+  "profileImageUrl": "https://example.com/profile.jpg"
+}
+
+###5. OAuth2 로그인 사용자 크리에이터 승격 테스트
+#OAuth2로 로그인한 사용자도 크리에이터로 승격할 수 있습니다.
+
+POST http://localhost:8080/api/user/creator
+Content-Type: application/json
+Authorization: Bearer 여기에_OAuth2_로그인_후_받은_토큰_입력
+
+###6. OAuth2 로그인 사용자 정산 정보 업데이트 테스트
+#OAuth2로 로그인한 사용자가 크리에이터인 경우 정산 정보를 업데이트할 수 있습니다.
+
+PATCH http://localhost:8080/api/user/creator/settlement
+Content-Type: application/json
+Authorization: Bearer 여기에_OAuth2_로그인_후_받은_토큰_입력
+
+{
+  "bankName": "카카오뱅크",
+  "accountNumber": "1234-5678-9012",
+  "accountHolder": "홍길동"
+}
+
+###===================OAuth2 로그인 플로우 설명
+###1. 사용자가 /oauth2/authorization/google로 접속
+###2. Spring Security가 Google OAuth2 인증 페이지로 리다이렉트
+###3. 사용자가 Google 계정으로 로그인 및 동의
+###4. Google이 인증 코드를 /login/oauth2/code/google로 리다이렉트
+###5. Spring Security가 인증 코드를 액세스 토큰으로 교환
+###6. 액세스 토큰으로 Google 사용자 정보 조회
+###7. CustomOAuth2UserService가 사용자 정보 처리:
+#   - 기존 사용자(provider+providerId로 조회) → 업데이트
+#   - 기존 사용자(email로 조회) → OAuth2 정보 추가
+#   - 신규 사용자 → 생성 (기본값: phoneNumber="01000000000", totalSpinach=1000)
+###8. OAuth2SuccessHandler가 JWT 토큰 생성
+###9. 프론트엔드로 리다이렉트 (토큰 포함)
+
+###===================환경 변수 설정
+#다음 환경 변수를 설정하세요:
+#GOOGLE_CLIENT_ID=your_google_client_id
+#GOOGLE_CLIENT_SECRET=your_google_client_secret
+#GOOGLE_REDIRECT_URI=http://localhost:8080/login/oauth2/code/google
+#OAUTH2_REDIRECT_URI=http://localhost:3000/oauth2/redirect (프론트엔드 리다이렉트 URI)
+
+###===================Google OAuth2 설정 방법
+#1. Google Cloud Console (https://console.cloud.google.com/) 접속
+#2. 프로젝트 생성 또는 선택
+#3. "API 및 서비스" > "사용자 인증 정보" 메뉴
+#4. "사용자 인증 정보 만들기" > "OAuth 클라이언트 ID" 선택
+#5. 애플리케이션 유형: "웹 애플리케이션"
+#6. 승인된 리디렉션 URI 추가:
+#   - http://localhost:8080/login/oauth2/code/google (개발 환경)
+#   - https://yourdomain.com/login/oauth2/code/google (프로덕션)
+#7. 클라이언트 ID와 클라이언트 보안 비밀번호를 환경 변수로 설정
+
+###===================테스트 방법
+#1. OAuth2 로그인은 브라우저에서 직접 테스트해야 합니다.
+#2. IntelliJ HTTP Client로는 OAuth2 플로우를 완전히 테스트할 수 없습니다.
+#3. 테스트 순서:
+#   - 브라우저에서 http://localhost:8080/oauth2/authorization/google 접속
+#   - Google 계정으로 로그인
+#   - 리다이렉트된 URL에서 토큰 추출
+#   - 추출한 토큰을 위의 API 테스트에 사용
