@@ -202,14 +202,6 @@ public class UserService {
         user.updateProfile(request.getNickname());
     }
 
-    @Transactional
-    public void unBanUser(Long targetId) {
-        BannedUser user = bannedUserRepository.findById(targetId)
-                .orElseThrow(() -> new UserNotFoundException("차단된 사용자 정보를 찾을 수 없습니다."));
-        user.setUnbannedAt(LocalDate.now());
-        // role을 바꿔주는 역할은 CustomUserDetailsService에서 실시
-    }
-
     @Transactional(readOnly = true)
     public Page<DevilUser> getDevilUsers(int page) {
         Pageable pageable = PageRequest.of(page, 30, Sort.by("user.nickname").ascending());
@@ -217,6 +209,7 @@ public class UserService {
     }
 
     //U-03: 권한 등록 (크리에이터 권한 신청 및 획득) - 완료
+
     @Transactional
     public void promoteToCreator(String email) {
         log.info("권한 승격 프로세스 시작 - 대상 이메일: {}", email);
@@ -248,7 +241,6 @@ public class UserService {
 
         log.info("사용자 {} 권한 승격 완료 (USER -> CREATOR)", email);
     }
-
     @Transactional(readOnly = true)
     public User getUser(Long id) {
         return userRepository.findById(id)
@@ -256,6 +248,7 @@ public class UserService {
     }
 
     //U-07: 유저 차단 실행 (휴대폰 번호 해싱 저장) - 완료
+
     @Transactional
     public void executeBan(Long adminId, Long targetId, int banDays, String reason) {
         User admin = userRepository.findById(adminId)
@@ -269,6 +262,14 @@ public class UserService {
         // 1. 상태 변경
         targetUser.changeRole(Role.BLOCKED);
         devilUser.plusBlockedDays(banDays);
+
+        Optional<BannedUser> banUser = bannedUserRepository.findByUser(targetUser);
+
+        if (banUser.isPresent()) {
+            BannedUser user = banUser.get();
+            user.updateBan(banDays, reason);
+            return;
+        }
 
         // 2. [U-01] 연락처 수집 동의 확인 (차단 시 수집 목적)
         // 모든 유저는 회원가입 시 연락처 수집 동의가 필수이므로, 동의하지 않은 유저는 존재하지 않음
@@ -286,13 +287,21 @@ public class UserService {
                 .unbannedAt(LocalDate.now().plusDays(banDays))
                 .banDays(banDays)
                 .hashedPhoneNumber(hashedPhone) // 해시값 보관
-                .reason(reason)
+                .reason(LocalDate.now() + " - " + reason)
                 .admin(admin)
                 .bannedUser(targetUser) // Builder 파라미터명에 맞춰 수정
                 .build();
 
         bannedUserRepository.save(bannedUser);
         log.info("사용자 {} 차단 및 번호 해싱 완료", targetUser.getEmail());
+    }
+
+    @Transactional
+    public void unBanUser(Long targetId) {
+        BannedUser user = bannedUserRepository.findByUserId(targetId)
+                .orElseThrow(() -> new UserNotFoundException("차단된 사용자 정보를 찾을 수 없습니다."));
+        user.setUnbannedAt(LocalDate.now());
+        // role을 바꿔주는 역할은 CustomUserDetailsService에서 실시
     }
 
     //U-08: 크리에이터 정산 정보 업데이트 (실명, 은행, 암호화 계좌)

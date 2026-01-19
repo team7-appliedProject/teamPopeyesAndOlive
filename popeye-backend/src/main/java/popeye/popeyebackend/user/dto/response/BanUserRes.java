@@ -6,6 +6,7 @@ import java.time.LocalDate;
 
 public record BanUserRes(
     Long id,
+    String nickName,
     LocalDate bannedAt,
     LocalDate unbannedAt,
     Integer banDays,
@@ -14,6 +15,7 @@ public record BanUserRes(
     public static BanUserRes from(BannedUser bannedUser) {
         return new BanUserRes(
                 bannedUser.getUser().getId(),
+                bannedUser.getUser().getNickname(),
                 bannedUser.getBannedAt(),
                 bannedUser.getUnbannedAt(),
                 bannedUser.getBanDays(),

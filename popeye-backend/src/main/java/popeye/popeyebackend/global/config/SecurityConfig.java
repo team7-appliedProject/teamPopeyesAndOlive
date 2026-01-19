@@ -69,6 +69,7 @@ public class SecurityConfig {
                             "/swagger-ui.html"
                     ).permitAll();
                     auth.requestMatchers("/api/report/**").permitAll();
+                    auth.requestMatchers("/api/main/**").permitAll();
                     auth.requestMatchers("/api/admin/**").hasRole("ADMIN");
 
                     // U-05: OAuth2 설정이 있을 때만 OAuth2 경로 허용
