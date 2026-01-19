@@ -42,7 +42,7 @@ export default function MyPage() {
         // 크레딧 사용 내역 가져오기
         try {
           const historyData = await creditApi.getHistory(0, 20);
-          setCreditHistory(historyData || []);
+          setCreditHistory(historyData?.content || []);
         } catch (err) {
           console.error('Failed to fetch credit history:', err);
           setCreditHistory([]);
@@ -251,43 +251,64 @@ export default function MyPage() {
                                 });
                               };
 
+                              // 타입 변환
+                              const getTypeLabel = (reasonType) => {
+                                switch (reasonType) {
+                                  case 'CHARGE': return 'charge';
+                                  case 'PURCHASE': return 'use';
+                                  case 'REFUND': return 'refund';
+                                  case 'EXPIRE': return 'expire';
+                                  default: return 'use';
+                                }
+                              };
+
+                              const getDescription = (reasonType, creditType) => {
+                                switch (reasonType) {
+                                  case 'CHARGE': return '크레딧 충전';
+                                  case 'PURCHASE': return '콘텐츠 구매';
+                                  case 'REFUND': return '환불';
+                                  case 'EXPIRE': return '크레딧 소멸';
+                                  default: return '크레딧 사용';
+                                }
+                              };
+
+                              const type = getTypeLabel(item.reasonType);
+                              const description = getDescription(item.reasonType, item.creditType);
+
                               return (
-                                <TableRow key={item.id}>
+                                <TableRow key={item.creditHistoryId}>
                                   <TableCell className="text-sm text-muted-foreground">
-                                    {formatDate(item.date)}
+                                    {formatDate(item.changedAt)}
                                   </TableCell>
                                   <TableCell>
-                                    {item.type === 'charge' && (
+                                    {type === 'charge' && (
                                       <Badge className="bg-blue-500">충전</Badge>
                                     )}
-                                    {item.type === 'use' && (
+                                    {type === 'use' && (
                                       <Badge variant="secondary">사용</Badge>
                                     )}
-                                    {item.type === 'reward' && (
-                                      <Badge className="bg-[#22c55e]">지급</Badge>
-                                    )}
-                                    {item.type === 'expire' && (
+                                    {type === 'expire' && (
                                       <Badge variant="destructive">소멸</Badge>
                                     )}
-                                    {item.type === 'refund' && (
+                                    {type === 'refund' && (
                                       <Badge className="bg-orange-500">환불</Badge>
                                     )}
                                   </TableCell>
                                   <TableCell className="text-sm">
-                                    {item.description || '-'}
+                                    {description}
                                   </TableCell>
                                   <TableCell className="text-right">
                                     <div className="flex items-center justify-end gap-2">
-                                      {item.type === 'charge' || item.type === 'reward' ? (
+                                      {type === 'charge' ? (
                                         <ArrowUpRight className="h-4 w-4 text-[#22c55e]" />
-                                      ) : item.type === 'expire' ? (
+                                      ) : type === 'expire' ? (
                                         <XCircle className="h-4 w-4 text-destructive" />
                                       ) : (
                                         <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
                                       )}
                                       <CreditBadge 
-                                        type={item.creditType} 
-                                        amount={Math.abs(item.amount)}
+                                        type={item.creditType === 'PAID' ? 'starCandy' : 'spinach'} 
+                                        amount={Math.abs(item.delta)}
                                         size="sm"
                                       />
                                     </div>

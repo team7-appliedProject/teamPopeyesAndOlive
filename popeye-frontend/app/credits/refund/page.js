@@ -45,26 +45,26 @@ export default function RefundPage() {
         // 크레딧 사용 내역 가져오기
         const historyData = await creditApi.getHistory(0, 50);
         
-        // 환불 가능한 항목만 필터링 (charge 타입이고 7일 이내인 것)
+        // 환불 가능한 항목만 필터링 (CHARGE 타입이고 paymentId가 있고 7일 이내인 것)
         const now = new Date();
         const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         
-        const refundable = (historyData || [])
+        const refundable = (historyData?.content || [])
           .filter(item => {
-            // charge 타입만 환불 가능
-            if (item.type !== 'charge') return false;
+            // CHARGE 타입이고 paymentId가 있어야 환불 가능
+            if (item.reasonType !== 'CHARGE' || !item.paymentId) return false;
             
             // 날짜 확인 (7일 이내)
-            const itemDate = new Date(item.date);
+            const itemDate = new Date(item.changedAt);
             return itemDate >= sevenDaysAgo;
           })
           .map(item => ({
-            id: item.id,
-            paymentId: item.paymentId || null, // paymentId가 있으면 사용
-            date: item.date,
-            description: item.description || '크레딧 충전',
-            amount: item.amount,
-            creditType: item.creditType,
+            id: String(item.creditHistoryId),
+            paymentId: item.paymentId,
+            date: item.changedAt,
+            description: '크레딧 충전',
+            amount: Math.abs(item.delta),
+            creditType: item.creditType === 'PAID' ? 'starCandy' : 'spinach',
             status: 'refundable',
           }));
         

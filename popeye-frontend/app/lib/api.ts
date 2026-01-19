@@ -416,6 +416,12 @@ export const paymentApi = {
       method: "POST",
       body: JSON.stringify({ cancelReason }),
     }),
+
+  /** 내 결제 내역 조회 */
+  getMyPayments: (page = 0, size = 20) =>
+    fetchApi<PageResponse<PaymentListItem>>("/api/payments/me", {
+      params: { page, size },
+    }),
 };
 
 // ============================================
@@ -452,7 +458,7 @@ export const creditApi = {
 
   /** 크레딧 사용 내역 조회 */
   getHistory: (page = 0, size = 20) =>
-    fetchApi<CreditHistoryItem[]>("/api/credits/history", {
+    fetchApi<PageResponse<CreditHistoryItem>>("/api/credits/histories/me", {
       params: { page, size },
     }),
 };
@@ -680,6 +686,20 @@ export interface ConfirmPaymentRequest {
   amount: number;
 }
 
+export interface PaymentListItem {
+  paymentId: number;
+  pgOrderId: string;
+  paymentType: "CREATED" | "DONE" | "CANCELED" | "ABORTED";
+  amount: number;
+  creditAmount: number;
+  pgProvider: "TOSS";
+  createdAt: string;
+  approvedAt: string | null;
+  canceledAt: string | null;
+  receiptUrl: string | null;
+  failureReason: string | null;
+}
+
 // Order Types
 export interface PurchaseResponse {
   orderId: number;
@@ -776,14 +796,25 @@ export interface CreditBalance {
   starCandy: number;
 }
 
+// Page Response 타입
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
 export interface CreditHistoryItem {
-  id: string;
-  type: "charge" | "use" | "reward" | "expire" | "refund";
-  amount: number;
-  creditType: "spinach" | "starCandy";
-  description: string;
-  date: string;
-  status: "pending" | "completed";
+  creditHistoryId: number;
+  creditType: "SPINACH" | "PAID";
+  reasonType: "CHARGE" | "PURCHASE" | "REFUND" | "EXPIRE";
+  delta: number;
+  changedAt: string;
+  orderId: number | null;
+  paymentId: number | null;
 }
 
 // ============================================

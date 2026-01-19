@@ -244,6 +244,9 @@ export default function ContentDetailPage() {
   // 전체 내용을 볼 수 있는지 (무료거나 구매했거나 전체 content가 있는 경우)
   const canViewFull = content.free || isPurchased || !!content.content;
   
+  // 구매 가능한지 (유료이고 아직 구매하지 않았고 가격이 있는 경우)
+  const canPurchase = !content.free && !isPurchased && content.price && content.price > 0;
+  
   // 표시할 본문 내용
   const displayContent = content.content || content.preview || '';
 
@@ -455,7 +458,7 @@ export default function ContentDetailPage() {
           </Card>
 
           {/* Purchase Section */}
-          {!canViewFull && content.price && (
+          {canPurchase && (
             <Card className="mt-6 border-2 border-[#5b21b6]">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
