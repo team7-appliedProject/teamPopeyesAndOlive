@@ -51,7 +51,9 @@ export default function LoginPage() {
     } catch (err) {
       console.error("[Login] Error:", err);
       // ApiError 클래스인 경우 errorResponse.message 사용
-      const errorMessage = err.errorResponse?.message || err.message || 
+      const errorMessage =
+        err.errorResponse?.message ||
+        err.message ||
         "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.";
       setError(errorMessage);
     } finally {
@@ -71,7 +73,7 @@ export default function LoginPage() {
           <CardTitle className="text-2xl">로그인</CardTitle>
           <CardDescription>StarP에 오신 것을 환영합니다</CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             {/* 에러 메시지 */}
@@ -82,8 +84,8 @@ export default function LoginPage() {
             )}
 
             {/* 이메일 입력 */}
-              <div className="space-y-2">
-                <Label htmlFor="email">이메일</Label>
+            <div className="space-y-2">
+              <Label htmlFor="email">이메일</Label>
               <Input
                 id="email"
                 type="email"
@@ -93,11 +95,11 @@ export default function LoginPage() {
                 className="h-11 border-2 border-gray-200 focus:border-[#5b21b6] bg-gray-50/50"
                 disabled={loading}
               />
-              </div>
+            </div>
 
             {/* 비밀번호 입력 */}
-              <div className="space-y-2">
-                <Label htmlFor="password">비밀번호</Label>
+            <div className="space-y-2">
+              <Label htmlFor="password">비밀번호</Label>
               <Input
                 id="password"
                 type="password"
@@ -107,14 +109,14 @@ export default function LoginPage() {
                 className="h-11 border-2 border-gray-200 focus:border-[#5b21b6] bg-gray-50/50"
                 disabled={loading}
               />
-              </div>
+            </div>
 
             {/* 로그인 버튼 */}
-              <Button 
+            <Button
               type="submit"
               className="w-full h-11 bg-[#5b21b6] hover:bg-[#5b21b6]/90 text-base font-medium"
               disabled={loading}
-              >
+            >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -123,7 +125,7 @@ export default function LoginPage() {
               ) : (
                 "로그인"
               )}
-              </Button>
+            </Button>
           </form>
 
           {/* 비밀번호 찾기 & 회원가입 */}
@@ -132,8 +134,8 @@ export default function LoginPage() {
               variant="link"
               className="text-sm text-muted-foreground hover:text-[#5b21b6]"
             >
-                비밀번호를 잊으셨나요?
-              </Button>
+              비밀번호를 잊으셨나요?
+            </Button>
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">
                 아직 계정이 없으신가요?
@@ -144,8 +146,8 @@ export default function LoginPage() {
               >
                 회원가입 하기
               </Link>
-              </div>
-              </div>
+            </div>
+          </div>
 
           {/* 소셜 로그인 */}
           <div className="pt-4">
@@ -154,15 +156,17 @@ export default function LoginPage() {
               <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-xs text-muted-foreground">
                 또는
               </span>
-              </div>
-          
-          <div className="mt-6">
-              <Button 
-                variant="outline" 
+            </div>
+
+            <div className="mt-6">
+              <Button
+                variant="outline"
                 className="w-full h-11 border-2"
                 onClick={() => {
-                  // Google OAuth2 로그인 시작
-                  window.location.href = '/oauth2/authorization/google';
+                  //Google OAuth2 로그인 시작
+                  //window.location.href = "/oauth2/authorization/google";
+                  window.location.href =
+                    "http://localhost:8080/oauth2/authorization/google";
                 }}
                 disabled={loading}
               >
