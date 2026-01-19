@@ -9,7 +9,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import popeye.popeyebackend.content.domain.Content;
+import popeye.popeyebackend.content.domain.ContentBan;
 import popeye.popeyebackend.content.enums.ContentStatus;
+import popeye.popeyebackend.content.repository.ContentBanRepository;
 import popeye.popeyebackend.content.service.ContentService;
 import popeye.popeyebackend.report.domain.Report;
 import popeye.popeyebackend.report.dto.ReportReqDto;
@@ -39,6 +41,7 @@ public class ReportService {
     private static final long REPORT_TTL = 24;
     private final ContentService contentService;
     private final UserService userService;
+    private final ContentBanRepository contentBanRepository;
 
     // 신고 목록 받기
     @Transactional(readOnly = true)
@@ -49,7 +52,7 @@ public class ReportService {
 
     // 신고 처리
     @Transactional
-    public void reportProcess(Long reportId, ReportProcessDto reportProcessDto) {
+    public void reportProcess(Long reportId, ReportProcessDto reportProcessDto, Long adminId) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new NoReportFoundException("Report not found"));
 
@@ -64,10 +67,18 @@ public class ReportService {
                 report.setReportState(ReportState.REJECTED);
             }
             case TRUE -> {
-                switch (reportProcessDto.targetType()) {
-                    case CONTENT -> blockContent(report.getTargetContent());
+                switch (report.getTargetType()) {
+                    case CONTENT -> {
+                        Content targetContent = report.getTargetContent();
+                        blockContent(targetContent);
+                        ContentBan contentBan = ContentBan.builder().content(targetContent)
+                                .admin(userService.getUser(adminId))
+                                .reason("신고 처리").build();
+                        contentBanRepository.save(contentBan);
+                    }
                 }
                 report.setReportState(ReportState.TRUE);
+
             }
             case FALSE -> {
                 if (report.getReporter() == null) {
