@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from 'react';
-import { Star, Leaf, AlertCircle, CreditCard } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Star, Leaf, AlertCircle, CreditCard, RotateCcw, XCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +28,7 @@ const chargePackages = [
 ];
 
 export default function CreditChargePage() {
+  const router = useRouter();
   const [selectedPackage, setSelectedPackage] = useState(null);
   
   // Mock current balance
@@ -35,8 +37,18 @@ export default function CreditChargePage() {
   const starCandyBalance = 8420;
 
   const handleCharge = () => {
-    // TODO: 토스페이먼츠 연동
-    alert('토스페이먼츠 결제 페이지로 이동합니다 (TODO: 실제 연동 필요)');
+    // 실제 결제 페이지로 이동
+    router.push('/payment/charge');
+  };
+
+  const handleRefund = () => {
+    // 환불 요청 페이지로 이동
+    router.push('/payment/refund');
+  };
+
+  const handleCancel = () => {
+    // 결제 취소 확인 페이지로 이동
+    router.push('/payment/cancel');
   };
 
   const selectedPkg = selectedPackage ? chargePackages.find(p => p.id === selectedPackage) : null;
@@ -191,71 +203,37 @@ export default function CreditChargePage() {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <CreditCard className="h-4 w-4" />
                       <span>결제 수단: 토스페이먼츠 (카드, 계좌이체, 간편결제)</span>
-                      <span className="text-xs text-destructive">TODO: 실제 API 연동 필요</span>
                     </div>
 
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button 
-                          size="lg" 
-                          className="w-full bg-[#5b21b6] hover:bg-[#5b21b6]/90"
-                          disabled={!selectedPackage}
-                        >
-                          충전하기
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>별사탕 충전</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            {selectedPkg && (
-                              <div className="space-y-3 text-left">
-                                <p>선택한 상품을 충전하시겠습니까?</p>
-                                <div className="rounded-lg bg-muted p-4 space-y-2">
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-sm">상품</span>
-                                    <CreditBadge 
-                                      type="starCandy" 
-                                      amount={selectedPkg.amount} 
-                                      showLabel
-                                    />
-                                  </div>
-                                  {selectedPkg.bonus > 0 && (
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-sm">보너스</span>
-                                      <CreditBadge 
-                                        type="starCandy" 
-                                        amount={selectedPkg.bonus}
-                                      />
-                                    </div>
-                                  )}
-                                  <Separator />
-                                  <div className="flex justify-between items-center font-semibold">
-                                    <span>결제 금액</span>
-                                    <span className="text-lg">₩{selectedPkg.price.toLocaleString()}</span>
-                                  </div>
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                  토스페이먼츠 결제 페이지로 이동합니다.
-                                </p>
-                                <p className="text-xs text-destructive">
-                                  ⚠️ TODO: 실제 토스페이먼츠 API 연동 필요
-                                </p>
-                              </div>
-                            )}
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>취소</AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={handleCharge}
-                            className="bg-[#5b21b6] hover:bg-[#5b21b6]/90"
-                          >
-                            결제하기
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <Button 
+                      size="lg" 
+                      className="w-full bg-[#5b21b6] hover:bg-[#5b21b6]/90"
+                      onClick={handleCharge}
+                    >
+                      크레딧 충전
+                    </Button>
+
+                    <Separator />
+
+                    {/* Additional Actions */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button 
+                        variant="outline"
+                        className="w-full"
+                        onClick={handleRefund}
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        환불 요청
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        className="w-full"
+                        onClick={handleCancel}
+                      >
+                        <XCircle className="h-4 w-4 mr-2" />
+                        결제 취소 확인
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

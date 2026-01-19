@@ -255,7 +255,9 @@ export default function PaymentChargePage() {
                             setError(null);
                           }
                         }}
+                        onWheel={(e) => e.currentTarget.blur()}
                         disabled={isLoading}
+                        className="[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
                       />
                       {creditAmount && (
                         <p className="text-sm text-muted-foreground">

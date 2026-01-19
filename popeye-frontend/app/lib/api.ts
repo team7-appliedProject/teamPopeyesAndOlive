@@ -490,8 +490,8 @@ export const withdrawalApi = {
 export const eventApi = {
   /** 무료 크레딧 지급 */
   grantFreeCredits: (amount: number) =>
-    fetchApi<number>('/api/events/free-credits', {
-      method: 'POST',
+    fetchApi<number>("/api/events/free-credits", {
+      method: "POST",
       params: { amount },
     }),
 };

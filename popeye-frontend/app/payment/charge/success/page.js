@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,9 +14,18 @@ export default function PaymentSuccessPage() {
   const [isProcessing, setIsProcessing] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const hasProcessedRef = useRef(false); // 중복 요청 방지
 
   useEffect(() => {
+    // 이미 처리 중이거나 완료된 경우 중복 실행 방지
+    if (hasProcessedRef.current) {
+      return;
+    }
+
     const processPayment = async () => {
+      // 처리 시작 표시
+      hasProcessedRef.current = true;
+
       // Toss Payments는 successUrl에 paymentKey와 orderId를 쿼리 파라미터로 전달
       const paymentKey = searchParams.get('paymentKey');
       const orderId = searchParams.get('orderId');
@@ -25,6 +34,7 @@ export default function PaymentSuccessPage() {
       if (!paymentKey || !orderId || !amount) {
         setError('결제 정보가 올바르지 않습니다. paymentKey, orderId, amount가 필요합니다.');
         setIsProcessing(false);
+        hasProcessedRef.current = false; // 에러 시 재시도 가능하도록
         return;
       }
 
@@ -45,6 +55,7 @@ export default function PaymentSuccessPage() {
         }, 3000);
       } catch (err) {
         console.error('결제 승인 실패:', err);
+        hasProcessedRef.current = false; // 에러 시 재시도 가능하도록
         if (err instanceof ApiError) {
           setError(err.errorResponse.message || '결제 승인에 실패했습니다.');
         } else {
