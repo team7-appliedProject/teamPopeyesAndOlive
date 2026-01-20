@@ -437,53 +437,83 @@ export default function ContentDetailPage() {
 
               <Separator className="my-6" />
 
-                {/* Actions */}
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant={isLiked ? "default" : "outline"}
-                    onClick={async () => {
-                      try {
-                        const response = await contentApi.toggleLike(Number(contentId));
-                        // 서버 응답으로 상태 업데이트
-                        setIsLiked(response.liked);
-                        setContent({ ...content, isLiked: response.liked, likeCount: response.likeCount });
-                      } catch (err) {
-                        console.error('[ContentDetail] Like error:', err);
-                        if (err.status === 401 || err.status === 403) {
-                          router.push('/login');
-                        } else {
-                          alert('좋아요 처리에 실패했습니다.');
-                        }
+              {/* Actions */}
+              <div className="flex items-center gap-3">
+                <Button
+                  variant={isLiked ? "default" : "outline"}
+                  onClick={async () => {
+                    try {
+                      const response = await contentApi.toggleLike(
+                        Number(contentId),
+                      );
+                      // 서버 응답으로 상태 업데이트
+                      setIsLiked(response.liked);
+                      setContent({
+                        ...content,
+                        isLiked: response.liked,
+                        likeCount: response.likeCount,
+                      });
+                    } catch (err) {
+                      console.error("[ContentDetail] Like error:", err);
+                      if (err.status === 401 || err.status === 403) {
+                        router.push("/login");
+                      } else {
+                        alert("좋아요 처리에 실패했습니다.");
                       }
-                    }}
-                    className={isLiked ? "text-red-500" : ""}
-                  >
-                    <Heart className={`h-4 w-4 mr-2 ${isLiked ? 'fill-current' : ''}`} />
-                    좋아요
-                  </Button>
-                  <Button
-                    variant={isBookmarked ? "default" : "outline"}
-                    onClick={async () => {
-                      try {
-                        const response = await contentApi.toggleBookmark(Number(contentId));
-                        // 서버 응답으로 상태 업데이트
-                        setIsBookmarked(response.bookmarked);
-                        setContent({ ...content, isBookmarked: response.bookmarked });
-                      } catch (err) {
-                        console.error('[ContentDetail] Bookmark error:', err);
-                        if (err.status === 401 || err.status === 403) {
-                          router.push('/login');
-                        } else {
-                          alert('북마크 처리에 실패했습니다.');
-                        }
+                    }
+                  }}
+                  className={isLiked ? "text-red-500" : ""}
+                >
+                  <Heart
+                    className={`h-4 w-4 mr-2 ${isLiked ? "fill-current" : ""}`}
+                  />
+                  좋아요
+                </Button>
+                <Button
+                  variant={isBookmarked ? "default" : "outline"}
+                  onClick={async () => {
+                    try {
+                      // 1. API 호출 결과를 기다림
+                      const response = await contentApi.toggleBookmark(
+                        Number(contentId),
+                      );
+
+                      // 2. response가 성공적으로 왔고, 데이터가 있는지 확인
+                      if (
+                        response &&
+                        typeof response.bookmarked !== "undefined"
+                      ) {
+                        const nextStatus = response.bookmarked;
+                        setIsBookmarked(nextStatus);
+                        setContent((prev) =>
+                          prev ? { ...prev, isBookmarked: nextStatus } : prev,
+                        );
+                      } else {
+                        // 서버가 200 OK를 줬지만 데이터 형식이 이상한 경우
+                        throw new Error("Invalid Server Response");
                       }
-                    }}
-                  >
-                    <Bookmark className={`h-4 w-4 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
-                    찜하기
-                  </Button>
-                <Button 
-                  variant="ghost" 
+                    } catch (err) {
+                      // 3. 서버가 500 에러를 주거나 통신에 실패하면 이리로 옴
+                      console.error("[ContentDetail] Bookmark error:", err);
+
+                      if (err.status === 401 || err.status === 403) {
+                        router.push("/login");
+                      } else {
+                        // 여기서 alert가 뜨는 것은 서버 문제입니다.
+                        alert(
+                          "현재 서버 문제로 북마크가 불가능합니다. 잠시 후 다시 시도해주세요.",
+                        );
+                      }
+                    }
+                  }}
+                >
+                  <Bookmark
+                    className={`h-4 w-4 mr-2 ${isBookmarked ? "fill-current" : ""}`}
+                  />
+                  찜하기
+                </Button>
+                <Button
+                  variant="ghost"
                   className="text-destructive"
                   onClick={() => setReportDialogOpen(true)}
                 >
@@ -582,7 +612,11 @@ export default function ContentDetailPage() {
                   <div>
                     <h3 className="font-semibold mb-2">이 글 구매하기</h3>
                     <div className="flex items-center gap-3">
-                      <CreditBadge type="starCandy" amount={content.price} size="lg" />
+                      <CreditBadge
+                        type="starCandy"
+                        amount={content.price}
+                        size="lg"
+                      />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
                       💡 시금치 우선 차감 후 별사탕이 차감됩니다
@@ -590,8 +624,8 @@ export default function ContentDetailPage() {
                   </div>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button 
-                        size="lg" 
+                      <Button
+                        size="lg"
                         className="bg-[#5b21b6] hover:bg-[#5b21b6]/90"
                         disabled={purchasing}
                       >
@@ -601,7 +635,7 @@ export default function ContentDetailPage() {
                             구매 중...
                           </>
                         ) : (
-                          '크레딧으로 구매'
+                          "크레딧으로 구매"
                         )}
                       </Button>
                     </AlertDialogTrigger>
@@ -614,7 +648,11 @@ export default function ContentDetailPage() {
                             <div className="rounded-lg bg-muted p-3 space-y-1">
                               <div className="flex justify-between text-sm">
                                 <span>가격:</span>
-                                <CreditBadge type="starCandy" amount={content.price} size="sm" />
+                                <CreditBadge
+                                  type="starCandy"
+                                  amount={content.price}
+                                  size="sm"
+                                />
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 차감 순서: 시금치 → 별사탕
@@ -625,7 +663,7 @@ export default function ContentDetailPage() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>취소</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogAction
                           onClick={handlePurchase}
                           className="bg-[#5b21b6] hover:bg-[#5b21b6]/90"
                         >
