@@ -186,22 +186,7 @@ export default function CreatorPage() {
           </div>
 
           {creatorId ? (
-            <>
-              {/* 정산 가능 잔액 카드 */}
-              <Card className="mb-8">
-                {/* ... (원래 있던 잔액 카드 내용) ... */}
-              </Card>
-
-              {/* 컨텐츠별 정산 요약 */}
-              <Card className="mb-8">
-                {/* ... (원래 있던 요약 카드 내용) ... */}
-              </Card>
-
-              {/* 월별 상세 정산 */}
-              <Card className="mb-8">
-                {/* ... (원래 있던 상세 정산 카드 내용) ... */}
-              </Card>
-            </>
+            <></>
           ) : (
             /* ▼▼▼ [추가 2] creatorId가 아직 없을 때 보여줄 로딩 화면 ▼▼▼ */
             <div className="flex flex-col items-center justify-center py-20">
