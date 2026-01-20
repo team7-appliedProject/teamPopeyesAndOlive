@@ -107,7 +107,7 @@ export default function ContentDetailPage() {
 
       // 구매 API 호출
       const purchaseResponse = await orderApi.purchase(Number(contentId));
-
+      window.dispatchEvent(new Event("update-credits"));
       console.log("[ContentDetail] Purchase success:", purchaseResponse);
 
       // 구매 후 콘텐츠 다시 조회하여 전체 내용 가져오기
