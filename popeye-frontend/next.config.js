@@ -5,6 +5,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const nextConfig = {
   reactStrictMode: true,
   // ▼ 빌드 시 ESLint 및 타입스크립트 에러 무시 설정 추가
+  output: 'standalone',
   eslint: {
     ignoreDuringBuilds: true,
   },
