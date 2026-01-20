@@ -66,7 +66,7 @@ public class ContentController {
 
     @GetMapping()
     public ResponseEntity<List<ContentListRes>> getAllContent(
-            @AuthenticationPrincipal(required = false) PrincipalDetails details,
+            @AuthenticationPrincipal PrincipalDetails details,
             @RequestParam int page, 
             @RequestParam int size) {
         Long userId = details != null ? details.getUserId() : null;
@@ -75,7 +75,7 @@ public class ContentController {
 
     @GetMapping("/free")
     public ResponseEntity<List<ContentListRes>> getFreeContent(
-            @AuthenticationPrincipal(required = false) PrincipalDetails details,
+            @AuthenticationPrincipal PrincipalDetails details,
             @RequestParam int page, 
             @RequestParam int size) {
         Long userId = details != null ? details.getUserId() : null;
@@ -84,7 +84,7 @@ public class ContentController {
 
     @GetMapping("/paid")
     public ResponseEntity<List<ContentListRes>> getPaidContent(
-            @AuthenticationPrincipal(required = false) PrincipalDetails details,
+            @AuthenticationPrincipal PrincipalDetails details,
             @RequestParam int page, 
             @RequestParam int size) {
         Long userId = details != null ? details.getUserId() : null;
