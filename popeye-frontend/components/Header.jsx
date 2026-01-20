@@ -76,6 +76,12 @@ export function Header() {
     };
 
     checkAuth();
+    // 💡 [추가] 'update-credits' 이벤트를 감지하면 다시 checkAuth를 실행합니다.
+  window.addEventListener("update-credits", checkAuth);
+  
+  return () => {
+    window.removeEventListener("update-credits", checkAuth);
+  };
   }, []);
 
   // 알림 목록 가져오기 (로그인 시에만)

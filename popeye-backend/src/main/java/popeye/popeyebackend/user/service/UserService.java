@@ -127,14 +127,13 @@ public class UserService {
                 .phoneNumberCollectionConsent(request.getPhoneNumberCollectionConsent())
                 .build();
 
-
-
         // U-04: 고유 추천 코드 자동 생성 (나노아이디 사용, 중복 체크 포함)
         referralCodeService.generateUniqueReferralCode(user);
 
         User savedUser = userRepository.save(user);
 
         freeCreditPolicyService.grantFreeCredit(savedUser, 1000);
+
 
         // U-01: 추천인 코드 입력 시 리워드 지급 (SYS-02: 쌍방에게 크레딧 지급)
         if (referrer != null) {
@@ -183,10 +182,8 @@ public class UserService {
             referralCodeService.generateUniqueReferralCode(user);
         }
 
-        Long creatorId = 0L;
-        if(user.getCreator() != null) {
-            creatorId = user.getCreator().getId();
-        }
+        // 변경된 부분: Creator 객체가 있을 때만 ID를 가져오고, 없으면 null 처리
+        Long creatorId = (user.getCreator() != null) ? user.getCreator().getId() : null;
 
         return UserProfileResponse.builder()
                 .creatorId(creatorId)
