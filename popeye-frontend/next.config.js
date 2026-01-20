@@ -1,5 +1,5 @@
 const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../.env.dev') });
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -8,7 +8,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:8080/api/:path*', // 로컬 개발 환경에서 백엔드로 프록시
+        destination: 'http://db:8080/api/:path*', // 로컬 개발 환경에서 백엔드로 프록시
       },
     ];
   },
