@@ -76,6 +76,22 @@ export default function MyPage() {
           setUserInfo(response.data);
         }
 
+        // 북마크 목록 조회
+        try {
+          const bookmarks = await userBookmarkApi.getBookmarks();
+          setBookmarkedContents(bookmarks);
+        } catch (err) {
+          console.error('Failed to fetch bookmarks:', err);
+        }
+
+        // 구매 목록 조회
+        try {
+          const purchases = await userBookmarkApi.getPurchases();
+          setPurchasedContents(purchases);
+        } catch (err) {
+          console.error('Failed to fetch purchases:', err);
+        }
+
         // 크레딧 사용 내역 가져오기
         try {
           const historyData = await creditApi.getHistory(0, 20);

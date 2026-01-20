@@ -278,10 +278,29 @@ public class ContentService {
         return urls;
     }
 
-    public List<ContentListRes> getFreeContentList(boolean isfree, int page, int size) {
+    public List<ContentListRes> getFreeContentList(boolean isfree, int page, int size, Long userId) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Content> list = contentRepository.findByContentStatusAndIsFree(ContentStatus.ACTIVE, isfree, pageable);
-        return list.stream().map(ContentListRes::from).toList();
+        
+        User viewer = null;
+        if (userId != null) {
+            viewer = userRepository.findById(userId).orElse(null);
+        }
+        
+        final User finalViewer = viewer;
+        return list.stream().map(content -> {
+            boolean liked = false;
+            boolean bookmarked = false;
+            boolean purchased = false;
+            
+            if (finalViewer != null) {
+                liked = contentLikeRepository.existsByUserAndContent(finalViewer, content);
+                bookmarked = contentBookmarkRepository.existsByUserAndContent(finalViewer, content);
+                purchased = hasPurchased(finalViewer.getId(), content.getId());
+            }
+            
+            return ContentListRes.from(content, liked, bookmarked, purchased);
+        }).toList();
     }
 
     @Getter
@@ -303,9 +322,28 @@ public class ContentService {
     }
 
     @Transactional(readOnly = true)
-    public List<ContentListRes> getContentList(int page, int size) {
+    public List<ContentListRes> getContentList(int page, int size, Long userId) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Content> all = contentRepository.findAllByContentStatus(ContentStatus.ACTIVE, pageable);
-        return all.stream().map(ContentListRes::from).toList();
+        
+        User viewer = null;
+        if (userId != null) {
+            viewer = userRepository.findById(userId).orElse(null);
+        }
+        
+        final User finalViewer = viewer;
+        return all.stream().map(content -> {
+            boolean liked = false;
+            boolean bookmarked = false;
+            boolean purchased = false;
+            
+            if (finalViewer != null) {
+                liked = contentLikeRepository.existsByUserAndContent(finalViewer, content);
+                bookmarked = contentBookmarkRepository.existsByUserAndContent(finalViewer, content);
+                purchased = hasPurchased(finalViewer.getId(), content.getId());
+            }
+            
+            return ContentListRes.from(content, liked, bookmarked, purchased);
+        }).toList();
     }
 }

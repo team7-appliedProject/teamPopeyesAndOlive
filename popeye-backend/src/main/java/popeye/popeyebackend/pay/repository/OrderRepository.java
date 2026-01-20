@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.pay.domain.Order;
+import popeye.popeyebackend.pay.enums.OrderStatus;
 import popeye.popeyebackend.user.domain.User;
 
 import java.time.LocalDateTime;
@@ -19,4 +20,6 @@ public interface OrderRepository extends JpaRepository<Order,Long> {
     boolean existsByUser_IdAndContent_Id(Long userId, Long contentId);
 
     Optional<Order> findByUserIdAndContentId(Long userId, Long contentId);
+    
+    List<Order> findByUser_IdAndOrderStatus(Long userId, OrderStatus orderStatus);
 }

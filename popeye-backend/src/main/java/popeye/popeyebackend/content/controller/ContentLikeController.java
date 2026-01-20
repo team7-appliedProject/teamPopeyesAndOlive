@@ -19,10 +19,11 @@ public class ContentLikeController {
     private final ContentLikeService contentLikeService;
 
     @PostMapping("/{contentId}/like")
-    public ResponseEntity<Void> toggleLike(
+    public ResponseEntity<popeye.popeyebackend.content.dto.response.ToggleLikeResponse> toggleLike(
           @AuthenticationPrincipal PrincipalDetails details,
             @PathVariable Long contentId) {
-        contentLikeService.toggleLike(details.getUserId(), contentId);
-        return ResponseEntity.ok().build();
+        popeye.popeyebackend.content.dto.response.ToggleLikeResponse response = 
+                contentLikeService.toggleLike(details.getUserId(), contentId);
+        return ResponseEntity.ok(response);
     }
 }
