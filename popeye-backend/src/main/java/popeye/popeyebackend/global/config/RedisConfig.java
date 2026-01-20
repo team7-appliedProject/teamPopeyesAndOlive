@@ -20,6 +20,8 @@ public class RedisConfig {
 
     @Value("${spring.data.redis.password}")
     private String password;
+    
+    System.out.println(password);
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
