@@ -65,17 +65,29 @@ public class ContentController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<ContentListRes>> getAllContent(@RequestParam int page, @RequestParam int size) {
-        return ResponseEntity.ok(contentService.getContentList(page, size));
+    public ResponseEntity<List<ContentListRes>> getAllContent(
+            @AuthenticationPrincipal PrincipalDetails details,
+            @RequestParam int page, 
+            @RequestParam int size) {
+        Long userId = details != null ? details.getUserId() : null;
+        return ResponseEntity.ok(contentService.getContentList(page, size, userId));
     }
 
     @GetMapping("/free")
-    public ResponseEntity<List<ContentListRes>> getFreeContent(@RequestParam int page, @RequestParam int size) {
-        return ResponseEntity.ok(contentService.getFreeContentList(true, page, size));
+    public ResponseEntity<List<ContentListRes>> getFreeContent(
+            @AuthenticationPrincipal PrincipalDetails details,
+            @RequestParam int page, 
+            @RequestParam int size) {
+        Long userId = details != null ? details.getUserId() : null;
+        return ResponseEntity.ok(contentService.getFreeContentList(true, page, size, userId));
     }
 
     @GetMapping("/paid")
-    public ResponseEntity<List<ContentListRes>> getPaidContent(@RequestParam int page, @RequestParam int size) {
-        return ResponseEntity.ok(contentService.getFreeContentList(false, page, size));
+    public ResponseEntity<List<ContentListRes>> getPaidContent(
+            @AuthenticationPrincipal PrincipalDetails details,
+            @RequestParam int page, 
+            @RequestParam int size) {
+        Long userId = details != null ? details.getUserId() : null;
+        return ResponseEntity.ok(contentService.getFreeContentList(false, page, size, userId));
     }
 }

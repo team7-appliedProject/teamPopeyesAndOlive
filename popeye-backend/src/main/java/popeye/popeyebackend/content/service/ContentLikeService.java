@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import popeye.popeyebackend.content.domain.Content;
 import popeye.popeyebackend.content.domain.ContentLike;
+import popeye.popeyebackend.content.dto.response.ToggleLikeResponse;
 import popeye.popeyebackend.content.exception.ContentError;
 import popeye.popeyebackend.content.repository.ContentLikeRepository;
 import popeye.popeyebackend.content.repository.ContentRepository;
@@ -20,7 +21,7 @@ public class ContentLikeService {
     private final ContentRepository contentRepository;
     private final UserRepository userRepository;
 
-    public void toggleLike(Long userId, Long contentId) {
+    public ToggleLikeResponse toggleLike(Long userId, Long contentId) {
         User user = userRepository.findById(userId).orElseThrow();
 
         Content content = contentRepository.findById(contentId)
@@ -40,5 +41,11 @@ public class ContentLikeService {
             likeRepository.save(contentLike);
             content.increaseLike();
         }
+        
+        // DB에서 최신 상태 조회
+        boolean finalLiked = likeRepository.existsByUserAndContent(user, content);
+        long finalLikeCount = content.getLikeCount();
+        
+        return new ToggleLikeResponse(finalLiked, finalLikeCount);
     }
 }

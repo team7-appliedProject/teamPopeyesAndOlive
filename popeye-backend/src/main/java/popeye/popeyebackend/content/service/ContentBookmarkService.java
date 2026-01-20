@@ -20,7 +20,7 @@ public class ContentBookmarkService {
     private final ContentRepository contentRepository;
     private final UserRepository userRepository;
 
-    public void bookmark(Long userId, Long contentId) {
+    public boolean bookmark(Long userId, Long contentId) {
         User user = userRepository.findById(userId)
                 .orElseThrow();
         Content content = contentRepository.findById(contentId)
@@ -29,12 +29,14 @@ public class ContentBookmarkService {
         // 토글 방식: 이미 북마크되어 있으면 삭제, 없으면 추가
         if (bookmarkRepository.existsByUserAndContent(user, content)) {
             bookmarkRepository.deleteByUserAndContent(user, content);
+            return false;
         } else {
             ContentBookmark contentBookmark = ContentBookmark.builder()
                     .user(user)
                     .content(content)
                     .price(content.getPrice()).build();
             bookmarkRepository.save(contentBookmark);
+            return true;
         }
     }
 

@@ -443,13 +443,16 @@ export default function ContentDetailPage() {
                   variant={isLiked ? "default" : "outline"}
                   onClick={async () => {
                     try {
-                      await contentApi.toggleLike(Number(contentId));
-                      setIsLiked(!isLiked);
-                      // 콘텐츠 다시 조회하여 최신 상태 반영
-                      const data = await contentApi.getById(Number(contentId));
-                      if (data.likeCount !== undefined) {
-                        setContent({ ...content, likeCount: data.likeCount });
-                      }
+                      const response = await contentApi.toggleLike(
+                        Number(contentId),
+                      );
+                      // 서버 응답으로 상태 업데이트
+                      setIsLiked(response.liked);
+                      setContent({
+                        ...content,
+                        isLiked: response.liked,
+                        likeCount: response.likeCount,
+                      });
                     } catch (err) {
                       console.error("[ContentDetail] Like error:", err);
                       if (err.status === 401 || err.status === 403) {
@@ -470,14 +473,36 @@ export default function ContentDetailPage() {
                   variant={isBookmarked ? "default" : "outline"}
                   onClick={async () => {
                     try {
-                      await contentApi.toggleBookmark(Number(contentId));
-                      setIsBookmarked(!isBookmarked);
+                      // 1. API 호출 결과를 기다림
+                      const response = await contentApi.toggleBookmark(
+                        Number(contentId),
+                      );
+
+                      // 2. response가 성공적으로 왔고, 데이터가 있는지 확인
+                      if (
+                        response &&
+                        typeof response.bookmarked !== "undefined"
+                      ) {
+                        const nextStatus = response.bookmarked;
+                        setIsBookmarked(nextStatus);
+                        setContent((prev) =>
+                          prev ? { ...prev, isBookmarked: nextStatus } : prev,
+                        );
+                      } else {
+                        // 서버가 200 OK를 줬지만 데이터 형식이 이상한 경우
+                        throw new Error("Invalid Server Response");
+                      }
                     } catch (err) {
+                      // 3. 서버가 500 에러를 주거나 통신에 실패하면 이리로 옴
                       console.error("[ContentDetail] Bookmark error:", err);
+
                       if (err.status === 401 || err.status === 403) {
                         router.push("/login");
                       } else {
-                        alert("북마크 처리에 실패했습니다.");
+                        // 여기서 alert가 뜨는 것은 서버 문제입니다.
+                        alert(
+                          "현재 서버 문제로 북마크가 불가능합니다. 잠시 후 다시 시도해주세요.",
+                        );
                       }
                     }
                   }}
@@ -578,6 +603,79 @@ export default function ContentDetailPage() {
               </Dialog>
             </CardContent>
           </Card>
+
+          {/* Purchase Section */}
+          {!canViewFull && content.price && (
+            <Card className="mt-6 border-2 border-[#5b21b6]">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold mb-2">이 글 구매하기</h3>
+                    <div className="flex items-center gap-3">
+                      <CreditBadge
+                        type="starCandy"
+                        amount={content.price}
+                        size="lg"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      💡 시금치 우선 차감 후 별사탕이 차감됩니다
+                    </p>
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="lg"
+                        className="bg-[#5b21b6] hover:bg-[#5b21b6]/90"
+                        disabled={purchasing}
+                      >
+                        {purchasing ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            구매 중...
+                          </>
+                        ) : (
+                          "크레딧으로 구매"
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>글 구매</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          <div className="space-y-2 text-left">
+                            <p>"{content.title}" 글을 구매하시겠습니까?</p>
+                            <div className="rounded-lg bg-muted p-3 space-y-1">
+                              <div className="flex justify-between text-sm">
+                                <span>가격:</span>
+                                <CreditBadge
+                                  type="starCandy"
+                                  amount={content.price}
+                                  size="sm"
+                                />
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                차감 순서: 시금치 → 별사탕
+                              </div>
+                            </div>
+                          </div>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>취소</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handlePurchase}
+                          className="bg-[#5b21b6] hover:bg-[#5b21b6]/90"
+                        >
+                          구매하기
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
