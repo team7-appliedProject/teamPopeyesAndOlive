@@ -37,9 +37,9 @@ spring:
 
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:localhost}
-      port: ${SPRING_DATA_REDIS_PORT:6379}
-      password: ${SPRING_DATA_REDIS_PASSWORD}
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT}
+      # password: ${SPRING_DATA_REDIS_PASSWORD}
 
   # U-05: OAuth2 소셜 로그인 설정 (Google만)
   # 환경 변수 GOOGLE_CLIENT_ID와 GOOGLE_CLIENT_SECRET이 설정되어 있을 때만 활성화
