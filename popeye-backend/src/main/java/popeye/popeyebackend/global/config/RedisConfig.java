@@ -21,11 +21,12 @@ public class RedisConfig {
     @Value("${spring.data.redis.password}")
     private String password;
     
-    System.out.println(password);
+
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(host, port);
+            System.out.println(password);
 
         config.setPassword(RedisPassword.of(password));
 
