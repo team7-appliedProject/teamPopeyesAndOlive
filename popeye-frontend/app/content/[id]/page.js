@@ -403,7 +403,7 @@ export default function ContentDetailPage() {
                           <AlertDialogTitle>글 구매</AlertDialogTitle>
                           <AlertDialogDescription>
                             <div className="space-y-2 text-left">
-                              <p>"{content.title}" 글을 구매하시겠습니까?</p>
+                              <p>'{content.title}'' 글을 구매하시겠습니까?</p>
                               <div className="rounded-lg bg-muted p-3 space-y-1">
                                 <div className="flex justify-between text-sm">
                                   <span>가격:</span>
