@@ -23,7 +23,7 @@ services:
       - db
     restart: on-failure
     env_file:
-      - ../.env
+      - .env
 
   frontend:
     image: corqu/popeye-frontend:latest
