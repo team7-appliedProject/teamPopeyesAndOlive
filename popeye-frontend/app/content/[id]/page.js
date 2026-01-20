@@ -416,6 +416,10 @@ export default function ContentDetailPage() {
                                 <div className="text-xs text-muted-foreground">
                                   차감 순서: 시금치 → 별사탕
                                 </div>
+
+                                <p class="text-red-500 text-xs font-medium mt-1">
+    * 구매 후에는 환불이 불가능합니다.
+  </p>
                               </div>
                             </div>
                           </AlertDialogDescription>
